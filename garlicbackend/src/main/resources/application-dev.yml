@@ -1,0 +1,15 @@
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    com.zealep.garlicbackend: DEBUG
+    org.hibernate.SQL: DEBUG
+
+garlic:
+  cors:
+    # App Flutter web / dashboards en desarrollo
+    allowed-origins: http://localhost:*,http://127.0.0.1:*

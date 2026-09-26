@@ -1,0 +1,20 @@
+# ---- Secretos y configuración local ----
+.env
+*.local.json
+.claude/settings.local.json
+
+# ---- Datos locales (evidencias subidas, volúmenes) ----
+data/
+garlicbackend/data/
+
+# ---- Compilados ----
+garlicbackend/target/
+garlic_app/build/
+garlic_app/.dart_tool/
+
+# ---- IDE / SO ----
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

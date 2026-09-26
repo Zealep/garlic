@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: garlicbackend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/garlic}
+    username: ${DB_USER:garlic}
+    password: ${DB_PASSWORD:garlic}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
+  data:
+    web:
+      pageable:
+        max-page-size: 200
+
+server:
+  error:
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+garlic:
+  storage:
+    # Carpeta de evidencias (almacenamiento local). En produccion: volumen persistente o S3.
+    directorio: ${GARLIC_STORAGE_DIR:./data/evidencias}
