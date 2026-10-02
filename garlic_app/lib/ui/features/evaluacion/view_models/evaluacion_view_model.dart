@@ -77,7 +77,6 @@ class EvaluacionViewModel extends ChangeNotifier {
       PasoEvaluacion.muestras => b.muestras.isNotEmpty && problemasCierre.where((x) => x.paso == p).isEmpty,
       PasoEvaluacion.sensoriales => b.humedad.isNotEmpty || b.empastes.isNotEmpty || b.danos.isNotEmpty,
       PasoEvaluacion.sanidad => problemasCierre.where((x) => x.paso == p).isEmpty,
-      PasoEvaluacion.evidencias => fotos.isNotEmpty,
       PasoEvaluacion.resumen => b.estado == EstadoEvaluacion.cerrada,
     };
   }
@@ -146,10 +145,17 @@ class EvaluacionViewModel extends ChangeNotifier {
     muestraIndice = borrador!.muestras.length - 1;
   });
 
-  void quitarMuestra(int numero) => _editar(() {
-    borrador!.muestras.removeWhere((m) => m.numero == numero);
-    muestraIndice = 0;
-  });
+  /// Quita la muestra y sus fotos del equipo (en el servidor se eliminan al sincronizar la evaluación).
+  Future<void> quitarMuestra(int numero) async {
+    final fotosMuestra = fotosDe(SeccionFoto.muestra, muestraNumero: numero);
+    _editar(() {
+      borrador!.muestras.removeWhere((m) => m.numero == numero);
+      muestraIndice = 0;
+    });
+    for (final f in fotosMuestra) {
+      await _evaluaciones.eliminarEvidencia(f.id);
+    }
+  }
 
   /// Calidad: con exactamente dos clases (PRIMERA / ABIERTOS) la otra se completa sola al 100%,
   /// igual que la fórmula ABIERTOS = 1 - PRIMERA del protocolo.
@@ -223,14 +229,21 @@ class EvaluacionViewModel extends ChangeNotifier {
 
   // ------------------------------------------------------------------ fotos
 
-  Future<void> agregarFoto(Uint8List bytes, String mime, {int? muestraNumero}) async {
-    await guardarAhora(); // la muestra debe existir antes de subir su foto
+  /// Fotos de una sección del wizard (de una muestra en particular si se indica el número).
+  List<EvidenciaLocal> fotosDe(SeccionFoto seccion, {int? muestraNumero}) =>
+      fotos
+          .where((f) => SeccionFoto.de(f) == seccion)
+          .where((f) => seccion != SeccionFoto.muestra || f.muestraNumero == muestraNumero)
+          .toList();
+
+  Future<void> agregarFoto(Uint8List bytes, String mime, {required SeccionFoto seccion, int? muestraNumero}) async {
+    await guardarAhora(); // la muestra debe existir en el servidor antes de subir su foto
     await _evaluaciones.agregarEvidencia(
       evaluacionId: borrador!.id,
       bytes: bytes,
       mime: mime,
-      muestraNumero: muestraNumero,
-      factor: muestraNumero == null ? null : 'CALIDAD',
+      muestraNumero: seccion == SeccionFoto.muestra ? muestraNumero : null,
+      factor: seccion.factor,
     );
   }
 

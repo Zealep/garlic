@@ -11,7 +11,6 @@ import '../../../core/theme/colores.dart';
 import '../../../core/theme/tema.dart';
 import '../../../core/widgets/componentes.dart';
 import '../view_models/evaluacion_view_model.dart';
-import 'pasos/paso_evidencias.dart';
 import 'pasos/paso_general.dart';
 import 'pasos/paso_muestras.dart';
 import 'pasos/paso_resumen.dart';
@@ -132,7 +131,6 @@ class _ContenidoPaso extends StatelessWidget {
       PasoEvaluacion.muestras => PasoMuestras(vm: vm),
       PasoEvaluacion.sensoriales => PasoSensoriales(vm: vm),
       PasoEvaluacion.sanidad => PasoSanidad(vm: vm),
-      PasoEvaluacion.evidencias => PasoEvidencias(vm: vm),
       PasoEvaluacion.resumen => PasoResumen(vm: vm),
     };
     // Cambio de paso instantáneo: en formularios largos un fundido distrae y retrasa al evaluador.

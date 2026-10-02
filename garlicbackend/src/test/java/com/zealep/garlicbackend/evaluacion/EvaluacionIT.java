@@ -155,6 +155,32 @@ class EvaluacionIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void evidencias_porSeccion_generalMuestraYSensoriales() throws Exception {
+        String id = JsonPath.read(crearEvaluacion(evaluacionModelo()).andReturn().getResponse().getContentAsString(), "$.id");
+
+        mvc.perform(multipart("/api/v1/evaluaciones/" + id + "/evidencias")
+                        .file(new MockMultipartFile("archivo", "foto", "image/png", FOTO))
+                        .param("factor", "SENSORIALES").header(TenantContext.HEADER, empresa))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.factor").value("SENSORIALES"))
+                .andExpect(jsonPath("$.muestraNumero").doesNotExist());
+        mvc.perform(multipart("/api/v1/evaluaciones/" + id + "/evidencias")
+                        .file(new MockMultipartFile("archivo", "foto", "image/png", FOTO))
+                        .param("muestraNumero", "2").header(TenantContext.HEADER, empresa))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.muestraNumero").value(2));
+        mvc.perform(multipart("/api/v1/evaluaciones/" + id + "/evidencias")
+                        .file(new MockMultipartFile("archivo", "foto", "image/jpeg", FOTO))
+                        .header(TenantContext.HEADER, empresa))
+                .andExpect(status().isCreated());
+
+        mvc.perform(get("/api/v1/evaluaciones/" + id + "/evidencias").header(TenantContext.HEADER, empresa))
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[?(@.factor == 'SENSORIALES')]", hasSize(1)))
+                .andExpect(jsonPath("$[?(@.muestraNumero == 2)]", hasSize(1)));
+    }
+
+    @Test
     void sincronizacionOffline_crearCerrarYSubirFoto_sonIdempotentes() throws Exception {
         String id = UUID.randomUUID().toString();
         Map<String, Object> body = evaluacionModelo();

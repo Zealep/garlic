@@ -291,6 +291,31 @@ class EvaluacionBorrador {
   static double _redondeo(double v) => double.parse(v.toStringAsFixed(2));
 }
 
+/// Sección del wizard a la que pertenece una foto.
+enum SeccionFoto {
+  /// Evidencia general del lote (paso Datos): sin muestra ni factor.
+  general(null),
+
+  /// Foto de una muestra: se identifica por el número de muestra.
+  muestra(null),
+
+  /// Bloque único de la sección Sensoriales.
+  sensoriales('SENSORIALES');
+
+  const SeccionFoto(this.factor);
+
+  /// Valor de `factor` que se envía al API.
+  final String? factor;
+
+  /// Clasifica una foto (incluye las tomadas antes de este cambio: las generales tenían factor nulo
+  /// y las de muestra, factor CALIDAD con número de muestra).
+  static SeccionFoto de(EvidenciaLocal foto) {
+    if (foto.muestraNumero != null) return muestra;
+    if (foto.factor == sensoriales.factor) return sensoriales;
+    return general;
+  }
+}
+
 /// Foto tomada en campo, guardada en el teléfono hasta subirse.
 class EvidenciaLocal {
   const EvidenciaLocal({

@@ -9,12 +9,38 @@ import '../../../../core/theme/tema.dart';
 import '../../../../core/widgets/campo_porcentaje.dart';
 import '../../../../core/widgets/componentes.dart';
 import '../../view_models/evaluacion_view_model.dart';
+import '../widgets/galeria_fotos.dart';
 
 /// Paso 2: muestras con factor de calidad global (2.1) y factor tamaño / calibre (2.2).
 class PasoMuestras extends StatelessWidget {
   const PasoMuestras({super.key, required this.vm});
 
   final EvaluacionViewModel vm;
+
+  /// Si la muestra tiene fotos, confirma antes de quitarla (también se eliminan sus fotos).
+  Future<void> _quitarMuestra(BuildContext context, int numero) async {
+    final nFotos = vm.fotosDe(SeccionFoto.muestra, muestraNumero: numero).length;
+    if (nFotos > 0) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: Text('¿Quitar la muestra $numero?'),
+              content: Text('Se eliminarán también sus $nFotos foto${nFotos == 1 ? '' : 's'}.'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+                FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: GColores.error),
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Quitar muestra'),
+                ),
+              ],
+            ),
+      );
+      if (ok != true) return;
+    }
+    await vm.quitarMuestra(numero);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +66,17 @@ class PasoMuestras extends StatelessWidget {
           const SizedBox(height: GEspacio.l),
           _Calibres(vm: vm, muestra: m, key: ValueKey('calib-${m.numero}')),
           const SizedBox(height: GEspacio.l),
+          GaleriaFotos(
+            key: ValueKey('fotos-${m.numero}'),
+            titulo: 'Fotos de la muestra ${m.numero}',
+            ayuda: 'Evidencia de la calidad y el calibre de esta muestra.',
+            fotos: vm.fotosDe(SeccionFoto.muestra, muestraNumero: m.numero),
+            editable: vm.editable,
+            onAgregar:
+                (bytes, mime) => vm.agregarFoto(bytes, mime, seccion: SeccionFoto.muestra, muestraNumero: m.numero),
+            onEliminar: vm.eliminarFoto,
+          ),
+          const SizedBox(height: GEspacio.l),
           TextFormField(
             key: ValueKey('obs-${m.numero}'),
             initialValue: m.observacion,
@@ -52,7 +89,7 @@ class PasoMuestras extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 style: TextButton.styleFrom(foregroundColor: GColores.error),
-                onPressed: () => vm.quitarMuestra(m.numero),
+                onPressed: () => _quitarMuestra(context, m.numero),
                 icon: const Icon(PhosphorIconsBold.trash),
                 label: Text('Quitar muestra ${m.numero}'),
               ),

@@ -4,7 +4,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/theme/tema.dart';
 import '../../../../core/widgets/campos.dart';
 import '../../../../core/widgets/componentes.dart';
+import '../../../../../domain/models/evaluacion.dart';
 import '../../view_models/evaluacion_view_model.dart';
+import '../widgets/galeria_fotos.dart';
 
 /// Paso 1: datos generales (evaluador, fecha, observación).
 class PasoGeneral extends StatelessWidget {
@@ -61,6 +63,15 @@ class PasoGeneral extends StatelessWidget {
         const Aviso(
           mensaje:
               'Se toma una muestra representativa de acuerdo al campo. Todo se guarda en el equipo mientras avanzas.',
+        ),
+        const SizedBox(height: GEspacio.l),
+        GaleriaFotos(
+          titulo: 'Evidencias generales (opcional)',
+          ayuda: 'Fotos del campo, del lote o de la carga.',
+          fotos: vm.fotosDe(SeccionFoto.general),
+          editable: vm.editable,
+          onAgregar: (bytes, mime) => vm.agregarFoto(bytes, mime, seccion: SeccionFoto.general),
+          onEliminar: vm.eliminarFoto,
         ),
       ],
     );

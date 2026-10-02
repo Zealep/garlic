@@ -9,5 +9,7 @@ public enum FactorEvidencia {
     HUMEDAD,
     EMPASTE,
     DANO,
-    SANIDAD
+    SANIDAD,
+    /** Bloque unico de fotos de la seccion Sensoriales (humedad, empaste y danos). */
+    SENSORIALES
 }

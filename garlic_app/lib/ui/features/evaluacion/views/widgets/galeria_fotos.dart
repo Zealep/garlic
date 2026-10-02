@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -7,79 +9,52 @@ import '../../../../../domain/models/sync.dart';
 import '../../../../core/theme/colores.dart';
 import '../../../../core/theme/tema.dart';
 import '../../../../core/widgets/componentes.dart';
-import '../../view_models/evaluacion_view_model.dart';
 
-/// Paso 5: evidencias fotográficas por muestra y generales. Se guardan en el equipo y
-/// se suben solas cuando hay conexión.
-class PasoEvidencias extends StatelessWidget {
-  const PasoEvidencias({super.key, required this.vm});
+/// Bloque de fotos dentro de una sección del wizard (datos generales, cada muestra, sensoriales).
+/// Las fotos se comprimen, se guardan en el equipo y se suben solas al sincronizar.
+class GaleriaFotos extends StatelessWidget {
+  const GaleriaFotos({
+    super.key,
+    required this.titulo,
+    required this.fotos,
+    required this.editable,
+    required this.onAgregar,
+    required this.onEliminar,
+    this.ayuda,
+  });
 
-  final EvaluacionViewModel vm;
+  final String titulo;
+  final String? ayuda;
+  final List<EvidenciaLocal> fotos;
+  final bool editable;
+  final Future<void> Function(Uint8List bytes, String mime) onAgregar;
+  final Future<void> Function(String id) onEliminar;
 
-  Future<void> _tomar(BuildContext context, ImageSource fuente, int? muestra) async {
+  Future<void> _tomar(ImageSource fuente) async {
     final foto = await ImagePicker().pickImage(source: fuente, maxWidth: 1600, imageQuality: 72);
     if (foto == null) return;
     final bytes = await foto.readAsBytes();
     final mime = foto.mimeType ?? (foto.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg');
-    await vm.agregarFoto(bytes, mime, muestraNumero: muestra);
+    await onAgregar(bytes, mime);
   }
 
   @override
   Widget build(BuildContext context) {
-    final grupos = <int?>[...vm.borrador!.muestras.map((m) => m.numero), null];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Aviso(mensaje: 'Las fotos se comprimen y guardan en el equipo; se suben al sincronizar.'),
-        const SizedBox(height: GEspacio.l),
-        for (final numero in grupos) ...[
-          _GrupoFotos(
-            titulo: numero == null ? 'Evidencias generales' : 'Muestra $numero',
-            fotos: vm.fotos.where((f) => f.muestraNumero == numero).toList(),
-            editable: vm.editable,
-            onCamara: () => _tomar(context, ImageSource.camera, numero),
-            onGaleria: () => _tomar(context, ImageSource.gallery, numero),
-            onEliminar: vm.eliminarFoto,
-          ),
-          const SizedBox(height: GEspacio.l),
-        ],
-      ],
-    );
-  }
-}
-
-class _GrupoFotos extends StatelessWidget {
-  const _GrupoFotos({
-    required this.titulo,
-    required this.fotos,
-    required this.editable,
-    required this.onCamara,
-    required this.onGaleria,
-    required this.onEliminar,
-  });
-
-  final String titulo;
-  final List<EvidenciaLocal> fotos;
-  final bool editable;
-  final VoidCallback onCamara;
-  final VoidCallback onGaleria;
-  final Future<void> Function(String) onEliminar;
-
-  @override
-  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
     return SeccionTarjeta(
       titulo: titulo,
       icono: PhosphorIconsBold.camera,
-      accion: Pastilla(texto: '${fotos.length}', color: GColores.primario),
+      accion: Pastilla(texto: fotos.length == 1 ? '1 foto' : '${fotos.length} fotos', color: GColores.primario),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (ayuda != null && fotos.isEmpty) ...[Text(ayuda!, style: t.bodySmall), const SizedBox(height: GEspacio.m)],
           if (fotos.isNotEmpty) ...[
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 150,
+                maxCrossAxisExtent: 140,
                 mainAxisSpacing: GEspacio.s,
                 crossAxisSpacing: GEspacio.s,
               ),
@@ -93,7 +68,7 @@ class _GrupoFotos extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: onCamara,
+                    onPressed: () => _tomar(ImageSource.camera),
                     icon: const Icon(PhosphorIconsBold.camera),
                     label: const Text('Cámara'),
                   ),
@@ -101,13 +76,15 @@ class _GrupoFotos extends StatelessWidget {
                 const SizedBox(width: GEspacio.m),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: onGaleria,
+                    onPressed: () => _tomar(ImageSource.gallery),
                     icon: const Icon(PhosphorIconsBold.images),
                     label: const Text('Galería'),
                   ),
                 ),
               ],
-            ),
+            )
+          else if (fotos.isEmpty)
+            Text('Sin fotos', style: t.bodySmall),
         ],
       ),
     );

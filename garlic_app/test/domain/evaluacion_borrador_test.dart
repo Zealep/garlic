@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:garlic_app/domain/models/catalogo.dart';
 import 'package:garlic_app/domain/models/evaluacion.dart';
@@ -12,20 +14,20 @@ const cerosa = 'd-cerosa';
 const fusarium = 'e-fusarium';
 const raizRosada = 'e-raiz';
 
-final formulario = FormularioEvaluacion(
+const formulario = FormularioEvaluacion(
   cultivoId: 'ajo',
-  clasesCalidad: const [
+  clasesCalidad: [
     CatalogoItem(id: primera, codigo: 'PRIMERA', nombre: 'PRIMERA', orden: 1),
     CatalogoItem(id: abiertos, codigo: 'ABIERTOS', nombre: 'ABIERTOS', orden: 2),
   ],
-  calibres: const [CatalogoItem(id: cal4550, codigo: '45/50', nombre: '45/50')],
-  tiposHumedad: const [],
-  tiposEmpaste: const [],
-  tiposDano: const [
+  calibres: [CatalogoItem(id: cal4550, codigo: '45/50', nombre: '45/50')],
+  tiposHumedad: [],
+  tiposEmpaste: [],
+  tiposDano: [
     CatalogoItem(id: cerosa, codigo: 'CEROSA', nombre: 'PARALISIS CEROSA'),
     CatalogoItem(id: noContiene, codigo: 'NO_CONTIENE', nombre: 'NO CONTIENE', esExcluyente: true),
   ],
-  enfermedades: const [
+  enfermedades: [
     CatalogoItem(id: raizRosada, codigo: 'RAIZ_ROSADA', nombre: 'RAIZ ROSADA', evaluarEnCampo: true),
     CatalogoItem(id: fusarium, codigo: 'FUSARIUM', nombre: 'FUSARIUM', evaluarEnCampo: true),
   ],
@@ -112,5 +114,36 @@ void main() {
       final ev = loteModelo()..evaluadorId = null;
       expect(ReglasEvaluacion.validarContenido(ev, formulario).first.paso, PasoEvaluacion.general);
     });
+  });
+
+  group('Sección de cada foto (fotos dentro de cada paso del wizard)', () {
+    EvidenciaLocal foto({int? muestra, String? factor}) => EvidenciaLocal(
+      id: 'f',
+      evaluacionId: 'ev-1',
+      bytes: Uint8List(0),
+      mime: 'image/jpeg',
+      creado: DateTime(2025),
+      muestraNumero: muestra,
+      factor: factor,
+    );
+
+    test('con número de muestra pertenece a la muestra', () {
+      expect(SeccionFoto.de(foto(muestra: 2)), SeccionFoto.muestra);
+      // fotos de muestra tomadas antes del cambio (factor CALIDAD)
+      expect(SeccionFoto.de(foto(muestra: 1, factor: 'CALIDAD')), SeccionFoto.muestra);
+    });
+
+    test('factor SENSORIALES pertenece a Sensoriales', () {
+      expect(SeccionFoto.de(foto(factor: SeccionFoto.sensoriales.factor)), SeccionFoto.sensoriales);
+    });
+
+    test('sin muestra ni factor es evidencia general', () {
+      expect(SeccionFoto.de(foto()), SeccionFoto.general);
+      expect(SeccionFoto.general.factor, isNull);
+    });
+  });
+
+  test('el wizard ya no tiene un paso de fotos aparte', () {
+    expect(PasoEvaluacion.values.map((p) => p.titulo), ['Datos', 'Muestras', 'Sensoriales', 'Sanidad', 'Resumen']);
   });
 }

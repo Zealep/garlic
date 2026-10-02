@@ -8,10 +8,7 @@ import 'package:garlic_app/ui/core/widgets/componentes.dart';
 import 'package:garlic_app/ui/core/widgets/evaluacion_tile.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-Widget _app(Widget child) => MaterialApp(
-  theme: TemaGarlic.claro(),
-  home: Scaffold(body: Center(child: child)),
-);
+Widget _app(Widget child) => MaterialApp(theme: TemaGarlic.claro(), home: Scaffold(body: Center(child: child)));
 
 void main() {
   setUpAll(() => initializeDateFormatting('es'));

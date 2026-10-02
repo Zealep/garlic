@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../../domain/models/catalogo.dart';
 import '../../../../../domain/models/evaluacion.dart';
+import '../../../../../domain/use_cases/reglas_evaluacion.dart';
 import '../../../../../utils/formato.dart';
 import '../../../../core/theme/colores.dart';
 import '../../../../core/theme/tema.dart';
@@ -58,6 +59,8 @@ class PasoResumen extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: GEspacio.m),
+        _DesgloseFotos(vm: vm),
         const SizedBox(height: GEspacio.l),
         if (vm.editable) ...[
           if (pendientes.isEmpty)
@@ -262,6 +265,34 @@ class _GraficoCalibres extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// Cuántas fotos hay en cada sección (las fotos se toman dentro de cada paso).
+class _DesgloseFotos extends StatelessWidget {
+  const _DesgloseFotos({required this.vm});
+
+  final EvaluacionViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    final grupos = [
+      ('Generales', vm.fotosDe(SeccionFoto.general).length, PasoEvaluacion.general),
+      ('Muestras', vm.fotos.where((f) => SeccionFoto.de(f) == SeccionFoto.muestra).length, PasoEvaluacion.muestras),
+      ('Sensoriales', vm.fotosDe(SeccionFoto.sensoriales).length, PasoEvaluacion.sensoriales),
+    ];
+    return Wrap(
+      spacing: GEspacio.s,
+      runSpacing: GEspacio.s,
+      children: [
+        for (final (nombre, n, paso) in grupos)
+          ActionChip(
+            avatar: const Icon(PhosphorIconsBold.camera, size: 16, color: GColores.primario),
+            label: Text('$nombre · $n'),
+            onPressed: () => vm.irA(paso),
+          ),
+      ],
     );
   }
 }

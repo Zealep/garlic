@@ -7,7 +7,6 @@ enum PasoEvaluacion {
   muestras('Muestras'),
   sensoriales('Sensoriales'),
   sanidad('Sanidad'),
-  evidencias('Fotos'),
   resumen('Resumen');
 
   const PasoEvaluacion(this.titulo);
