@@ -140,8 +140,9 @@ class EvaluacionViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// La muestra nueva trae los calibres elegidos en la anterior (sin valores): suele evaluarse igual.
   void agregarMuestra() => _editar(() {
-    borrador!.muestras.add(MuestraBorrador(numero: borrador!.siguienteNumeroMuestra()));
+    borrador!.muestras.add(borrador!.nuevaMuestra());
     muestraIndice = borrador!.muestras.length - 1;
   });
 
@@ -174,14 +175,19 @@ class EvaluacionViewModel extends ChangeNotifier {
     }
   });
 
+  /// % de un calibre elegido. Vaciar el campo no lo quita: queda pendiente (0) hasta ingresar el valor.
   void setCalibre(String calibreId, double? valor) => _editar(() {
-    final m = muestraActual!;
-    if (valor == null) {
-      m.calibres.remove(calibreId);
-    } else {
-      m.calibres[calibreId] = valor.clamp(0, 100).toDouble();
-    }
+    muestraActual!.calibres[calibreId] = (valor ?? 0).clamp(0, 100).toDouble();
   });
+
+  /// Agrega o quita un calibre del catálogo en la muestra actual.
+  void alternarCalibre(String calibreId) => _editar(() {
+    final m = muestraActual!;
+    if (m.calibres.remove(calibreId) == null) m.calibres[calibreId] = 0;
+  });
+
+  /// Asigna lo que falta para llegar a 100% al calibre pendiente (o al último elegido).
+  void completarCalibres() => _editar(() => muestraActual!.completarCalibres());
 
   void setObservacionMuestra(String v) => _editar(() => muestraActual!.observacion = v);
 

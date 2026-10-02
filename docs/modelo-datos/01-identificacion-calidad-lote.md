@@ -216,7 +216,7 @@ erDiagram
 | clase_calidad_id | uuid | NO | PK, FK |
 | porcentaje | numeric(5,2) | NO | `CHECK (porcentaje BETWEEN 0 AND 100)` |
 
-**muestra_calibre**: 2.2 Factor de tamaño. Tiene la misma estructura, pero con `calibre_id`. **No se exige que la suma sea 100%** (pendiente de confirmar).
+**muestra_calibre**: 2.2 Factor de tamaño. Tiene la misma estructura, pero con `calibre_id`. El evaluador elige los calibres presentes en cada muestra (pueden superponerse, ej. 50/60 y 50/55); **deben sumar 100% y son obligatorios para cerrar la evaluación**.
 
 **evaluacion_humedad**: 2.2.1 Humedad (se registra por evaluación).
 | Columna | Tipo | Nulo | Descripción |
@@ -257,7 +257,7 @@ erDiagram
 
 ## 4. Reglas de negocio
 1. En `muestra_calidad`, cada muestra suma 100% (ABIERTOS = 100 − PRIMERA).
-2. En `muestra_calibre` no se exige que la suma sea 100% (por ahora).
+2. En `muestra_calibre`, para cerrar, cada muestra tiene al menos un calibre, ninguno en 0% y la suma es 100% (en borrador no se exige).
 3. `tipo_dano.es_excluyente`: si se marca, no se puede marcar ningún otro daño en la evaluación.
 4. En `evaluacion_sanidad`, el porcentaje solo se registra si `presente = true`.
 5. No puede haber dos lotes activos con la misma zona en la misma campaña.
@@ -315,7 +315,7 @@ Las reglas 1, 3 y 6 se validan en la aplicación; más adelante se pueden llevar
 
 ## 7. Pendientes
 - [ ] Confirmar que el duplicado se valida por **zona dentro de la campaña**. La zona podría repetirse legítimamente en otra cosecha.
-- [ ] Definir si hace falta un calibre "<45" o "resto", y si los calibres deben sumar 100%.
+- [x] Calibres seleccionables por muestra, deben sumar 100% (se agregaron 50/60 y 60/70).
 - [ ] Definir la columna "stand by" de humedad (versión futura).
 - [ ] Punto 3: pesos, precios, abonos y saldos (siguiente iteración).
 - [x] DDL generado en `database/init/` (ver `database/README.md`).

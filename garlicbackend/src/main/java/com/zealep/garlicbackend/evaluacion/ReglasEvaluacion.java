@@ -38,7 +38,7 @@ final class ReglasEvaluacion {
                     throw new BusinessException(muestra + "la calidad debe sumar 100% (suma " + suma.stripTrailingZeros().toPlainString() + "%)");
                 }
             }
-            // calibres: por ahora no se exige que sumen 100% (pendiente de confirmar con el cliente)
+            // calibres: la suma de 100% se exige al cerrar (el borrador se guarda mientras se escribe)
         }
 
         sinRepetidos(request.humedadOVacio(), EvaluacionRequest.Humedad::tipoHumedadId, "tipo de humedad");
@@ -65,12 +65,25 @@ final class ReglasEvaluacion {
         if (muestras.isEmpty()) {
             throw new BusinessException("Para cerrar la evaluacion registre al menos una muestra");
         }
-        muestras.stream()
-                .filter(m -> m.getCalidad().isEmpty())
-                .findFirst()
-                .ifPresent(m -> {
-                    throw new BusinessException("Para cerrar, la muestra " + m.getNumero() + " debe tener el factor de calidad");
-                });
+        for (Muestra m : muestras) {
+            String muestra = "Para cerrar, la muestra " + m.getNumero() + " ";
+            if (m.getCalidad().isEmpty()) {
+                throw new BusinessException(muestra + "debe tener el factor de calidad");
+            }
+            if (m.getCalibres().isEmpty()) {
+                throw new BusinessException(muestra + "debe tener al menos un calibre");
+            }
+            if (m.getCalibres().stream().anyMatch(c -> c.porcentaje().signum() == 0)) {
+                throw new BusinessException(muestra + "tiene un calibre sin porcentaje");
+            }
+            BigDecimal sumaCalibres = m.getCalibres().stream()
+                    .map(PorcentajeCalibre::porcentaje)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (sumaCalibres.compareTo(CIEN) != 0) {
+                throw new BusinessException(muestra + "debe tener calibres que sumen 100% (suma "
+                        + sumaCalibres.stripTrailingZeros().toPlainString() + "%)");
+            }
+        }
         Set<UUID> respondidas = new HashSet<>();
         ev.getSanidad().forEach(s -> respondidas.add(s.enfermedadId()));
         if (!respondidas.containsAll(enfermedadesObligatorias)) {

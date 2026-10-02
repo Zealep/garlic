@@ -9,6 +9,7 @@ import 'package:garlic_app/domain/use_cases/reglas_evaluacion.dart';
 const primera = 'c-primera';
 const abiertos = 'c-abiertos';
 const cal4550 = 'cal-45-50';
+const cal5060 = 'cal-50-60';
 const noContiene = 'd-no-contiene';
 const cerosa = 'd-cerosa';
 const fusarium = 'e-fusarium';
@@ -20,7 +21,10 @@ const formulario = FormularioEvaluacion(
     CatalogoItem(id: primera, codigo: 'PRIMERA', nombre: 'PRIMERA', orden: 1),
     CatalogoItem(id: abiertos, codigo: 'ABIERTOS', nombre: 'ABIERTOS', orden: 2),
   ],
-  calibres: [CatalogoItem(id: cal4550, codigo: '45/50', nombre: '45/50')],
+  calibres: [
+    CatalogoItem(id: cal4550, codigo: '45/50', nombre: '45/50', orden: 1),
+    CatalogoItem(id: cal5060, codigo: '50/60', nombre: '50/60', orden: 3),
+  ],
   tiposHumedad: [],
   tiposEmpaste: [],
   tiposDano: [
@@ -40,9 +44,9 @@ EvaluacionBorrador loteModelo() => EvaluacionBorrador(
   evaluadorId: 'u-1',
   fecha: DateTime(2025, 10, 10),
   muestras: [
-    MuestraBorrador(numero: 1, calidad: {primera: 80, abiertos: 20}, calibres: {cal4550: 13}),
-    MuestraBorrador(numero: 2, calidad: {primera: 85, abiertos: 15}, calibres: {cal4550: 10}),
-    MuestraBorrador(numero: 3, calidad: {primera: 75, abiertos: 25}, calibres: {cal4550: 20}),
+    MuestraBorrador(numero: 1, calidad: {primera: 80, abiertos: 20}, calibres: {cal4550: 40, cal5060: 60}),
+    MuestraBorrador(numero: 2, calidad: {primera: 85, abiertos: 15}, calibres: {cal4550: 30, cal5060: 70}),
+    MuestraBorrador(numero: 3, calidad: {primera: 75, abiertos: 25}, calibres: {cal4550: 50, cal5060: 50}),
   ],
   danos: {noContiene},
   sanidad: {raizRosada: SanidadBorrador(presente: false), fusarium: SanidadBorrador(presente: true, porcentaje: 5)},
@@ -54,7 +58,8 @@ void main() {
       final ev = loteModelo();
       expect(ev.promediosCalidad()[primera], 80.0);
       expect(ev.promediosCalidad()[abiertos], 20.0);
-      expect(ev.promediosCalibres()[cal4550], 14.33);
+      expect(ev.promediosCalibres()[cal4550], 40.0);
+      expect(ev.promediosCalibres()[cal5060], 60.0);
     });
 
     test('solo promedian las muestras que registran la opción', () {
@@ -145,5 +150,63 @@ void main() {
 
   test('el wizard ya no tiene un paso de fotos aparte', () {
     expect(PasoEvaluacion.values.map((p) => p.titulo), ['Datos', 'Muestras', 'Sensoriales', 'Sanidad', 'Resumen']);
+  });
+
+  group('Calibres elegidos por muestra (deben sumar 100%)', () {
+    test('para cerrar, cada muestra debe tener calibres', () {
+      final ev = loteModelo();
+      ev.muestras[1].calibres.clear();
+      expect(
+        ReglasEvaluacion.validarCierre(ev, formulario).map((p) => p.mensaje),
+        contains('Muestra 2: elija al menos un calibre'),
+      );
+    });
+
+    test('para cerrar, los calibres deben sumar 100%', () {
+      final ev = loteModelo();
+      ev.muestras.first.calibres[cal5060] = 39.3;
+      expect(
+        ReglasEvaluacion.validarCierre(ev, formulario).map((p) => p.mensaje),
+        contains('Muestra 1: los calibres deben sumar 100% (suma 79.30%)'),
+      );
+    });
+
+    test('un calibre elegido sin % se reporta con su código', () {
+      final ev = loteModelo();
+      ev.muestras.first.calibres
+        ..[cal4550] = 100
+        ..[cal5060] = 0;
+      expect(
+        ReglasEvaluacion.validarCierre(ev, formulario).map((p) => p.mensaje),
+        contains('Muestra 1: ingrese el % de 50/60'),
+      );
+    });
+
+    test('mientras se escribe el borrador no se exige la suma (se valida al cerrar)', () {
+      final ev = loteModelo();
+      ev.muestras.first.calibres[cal5060] = 10;
+      expect(ReglasEvaluacion.validarContenido(ev, formulario), isEmpty);
+    });
+
+    test('Completar 100% llena el calibre pendiente con lo que falta', () {
+      final m = MuestraBorrador(numero: 1, calibres: {cal4550: 70, cal5060: 0});
+      expect(m.faltaCalibres, 30);
+      m.completarCalibres();
+      expect(m.calibres[cal5060], 30);
+      expect(m.faltaCalibres, 0);
+    });
+
+    test('Completar 100% no hace nada si los calibres ya se pasan', () {
+      final m = MuestraBorrador(numero: 1, calibres: {cal4550: 70, cal5060: 40});
+      m.completarCalibres();
+      expect(m.calibres, {cal4550: 70, cal5060: 40});
+    });
+
+    test('la muestra nueva trae los calibres de la anterior, sin valores', () {
+      final nueva = loteModelo().nuevaMuestra();
+      expect(nueva.numero, 4);
+      expect(nueva.calibres, {cal4550: 0, cal5060: 0});
+      expect(nueva.calidad, isEmpty);
+    });
   });
 }

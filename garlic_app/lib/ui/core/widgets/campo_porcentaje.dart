@@ -13,6 +13,7 @@ class CampoPorcentaje extends StatefulWidget {
     required this.onChanged,
     this.habilitado = true,
     this.denso = false,
+    this.pista,
   });
 
   final String etiqueta;
@@ -20,6 +21,9 @@ class CampoPorcentaje extends StatefulWidget {
   final ValueChanged<double?> onChanged;
   final bool habilitado;
   final bool denso;
+
+  /// Texto de ayuda dentro del campo cuando está vacío (ej. "Ingrese %").
+  final String? pista;
 
   @override
   State<CampoPorcentaje> createState() => _CampoPorcentajeState();
@@ -66,7 +70,12 @@ class _CampoPorcentajeState extends State<CampoPorcentaje> {
     style: const TextStyle(fontFeatures: GTipo.tabular, fontWeight: FontWeight.w600, fontSize: 16),
     autovalidateMode: AutovalidateMode.onUserInteraction,
     validator: _error,
-    decoration: InputDecoration(labelText: widget.etiqueta, suffixText: '%', isDense: widget.denso),
+    decoration: InputDecoration(
+      labelText: widget.etiqueta,
+      hintText: widget.pista,
+      suffixText: '%',
+      isDense: widget.denso,
+    ),
     onChanged: (t) {
       if (_error(t) != null) return;
       widget.onChanged(t.isEmpty ? null : double.parse(t.replaceAll(',', '.')));

@@ -92,7 +92,14 @@ class PasoResumen extends StatelessWidget {
         SeccionTarjeta(
           titulo: '2.2 Calibres · promedio',
           icono: PhosphorIconsBold.ruler,
-          child: SizedBox(height: 220, child: _GraficoCalibres(calibres: f.calibres, promedios: promCalibres)),
+          child: SizedBox(
+            height: 220,
+            child: _GraficoCalibres(
+              // solo los calibres usados en la evaluación, en el orden del catálogo
+              calibres: f.calibres.where((c) => promCalibres.containsKey(c.id)).toList(),
+              promedios: promCalibres,
+            ),
+          ),
         ),
         const SizedBox(height: GEspacio.l),
         SeccionTarjeta(

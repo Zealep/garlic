@@ -344,7 +344,8 @@ class _Cifra extends StatelessWidget {
   );
 }
 
-/// 2.2 Factor tamaño: % por calibre (no se exige que sumen 100%).
+/// 2.2 Factor tamaño: el evaluador elige del catálogo los calibres presentes en la muestra
+/// e ingresa su %; deben sumar 100% para cerrar (se permiten rangos superpuestos, ej. 50/60).
 class _Calibres extends StatelessWidget {
   const _Calibres({super.key, required this.vm, required this.muestra});
 
@@ -354,51 +355,140 @@ class _Calibres extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final calibres = vm.formulario!.calibres;
-    final total = muestra.totalCalibres;
+    final catalogo = vm.formulario!.calibres;
+    final elegidos = catalogo.where((c) => muestra.calibres.containsKey(c.id)).toList();
+    final falta = muestra.faltaCalibres;
     return SeccionTarjeta(
       titulo: '2.2 Calibre (tamaño)',
       icono: PhosphorIconsBold.ruler,
-      accion: Pastilla(texto: 'Total ${Formato.porcentaje(total)}', color: GColores.info),
+      accion: elegidos.isEmpty ? null : _EstadoTotal(falta: falta),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          LayoutBuilder(
-            builder: (context, c) {
-              final columnas = c.maxWidth > 520 ? 3 : 2;
-              final ancho = (c.maxWidth - (columnas - 1) * GEspacio.m) / columnas;
-              return Wrap(
-                spacing: GEspacio.m,
-                runSpacing: GEspacio.m,
-                children: [
-                  for (final cal in calibres)
+          Text(
+            vm.editable ? 'Elige los calibres presentes en la muestra' : 'Calibres de la muestra',
+            style: t.bodySmall,
+          ),
+          const SizedBox(height: GEspacio.s),
+          if (vm.editable)
+            Wrap(
+              spacing: GEspacio.s,
+              runSpacing: GEspacio.s,
+              children: [
+                for (final c in catalogo)
+                  FilterChip(
+                    label: Text(c.codigo),
+                    tooltip: _rango(c),
+                    selected: muestra.calibres.containsKey(c.id),
+                    onSelected: (_) => vm.alternarCalibre(c.id),
+                  ),
+              ],
+            ),
+          if (elegidos.isNotEmpty) ...[
+            const SizedBox(height: GEspacio.l),
+            for (final c in elegidos)
+              Padding(
+                padding: const EdgeInsets.only(bottom: GEspacio.s),
+                child: Row(
+                  children: [
                     SizedBox(
-                      width: ancho,
-                      child: CampoPorcentaje(
-                        etiqueta: cal.codigo,
-                        valor: muestra.calibres[cal.id],
-                        habilitado: vm.editable,
-                        onChanged: (v) => vm.setCalibre(cal.id, v),
+                      width: 76,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(c.codigo, style: t.titleMedium!.copyWith(fontFamily: GTipo.titulos)),
+                          Text(_rango(c), style: t.bodySmall),
+                        ],
                       ),
                     ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: GEspacio.m),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: (total / 100).clamp(0, 1),
-              minHeight: 8,
-              backgroundColor: GColores.superficieAlt,
-              color: GColores.info,
+                    Expanded(
+                      child: CampoPorcentaje(
+                        key: ValueKey('calibre-${muestra.numero}-${c.id}'),
+                        etiqueta: 'Porcentaje',
+                        pista: 'Ingrese %',
+                        valor: (muestra.calibres[c.id] ?? 0) == 0 ? null : muestra.calibres[c.id],
+                        habilitado: vm.editable,
+                        onChanged: (v) => vm.setCalibre(c.id, v),
+                      ),
+                    ),
+                    if (vm.editable)
+                      IconButton(
+                        tooltip: 'Quitar ${c.codigo}',
+                        icon: const Icon(PhosphorIconsRegular.x, color: GColores.tintaSuave),
+                        onPressed: () => vm.alternarCalibre(c.id),
+                      ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: GEspacio.s),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: (muestra.totalCalibres / 100).clamp(0, 1),
+                minHeight: 8,
+                backgroundColor: GColores.superficieAlt,
+                color: _colorTotal(falta),
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text('Por ahora no se exige que los calibres sumen 100%', style: t.bodySmall),
+            const SizedBox(height: GEspacio.s),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    falta == 0
+                        ? 'Los calibres suman 100%'
+                        : falta > 0
+                        ? 'Falta ${Formato.porcentaje(falta)} para llegar a 100%'
+                        : 'Se pasan por ${Formato.porcentaje(-falta)}: ajusta los valores',
+                    style: t.bodySmall!.copyWith(color: falta == 0 ? GColores.secundario : _colorTotal(falta)),
+                  ),
+                ),
+                if (vm.editable && falta > 0)
+                  TextButton.icon(
+                    onPressed: vm.completarCalibres,
+                    icon: const Icon(PhosphorIconsBold.magicWand, size: 18),
+                    label: const Text('Completar 100%'),
+                  ),
+              ],
+            ),
+          ] else if (!vm.editable)
+            Text('Sin calibres', style: t.bodySmall),
         ],
       ),
+    );
+  }
+
+  static String _rango(CatalogoItem c) {
+    String n(double v) => v == v.roundToDouble() ? v.toInt().toString() : v.toString();
+    final min = c.diametroMinMm;
+    final max = c.diametroMaxMm;
+    if (min == null) return c.nombre;
+    return max == null ? 'más de ${n(min)} mm' : '${n(min)}–${n(max)} mm';
+  }
+}
+
+Color _colorTotal(double falta) =>
+    falta == 0
+        ? GColores.secundario
+        : falta > 0
+        ? GColores.advertencia
+        : GColores.error;
+
+/// Pastilla con el estado del total de calibres: 100% ✓ · Falta X% · Sobra X%.
+class _EstadoTotal extends StatelessWidget {
+  const _EstadoTotal({required this.falta});
+
+  final double falta;
+
+  @override
+  Widget build(BuildContext context) {
+    if (falta == 0) {
+      return const Pastilla(texto: '100%', color: GColores.secundario, icono: PhosphorIconsBold.check);
+    }
+    return Pastilla(
+      texto: falta > 0 ? 'Falta ${Formato.porcentaje(falta)}' : 'Sobra ${Formato.porcentaje(-falta)}',
+      color: _colorTotal(falta),
+      icono: PhosphorIconsBold.warning,
     );
   }
 }

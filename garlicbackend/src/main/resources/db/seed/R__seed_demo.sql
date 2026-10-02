@@ -46,11 +46,13 @@ BEGIN
     INSERT INTO calibre (empresa_id, cultivo_id, codigo, nombre, diametro_min_mm, diametro_max_mm, orden) VALUES
         (v_emp, v_cul, '45/50', '45/50', 45, 50,   1),
         (v_emp, v_cul, '50/55', '50/55', 50, 55,   2),
-        (v_emp, v_cul, '55/60', '55/60', 55, 60,   3),
-        (v_emp, v_cul, '60/65', '60/65', 60, 65,   4),
-        (v_emp, v_cul, '65/70', '65/70', 65, 70,   5),
-        (v_emp, v_cul, '>70',   '>70',   70, NULL, 6)
-    ON CONFLICT DO NOTHING;
+        (v_emp, v_cul, '50/60', '50/60', 50, 60,   3),   -- rango amplio (abarca 50/55 y 55/60)
+        (v_emp, v_cul, '55/60', '55/60', 55, 60,   4),
+        (v_emp, v_cul, '60/65', '60/65', 60, 65,   5),
+        (v_emp, v_cul, '60/70', '60/70', 60, 70,   6),   -- rango amplio (abarca 60/65 y 65/70)
+        (v_emp, v_cul, '65/70', '65/70', 65, 70,   7),
+        (v_emp, v_cul, '>70',   '>70',   70, NULL, 8)
+    ON CONFLICT (empresa_id, cultivo_id, codigo) DO UPDATE SET orden = EXCLUDED.orden;
 
     INSERT INTO tipo_humedad (empresa_id, cultivo_id, codigo, nombre, orden) VALUES
         (v_emp, v_cul, 'GOTAS_DENTRO',        'GOTAS DENTRO',            1),

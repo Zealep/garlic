@@ -33,7 +33,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Punto 2 del protocolo contra Postgres real, usando el lote modelo del Excel
- * (3 muestras, PRIMERA 80/85/75 -> PROM 80; calibre 45/50 13/10/20 -> PROM 14.33).
+ * (3 muestras, PRIMERA 80/85/75 -> PROM 80; calibres sumando 100% por muestra, 45/50 40/30/50 -> PROM 40).
  */
 class EvaluacionIT extends AbstractIntegrationTest {
 
@@ -107,7 +107,7 @@ class EvaluacionIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.promedios.calidad[0].porcentaje").value(80.00))
                 .andExpect(jsonPath("$.promedios.calidad[1].porcentaje").value(20.00))
                 .andExpect(jsonPath("$.promedios.calibres[0].codigo").value("45/50"))
-                .andExpect(jsonPath("$.promedios.calibres[0].porcentaje").value(14.33))
+                .andExpect(jsonPath("$.promedios.calibres[0].porcentaje").value(40.00))
                 .andExpect(jsonPath("$.humedad", hasSize(2)))
                 .andExpect(jsonPath("$.humedad[0].nivel").value("ALTA"))
                 .andExpect(jsonPath("$.humedad[1].nivel").value("MEDIA"))
@@ -231,6 +231,25 @@ class EvaluacionIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void cerrar_exigeCalibresQueSumen100EnCadaMuestra() throws Exception {
+        Map<String, Object> borrador = evaluacionModelo();
+        muestras(borrador).get(1).put("calibres", List.of(Map.of("calibreId", cal4550, "porcentaje", new BigDecimal("70"))));
+        // el borrador se guarda aunque los calibres aun no sumen 100 (se esta escribiendo)
+        String id = JsonPath.read(crearEvaluacion(borrador).andReturn().getResponse().getContentAsString(), "$.id");
+
+        mvc.perform(post("/api/v1/evaluaciones/" + id + "/cerrar").header(TenantContext.HEADER, empresa))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.detail").value(containsString("muestra 2 debe tener calibres que sumen 100% (suma 70%)")));
+
+        muestras(borrador).get(1).put("calibres", List.of());
+        mvc.perform(json(put("/api/v1/evaluaciones/" + id), empresa, JSON.writeValueAsString(borrador)))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/v1/evaluaciones/" + id + "/cerrar").header(TenantContext.HEADER, empresa))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.detail").value(containsString("muestra 2 debe tener al menos un calibre")));
+    }
+
+    @Test
     void reglasDeNegocio_responden422() throws Exception {
         Map<String, Object> mala = evaluacionModelo();
         muestras(mala).get(0).put("calidad", calidad("80", "10"));
@@ -343,9 +362,9 @@ class EvaluacionIT extends AbstractIntegrationTest {
         ev.put("fechaEvaluacion", "2025-10-10");
         ev.put("observacion", "SE RECOMIENDA CARGAR EN 3 DIAS PARA BAJAR LA HUMEDAD");
         ev.put("muestras", new ArrayList<>(List.of(
-                muestra(1, "80", "20", "13", "18.2"),
-                muestra(2, "85", "15", "10", "15"),
-                muestra(3, "75", "25", "20", "20"))));
+                muestra(1, "80", "20", "40", "60"),
+                muestra(2, "85", "15", "30", "70"),
+                muestra(3, "75", "25", "50", "50"))));
         ev.put("humedad", List.of(
                 Map.of("tipoHumedadId", gotasDentro, "nivel", "ALTA"),
                 Map.of("tipoHumedadId", rosaBeige, "nivel", "MEDIA")));

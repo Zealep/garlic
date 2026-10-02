@@ -17,7 +17,9 @@ Excel del cliente "N°1 EVALUACION CAMPO AJO 2025", hoja **"LOTE #XXX MODELO - V
 - **DNI LC** = DNI a cuyo nombre se emite la liquidación de compra (`lote.titular_liquidacion_id`).
 - Fechas arrancado/corte/carga pertenecen al **lote**; el **tipo de compra lo decide el evaluador**.
 - Calidad y calibre se registran **por muestra**; humedad, empaste, daños y sanidad **por evaluación**.
-- Calibres: por ahora **no** se exige que sumen 100 %.
+- **Calibres**: el evaluador elige del catálogo los calibres de cada muestra (incluye rangos amplios 50/60 y 60/70;
+  se permiten superpuestos). **Deben sumar 100 % y son obligatorios para cerrar**; mientras se edita el borrador no se exige.
+- Fotos: se toman dentro de cada sección (Datos = generales, cada muestra, Sensoriales); Sanidad no lleva fotos.
 
 ## Estructura
 - `garlicbackend/` — Spring Boot 4.1 / Java 21, monolito modular por feature (ver su README). Skill: `java-springboot`.
@@ -47,5 +49,5 @@ Empresa demo: RUC `00000000000` (la app la lista vía `/dev/empresas`, solo perf
 - [ ] Verificar la app en emulador Android (en Windows requiere Modo desarrollador para compilar con plugins).
 - [ ] Autenticación JWT (reemplaza el header de tenant y el selector de empresa de desarrollo).
 - [ ] Punto 3 del protocolo (pesos, precio, abonos, saldos) tras modelarlo con el cliente.
-- [ ] Confirmar con el cliente: duplicado de zona por campaña, calibre "<45"/suma 100 %, orden de fechas del lote,
+- [ ] Confirmar con el cliente: duplicado de zona por campaña, orden de fechas del lote,
       motivo de anulación del lote.

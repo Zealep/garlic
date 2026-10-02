@@ -22,6 +22,8 @@ class ReglasEvaluacionTest {
     private static final UUID ABIERTOS = UUID.randomUUID();
     private static final UUID NO_CONTIENE = UUID.randomUUID();
     private static final UUID CEROSA = UUID.randomUUID();
+    private static final UUID CAL_50_60 = UUID.randomUUID();
+    private static final UUID CAL_60_70 = UUID.randomUUID();
     private static final Map<UUID, TipoDano> DANOS = Map.of(
             NO_CONTIENE, dano("NO CONTIENE", true),
             CEROSA, dano("PARALISIS CEROSA", false));
@@ -88,12 +90,59 @@ class ReglasEvaluacionTest {
 
     @Test
     void cierre_sinResponderEnfermedadObligatoria_esRechazado() {
-        EvaluacionLote ev = new EvaluacionLote(UUID.randomUUID(), null);
-        ev.muestraONueva((short) 1).reemplazarCalidad(List.of(new PorcentajeCalidad(PRIMERA, BigDecimal.valueOf(100))));
+        EvaluacionLote ev = muestraCompleta(new BigDecimal("100"));
 
         assertThatThrownBy(() -> ReglasEvaluacion.validarCierre(ev, List.of(UUID.randomUUID())))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("responda SI/NO");
+    }
+
+    @Test
+    void cierre_sinCalibres_esRechazado() {
+        EvaluacionLote ev = new EvaluacionLote(UUID.randomUUID(), null);
+        ev.muestraONueva((short) 1).reemplazarCalidad(List.of(new PorcentajeCalidad(PRIMERA, BigDecimal.valueOf(100))));
+
+        assertThatThrownBy(() -> ReglasEvaluacion.validarCierre(ev, List.of()))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("al menos un calibre");
+    }
+
+    @Test
+    void cierre_calibresQueNoSuman100_esRechazado() {
+        assertThatThrownBy(() -> ReglasEvaluacion.validarCierre(muestraCompleta(new BigDecimal("79.3")), List.of()))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("sumen 100% (suma 79.3%)");
+    }
+
+    @Test
+    void cierre_calibreSinPorcentaje_esRechazado() {
+        EvaluacionLote ev = muestraCompleta(new BigDecimal("100"));
+        ev.muestra((short) 1).orElseThrow().reemplazarCalibres(List.of(
+                new PorcentajeCalibre(CAL_50_60, new BigDecimal("100")),
+                new PorcentajeCalibre(CAL_60_70, BigDecimal.ZERO)));
+
+        assertThatThrownBy(() -> ReglasEvaluacion.validarCierre(ev, List.of()))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("calibre sin porcentaje");
+    }
+
+    @Test
+    void cierre_calibresSuperpuestosQueSuman100_esValido() {
+        EvaluacionLote ev = muestraCompleta(new BigDecimal("100"));
+        ev.muestra((short) 1).orElseThrow().reemplazarCalibres(List.of(
+                new PorcentajeCalibre(CAL_50_60, new BigDecimal("60")),
+                new PorcentajeCalibre(CAL_60_70, new BigDecimal("40"))));
+
+        assertThatCode(() -> ReglasEvaluacion.validarCierre(ev, List.of())).doesNotThrowAnyException();
+    }
+
+    /** Muestra 1 con calidad 100% y un calibre con el porcentaje indicado. */
+    private static EvaluacionLote muestraCompleta(BigDecimal pctCalibre) {
+        EvaluacionLote ev = new EvaluacionLote(UUID.randomUUID(), null);
+        var m = ev.muestraONueva((short) 1);
+        m.reemplazarCalidad(List.of(new PorcentajeCalidad(PRIMERA, BigDecimal.valueOf(100))));
+        m.reemplazarCalibres(List.of(new PorcentajeCalibre(CAL_50_60, pctCalibre)));
+        return ev;
     }
 
     private static EvaluacionRequest request(List<Muestra> muestras, List<UUID> danos, List<Sanidad> sanidad) {

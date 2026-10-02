@@ -103,6 +103,17 @@ class MuestraBorrador {
   double get totalCalidad => calidad.values.fold(0, (a, b) => a + b);
   double get totalCalibres => calibres.values.fold(0, (a, b) => a + b);
 
+  /// Lo que falta para que los calibres sumen 100% (negativo si se pasan).
+  double get faltaCalibres => double.parse((100 - totalCalibres).toStringAsFixed(2));
+
+  /// Pone lo que falta para llegar a 100% en el primer calibre sin valor o, si todos tienen, en el último.
+  /// No hace nada si ya suman 100% o se pasan.
+  void completarCalibres() {
+    if (calibres.isEmpty || faltaCalibres <= 0) return;
+    final destino = calibres.keys.firstWhere((id) => calibres[id] == 0, orElse: () => calibres.keys.last);
+    calibres[destino] = double.parse((calibres[destino]! + faltaCalibres).toStringAsFixed(2));
+  }
+
   MuestraBorrador copia() =>
       MuestraBorrador(numero: numero, observacion: observacion, calidad: {...calidad}, calibres: {...calibres});
 }
@@ -284,6 +295,12 @@ class EvaluacionBorrador {
     }
     return {for (final k in suma.keys) k: double.parse((suma[k]! / n[k]!).toStringAsFixed(2))};
   }
+
+  /// Nueva muestra que reutiliza los calibres elegidos en la última (con 0%, pendientes de llenar).
+  MuestraBorrador nuevaMuestra() => MuestraBorrador(
+    numero: siguienteNumeroMuestra(),
+    calibres: muestras.isEmpty ? {} : {for (final id in muestras.last.calibres.keys) id: 0},
+  );
 
   int siguienteNumeroMuestra() =>
       muestras.isEmpty ? 1 : muestras.map((m) => m.numero).reduce((a, b) => a > b ? a : b) + 1;
