@@ -73,7 +73,16 @@ enum TipoOperacion {
   loteUpsert('Lote'),
   evaluacionUpsert('Evaluación'),
   evaluacionCerrar('Cierre de evaluación'),
-  evidenciaSubir('Foto');
+  evidenciaSubir('Foto'),
+
+  /// PUT idempotente de un recurso de la compra (fijación, carga, gasto, pago). Payload: `{ruta, body}`.
+  recursoGuardar('Compra'),
+
+  /// DELETE de un recurso de la compra; 404 cuenta como éxito. Payload: `{ruta}`.
+  recursoEliminar('Eliminación'),
+
+  /// Foto de respaldo de una carga, gasto o pago.
+  comprobanteSubir('Comprobante');
 
   const TipoOperacion(this.etiqueta);
 

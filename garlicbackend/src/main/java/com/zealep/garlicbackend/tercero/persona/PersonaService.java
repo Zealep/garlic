@@ -1,12 +1,17 @@
 package com.zealep.garlicbackend.tercero.persona;
 
+import com.zealep.garlicbackend.shared.exception.BusinessException;
 import com.zealep.garlicbackend.shared.exception.ConflictException;
 import com.zealep.garlicbackend.shared.exception.NotFoundException;
 import com.zealep.garlicbackend.shared.tenant.TenantProvider;
 import com.zealep.garlicbackend.shared.web.PageResponse;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -122,6 +127,23 @@ public class PersonaService {
     private Optional<Persona> porDocumento(TipoDocumento tipo, String numero) {
         return repository.findByEmpresaIdAndTipoDocumentoAndNumeroDocumento(
                 tenantProvider.currentEmpresaId(), tipo, Persona.normalizarDocumento(numero));
+    }
+
+    /** Para otros modulos que referencian una persona desde un request (ej. beneficiario de un pago): 422 si no existe. */
+    public Persona referencia(UUID id) {
+        return repository.findByIdAndEmpresaId(id, tenantProvider.currentEmpresaId())
+                .orElseThrow(() -> new BusinessException("Persona " + id + " no existe"));
+    }
+
+    /** Nombres de varias personas de la empresa (para mostrar en listados de otros modulos). */
+    public Map<UUID, String> nombresPorId(Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        UUID empresaId = tenantProvider.currentEmpresaId();
+        return repository.findAllById(new HashSet<>(ids)).stream()
+                .filter(p -> p.getEmpresaId().equals(empresaId))
+                .collect(Collectors.toMap(Persona::getId, Persona::getNombres));
     }
 
     private Persona buscar(UUID id) {

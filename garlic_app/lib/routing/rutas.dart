@@ -12,6 +12,9 @@ abstract final class Rutas {
   /// Nueva evaluación de un lote.
   static String evaluar(String loteId) => '/lotes/$loteId/evaluar';
 
+  /// Compra del lote: precio, cargas, gastos, pagos y balance (punto 3).
+  static String compra(String loteId) => '/lotes/$loteId/compra';
+
   /// Abrir una evaluación existente (editar borrador o ver cerrada).
   static String evaluacion(String loteId, String id) => '/lotes/$loteId/evaluaciones/$id';
 }

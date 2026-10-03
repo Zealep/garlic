@@ -6,6 +6,7 @@ import com.zealep.garlicbackend.evaluacion.Muestra;
 import com.zealep.garlicbackend.shared.exception.BusinessException;
 import com.zealep.garlicbackend.shared.exception.ConflictException;
 import com.zealep.garlicbackend.shared.exception.NotFoundException;
+import com.zealep.garlicbackend.shared.storage.ArchivosSubidos;
 import com.zealep.garlicbackend.shared.storage.StorageService;
 import com.zealep.garlicbackend.shared.tenant.TenantProvider;
 import com.zealep.garlicbackend.shared.web.Creacion;
@@ -15,7 +16,6 @@ import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +25,6 @@ import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -37,14 +36,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class EvidenciaService {
 
     private static final Logger logger = LoggerFactory.getLogger(EvidenciaService.class);
-
-    /** Tipos de imagen aceptados y la extension con la que se guardan. */
-    private static final Map<String, String> TIPOS_PERMITIDOS = Map.of(
-            "image/jpeg", "jpg",
-            "image/png", "png",
-            "image/webp", "webp",
-            "image/heic", "heic",
-            "image/heif", "heif");
 
     private final EvidenciaRepository repository;
     private final EvaluacionLoteRepository evaluacionRepository;
@@ -76,7 +67,7 @@ public class EvidenciaService {
         Muestra muestra = muestraNumero == null ? null : evaluacion.muestra(muestraNumero)
                 .orElseThrow(() -> new BusinessException("La muestra " + muestraNumero
                         + " no existe en la evaluacion; guardela primero"));
-        String extension = extensionValida(archivo);
+        String extension = ArchivosSubidos.extensionImagen(archivo);
 
         String clave;
         try (InputStream contenido = archivo.getInputStream()) {
@@ -85,7 +76,7 @@ public class EvidenciaService {
             throw new UncheckedIOException("No se pudo leer el archivo subido", e);
         }
         // si la transaccion falla, no dejar el archivo huerfano
-        alTerminar(TransactionSynchronization.STATUS_ROLLED_BACK, () -> storage.eliminar(clave));
+        ArchivosSubidos.alTerminar(TransactionSynchronization.STATUS_ROLLED_BACK, () -> storage.eliminar(clave));
 
         Evidencia nueva = new Evidencia(evaluacion, muestra, factor, clave, descripcion, fechaCaptura);
         if (id != null) {
@@ -132,7 +123,7 @@ public class EvidenciaService {
         repository.deleteAll(evidencias);
         List<String> claves = evidencias.stream().map(Evidencia::getUrlArchivo).toList();
         // los archivos se borran solo si el borrado en base se confirma
-        alTerminar(TransactionSynchronization.STATUS_COMMITTED, () -> claves.forEach(storage::eliminar));
+        ArchivosSubidos.alTerminar(TransactionSynchronization.STATUS_COMMITTED, () -> claves.forEach(storage::eliminar));
     }
 
     private EvaluacionLote evaluacionEditable(UUID evaluacionId) {
@@ -151,29 +142,6 @@ public class EvidenciaService {
     private Evidencia buscar(UUID id) {
         return repository.findByIdAndEmpresaId(id, tenantProvider.currentEmpresaId())
                 .orElseThrow(() -> new NotFoundException("Evidencia", id));
-    }
-
-    private static String extensionValida(MultipartFile archivo) {
-        if (archivo == null || archivo.isEmpty()) {
-            throw new BusinessException("El archivo esta vacio");
-        }
-        String tipo = archivo.getContentType() == null ? "" : archivo.getContentType().toLowerCase();
-        String extension = TIPOS_PERMITIDOS.get(tipo);
-        if (extension == null) {
-            throw new BusinessException("Tipo de archivo no permitido (" + tipo + "). Use JPG, PNG, WEBP o HEIC");
-        }
-        return extension;
-    }
-
-    private static void alTerminar(int estadoEsperado, Runnable accion) {
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCompletion(int status) {
-                if (status == estadoEsperado) {
-                    accion.run();
-                }
-            }
-        });
     }
 
     /** Archivo listo para descargar. */

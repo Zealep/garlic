@@ -1,6 +1,7 @@
 package com.zealep.garlicbackend.evaluacion;
 
 import com.zealep.garlicbackend.evaluacion.CatalogosEvaluacion.Resueltos;
+import com.zealep.garlicbackend.evaluacion.dto.CalidadPorMuestra;
 import com.zealep.garlicbackend.evaluacion.dto.EvaluacionRequest;
 import com.zealep.garlicbackend.evaluacion.dto.EvaluacionResponse;
 import com.zealep.garlicbackend.evaluacion.dto.EvaluacionResumen;
@@ -8,6 +9,7 @@ import com.zealep.garlicbackend.evaluacion.dto.FormularioEvaluacion;
 import com.zealep.garlicbackend.evaluacion.evidencia.EvidenciaService;
 import com.zealep.garlicbackend.lote.Lote;
 import com.zealep.garlicbackend.lote.LoteService;
+import com.zealep.garlicbackend.shared.exception.BusinessException;
 import com.zealep.garlicbackend.shared.exception.ConflictException;
 import com.zealep.garlicbackend.shared.exception.NotFoundException;
 import com.zealep.garlicbackend.shared.tenant.TenantProvider;
@@ -22,6 +24,7 @@ import org.springframework.data.jpa.domain.Specification;
 import com.zealep.garlicbackend.usuario.UsuarioService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -102,6 +105,22 @@ public class EvaluacionService {
     public EvaluacionResponse obtener(UUID id) {
         EvaluacionLote ev = buscar(id);
         return assembler.toResponse(ev, catalogos.deEvaluacion(ev));
+    }
+
+    /**
+     * Para el modulo de compra (fijacion de precio): % de calidad de cada muestra de una evaluacion del lote.
+     * 422 si la evaluacion no existe en la empresa o es de otro lote.
+     */
+    public CalidadPorMuestra calidadPorMuestra(UUID evaluacionId, UUID loteId) {
+        EvaluacionLote ev = repository.findByIdAndEmpresaId(evaluacionId, tenantProvider.currentEmpresaId())
+                .filter(e -> e.getLote().getId().equals(loteId))
+                .orElseThrow(() -> new BusinessException("La evaluacion " + evaluacionId + " no existe en el lote"));
+        List<CalidadPorMuestra.MuestraCalidad> muestras = ev.getMuestras().stream()
+                .sorted(Comparator.comparing(Muestra::getNumero))
+                .map(m -> new CalidadPorMuestra.MuestraCalidad(m.getNumero(), m.getCalidad().stream()
+                        .collect(Collectors.toMap(PorcentajeCalidad::claseCalidadId, PorcentajeCalidad::porcentaje))))
+                .toList();
+        return new CalidadPorMuestra(ev.getId(), !ev.isBorrador(), ev.getFechaEvaluacion(), muestras);
     }
 
     /** Idempotente: si el id enviado por el cliente ya existe en la empresa, devuelve esa evaluacion. */

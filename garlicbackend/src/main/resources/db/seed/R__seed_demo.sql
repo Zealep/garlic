@@ -74,6 +74,26 @@ BEGIN
         (v_emp, v_cul, 'NO_CONTIENE',      'NO CONTIENE',                     true,  3)
     ON CONFLICT DO NOTHING;
 
+    -- Punto 3: compra del lote
+    INSERT INTO tipo_empaque (empresa_id, cultivo_id, codigo, nombre, peso_referencial_kg, orden) VALUES
+        (v_emp, v_cul, 'MALLA', 'MALLA', 40,   1),
+        (v_emp, v_cul, 'JAVA',  'JAVA',  NULL, 2),
+        (v_emp, v_cul, 'SACO',  'SACO',  NULL, 3)
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO tipo_gasto (empresa_id, cultivo_id, codigo, nombre, por_carga, requiere_descripcion, orden) VALUES
+        (v_emp, v_cul, 'ESTIBA_DESESTIBA', 'ESTIBA / DESESTIBA', true,  false, 1),
+        (v_emp, v_cul, 'PESAJE',           'COSTO PESAJE',       true,  false, 2),
+        (v_emp, v_cul, 'FLETE_INTERNO',    'FLETE INTERNO',      true,  false, 3),
+        (v_emp, v_cul, 'OTROS',            'OTROS GASTOS',       false, true,  4)
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO condicion_pago (empresa_id, cultivo_id, codigo, nombre, orden) VALUES
+        (v_emp, v_cul, 'CTA_BANCO', 'CTA BANCO', 1),
+        (v_emp, v_cul, 'EFECTIVO',  'EFECTIVO',  2),
+        (v_emp, v_cul, 'CREDITO',   'CREDITO',   3)
+    ON CONFLICT DO NOTHING;
+
     INSERT INTO enfermedad (empresa_id, cultivo_id, codigo, nombre, nombre_cientifico, se_transmite_por_semilla, evaluar_en_campo, orden) VALUES
         (v_emp, v_cul, 'RAIZ_ROSADA',       'RAIZ ROSADA',                     NULL,                                 false, true,  1),
         (v_emp, v_cul, 'FUSARIUM',          'FUSARIUM',                        'Fusarium spp.',                      true,  true,  2),

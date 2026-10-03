@@ -11,6 +11,7 @@ import '../../../core/theme/tema.dart';
 import '../../../core/widgets/componentes.dart';
 import '../../../core/widgets/evaluacion_tile.dart';
 import '../../../core/widgets/marca.dart';
+import '../../compra/views/widgets/balance_compra.dart';
 import '../view_models/lotes_view_model.dart';
 
 class LoteDetalleScreen extends StatelessWidget {
@@ -259,6 +260,12 @@ class _Historial extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        ResumenCompraTarjeta(
+          compra: vm.compra,
+          editable: lote.activo,
+          onTap: () => context.push(Rutas.compra(lote.id)),
+        ),
+        const SizedBox(height: GEspacio.xl),
         Text('Evaluaciones de calidad', style: t.titleLarge),
         const SizedBox(height: GEspacio.m),
         if (vm.evaluaciones.isEmpty)

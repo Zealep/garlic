@@ -14,6 +14,9 @@ class CatalogoItem {
     this.esExcluyente = false,
     this.evaluarEnCampo = false,
     this.nombreCientifico,
+    this.pesoReferencialKg,
+    this.porCarga = false,
+    this.requiereDescripcion = false,
   });
 
   factory CatalogoItem.fromJson(Map<String, Object?> json) => CatalogoItem(
@@ -27,6 +30,9 @@ class CatalogoItem {
     esExcluyente: json['esExcluyente'] as bool? ?? false,
     evaluarEnCampo: json['evaluarEnCampo'] as bool? ?? false,
     nombreCientifico: json['nombreCientifico'] as String?,
+    pesoReferencialKg: (json['pesoReferencialKg'] as num?)?.toDouble(),
+    porCarga: json['porCarga'] as bool? ?? false,
+    requiereDescripcion: json['requiereDescripcion'] as bool? ?? false,
   );
 
   final String id;
@@ -40,6 +46,15 @@ class CatalogoItem {
   final bool evaluarEnCampo;
   final String? nombreCientifico;
 
+  /// Tipo de empaque: kg que lleva normalmente (sugiere la cantidad de empaques de una carga).
+  final double? pesoReferencialKg;
+
+  /// Tipo de gasto que se registra por camión (estiba, pesaje, flete).
+  final bool porCarga;
+
+  /// Tipo de gasto que exige describirlo (otros gastos).
+  final bool requiereDescripcion;
+
   Map<String, Object?> toJson() => {
     'id': id,
     'codigo': codigo,
@@ -51,6 +66,9 @@ class CatalogoItem {
     'esExcluyente': esExcluyente,
     'evaluarEnCampo': evaluarEnCampo,
     'nombreCientifico': nombreCientifico,
+    'pesoReferencialKg': pesoReferencialKg,
+    'porCarga': porCarga,
+    'requiereDescripcion': requiereDescripcion,
   };
 
   /// Nombre con primera letra en mayúscula para mostrar ("GOTAS DENTRO" -> "Gotas dentro").

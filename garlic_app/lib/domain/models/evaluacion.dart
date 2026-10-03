@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../../utils/formato.dart';
+import 'foto.dart';
 import 'sync.dart';
 
 enum NivelHumedad {
@@ -334,7 +335,7 @@ enum SeccionFoto {
 }
 
 /// Foto tomada en campo, guardada en el teléfono hasta subirse.
-class EvidenciaLocal {
+class EvidenciaLocal implements FotoLocal {
   const EvidenciaLocal({
     required this.id,
     required this.evaluacionId,
@@ -346,12 +347,15 @@ class EvidenciaLocal {
     this.syncState = SyncState.pendiente,
   });
 
+  @override
   final String id;
   final String evaluacionId;
   final int? muestraNumero;
   final String? factor;
+  @override
   final Uint8List bytes;
   final String mime;
   final DateTime creado;
+  @override
   final SyncState syncState;
 }

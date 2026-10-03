@@ -8,7 +8,8 @@ Idioma del proyecto: **español** (código de dominio, UI, docs y respuestas).
 Excel del cliente "N°1 EVALUACION CAMPO AJO 2025", hoja **"LOTE #XXX MODELO - VARIEDAD - C"** (protocolo de compra en campo):
 1. Identificación del lote → módulo `lote` ✅
 2. Calidad del lote → módulo `evaluacion` (+ evidencias) ✅
-3. Pesos / precio / abonos / saldos → **pendiente**; primero hay que modelar sus tablas con el cliente.
+3. Pesos / precio / abonos / saldos → módulo `compra` ✅ (fijación de precio, cargas, gastos vinculados, pagos y balance;
+   fórmulas en `docs/modelo-datos/02-compra-lote.md`). El MVP termina con la materia prima puesta en packing.
 
 ## Decisiones acordadas con el cliente
 - Modelo **híbrido**: una tabla por objeto + catálogos configurables por empresa.
@@ -20,6 +21,11 @@ Excel del cliente "N°1 EVALUACION CAMPO AJO 2025", hoja **"LOTE #XXX MODELO - V
 - **Calibres**: el evaluador elige del catálogo los calibres de cada muestra (incluye rangos amplios 50/60 y 60/70;
   se permiten superpuestos). **Deben sumar 100 % y son obligatorios para cerrar**; mientras se edita el borrador no se exige.
 - Fotos: se toman dentro de cada sección (Datos = generales, cada muestra, Sensoriales); Sanidad no lleva fotos.
+- **Precio**: precio técnico = promedio de (Σ precio base por clase × % de calidad de cada muestra) **− gasto de llenado**;
+  luego el precio pactado (manual). Se fija con una evaluación **cerrada**.
+- **Cargas**: una por camión; **destare = % por carga** (sugerido 1 %). Total MP = Σ (kg − destare) × precio.
+- **Pagos** solo por materia prima; los **gastos vinculados** (estiba, pesaje, flete, otros) van aparte.
+  Saldo = total MP − pagos. C.U. MP y C.U. puesto en packing se calculan sobre **kg netos**.
 
 ## Estructura
 - `garlicbackend/` — Spring Boot 4.1 / Java 21, monolito modular por feature (ver su README). Skill: `java-springboot`.
@@ -30,9 +36,10 @@ Excel del cliente "N°1 EVALUACION CAMPO AJO 2025", hoja **"LOTE #XXX MODELO - V
 
 ## Convenciones clave
 - Tenant por header `X-Empresa-Id` (hasta agregar JWT); nunca confiar en el body.
-- Esquema solo por **migraciones Flyway nuevas** (`V4__...`); nunca editar una ya aplicada. `ddl-auto=validate`.
+- Esquema solo por **migraciones Flyway nuevas** (`V6__...`); nunca editar una ya aplicada. `ddl-auto=validate`.
 - Errores: 400 validación · 404 · 409 duplicado/estado · 422 regla de negocio (ProblemDetail RFC 9457).
-- IDs UUID generados por el cliente para sincronización idempotente (lote, evaluación, evidencia).
+- IDs UUID generados por el cliente para sincronización idempotente (lote, evaluación, evidencia, carga, gasto, pago,
+  comprobante). Lo nuevo del punto 3 usa **PUT upsert** (201/200), así no hay 404 al sincronizar.
 - Tests obligatorios al agregar funcionalidad: `./mvnw verify` (backend) y `flutter analyze && flutter test` (app).
 - No subir secretos (`.env`) ni datos locales (`data/`).
 
@@ -48,6 +55,7 @@ Empresa demo: RUC `00000000000` (la app la lista vía `/dev/empresas`, solo perf
 - [ ] App: enviar lo nuevo directo con `POST` (hoy intenta `PUT` y ante 404 hace `POST`, lo que deja un 404 visible en la consola del navegador).
 - [ ] Verificar la app en emulador Android (en Windows requiere Modo desarrollador para compilar con plugins).
 - [ ] Autenticación JWT (reemplaza el header de tenant y el selector de empresa de desarrollo).
-- [ ] Punto 3 del protocolo (pesos, precio, abonos, saldos) tras modelarlo con el cliente.
+- [ ] Confirmar con el cliente (punto 3): modalidades "Precio Barre/Escoba" (hoja DATOS), si POROTO es clase de calidad,
+      qué significa la condición CREDITO y si la liquidación se cierra (inmutable) al pagar.
 - [ ] Confirmar con el cliente: duplicado de zona por campaña, orden de fechas del lote,
       motivo de anulación del lote.

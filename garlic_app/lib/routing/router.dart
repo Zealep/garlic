@@ -3,11 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../data/repositories/catalogos_repository.dart';
+import '../data/repositories/compra_repository.dart';
 import '../data/repositories/config_repository.dart';
 import '../data/repositories/evaluaciones_repository.dart';
 import '../data/repositories/lotes_repository.dart';
 import '../data/repositories/sync_repository.dart';
 import '../ui/core/layout/shell_adaptativo.dart';
+import '../ui/features/compra/view_models/compra_view_model.dart';
+import '../ui/features/compra/views/compra_screen.dart';
 import '../ui/features/evaluacion/view_models/bandeja_view_model.dart';
 import '../ui/features/evaluacion/view_models/evaluacion_view_model.dart';
 import '../ui/features/evaluacion/views/bandeja_screen.dart';
@@ -108,6 +111,7 @@ GoRouter crearRouter(ConfigRepository config) => GoRouter(
                             loteId: id,
                             lotes: c.read<LotesRepository>(),
                             evaluaciones: c.read<EvaluacionesRepository>(),
+                            compra: c.read<CompraRepository>(),
                           ),
                       builder: (vm) => LoteDetalleScreen(viewModel: vm),
                     );
@@ -117,6 +121,25 @@ GoRouter crearRouter(ConfigRepository config) => GoRouter(
                       path: 'evaluar',
                       parentNavigatorKey: _raiz,
                       builder: (context, state) => _wizard(state.pathParameters['loteId']!, null),
+                    ),
+                    GoRoute(
+                      path: 'compra',
+                      parentNavigatorKey: _raiz,
+                      builder: (context, state) {
+                        final id = state.pathParameters['loteId']!;
+                        return _ConViewModel(
+                          key: ValueKey('compra-$id'),
+                          crear:
+                              (c) => CompraViewModel(
+                                loteId: id,
+                                lotes: c.read<LotesRepository>(),
+                                evaluaciones: c.read<EvaluacionesRepository>(),
+                                compra: c.read<CompraRepository>(),
+                                catalogos: c.read<CatalogosRepository>(),
+                              ),
+                          builder: (vm) => CompraScreen(viewModel: vm),
+                        );
+                      },
                     ),
                     GoRoute(
                       path: 'evaluaciones/:evaluacionId',

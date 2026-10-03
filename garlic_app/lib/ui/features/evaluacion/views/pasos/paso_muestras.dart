@@ -9,7 +9,7 @@ import '../../../../core/theme/tema.dart';
 import '../../../../core/widgets/campo_porcentaje.dart';
 import '../../../../core/widgets/componentes.dart';
 import '../../view_models/evaluacion_view_model.dart';
-import '../widgets/galeria_fotos.dart';
+import '../../../../core/widgets/galeria_fotos.dart';
 
 /// Paso 2: muestras con factor de calidad global (2.1) y factor tamaño / calibre (2.2).
 class PasoMuestras extends StatelessWidget {

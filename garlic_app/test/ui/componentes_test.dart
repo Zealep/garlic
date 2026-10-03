@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:garlic_app/domain/models/compra.dart';
 import 'package:garlic_app/domain/models/evaluacion.dart';
 import 'package:garlic_app/domain/models/sync.dart';
 import 'package:garlic_app/ui/core/layout/breakpoints.dart';
 import 'package:garlic_app/ui/core/theme/tema.dart';
 import 'package:garlic_app/ui/core/widgets/componentes.dart';
 import 'package:garlic_app/ui/core/widgets/evaluacion_tile.dart';
+import 'package:garlic_app/ui/features/compra/views/widgets/balance_compra.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 Widget _app(Widget child) => MaterialApp(theme: TemaGarlic.claro(), home: Scaffold(body: Center(child: child)));
@@ -49,6 +51,34 @@ void main() {
     expect(find.byTooltip('Pendiente'), findsOneWidget);
 
     await tester.tap(find.byType(EvaluacionTile));
+    expect(tocado, isTrue);
+  });
+
+  testWidgets('Tarjeta de compra del lote: precio pactado, kg netos, saldo y estado de pago', (tester) async {
+    var tocado = false;
+    await tester.pumpWidget(
+      _app(
+        SizedBox(
+          width: 420,
+          child: ResumenCompraTarjeta(
+            compra: CompraLote(
+              loteId: 'l1',
+              fijacion: FijacionPrecio(evaluacionId: 'e1', precioPactado: 2.8),
+              cargas: [Carga(id: 'c1', fecha: DateTime(2025, 10, 20), kg: 15000, precioKg: 2.8)],
+              pagos: [Pago(id: 'p1', fecha: DateTime(2025, 10, 21), condicionPagoId: 'cta', monto: 10000)],
+            ),
+            onTap: () => tocado = true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Pago parcial'), findsOneWidget);
+    expect(find.textContaining('2,80'), findsOneWidget);
+    expect(find.text('14.850 kg'), findsOneWidget);
+    expect(find.text('S/ 31.580,00'), findsOneWidget);
+
+    await tester.tap(find.text('Saldo'));
     expect(tocado, isTrue);
   });
 

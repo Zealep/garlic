@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../../../domain/models/evaluacion.dart';
-import '../../../../../domain/models/sync.dart';
-import '../../../../core/theme/colores.dart';
-import '../../../../core/theme/tema.dart';
-import '../../../../core/widgets/componentes.dart';
+import '../../../domain/models/foto.dart';
+import '../../../domain/models/sync.dart';
+import '../theme/colores.dart';
+import '../theme/tema.dart';
+import 'componentes.dart';
 
-/// Bloque de fotos dentro de una sección del wizard (datos generales, cada muestra, sensoriales).
+/// Bloque de fotos: secciones del wizard de evaluación y comprobantes de la compra (ticket, voucher).
 /// Las fotos se comprimen, se guardan en el equipo y se suben solas al sincronizar.
 class GaleriaFotos extends StatelessWidget {
   const GaleriaFotos({
@@ -25,7 +25,7 @@ class GaleriaFotos extends StatelessWidget {
 
   final String titulo;
   final String? ayuda;
-  final List<EvidenciaLocal> fotos;
+  final List<FotoLocal> fotos;
   final bool editable;
   final Future<void> Function(Uint8List bytes, String mime) onAgregar;
   final Future<void> Function(String id) onEliminar;
@@ -94,7 +94,7 @@ class GaleriaFotos extends StatelessWidget {
 class _Miniatura extends StatelessWidget {
   const _Miniatura({required this.foto, required this.editable, required this.onEliminar});
 
-  final EvidenciaLocal foto;
+  final FotoLocal foto;
   final bool editable;
   final Future<void> Function(String) onEliminar;
 
@@ -105,7 +105,7 @@ class _Miniatura extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.memory(foto.bytes, fit: BoxFit.cover, gaplessPlayback: true, semanticLabel: 'Evidencia fotográfica'),
+          Image.memory(foto.bytes, fit: BoxFit.cover, gaplessPlayback: true, semanticLabel: 'Foto'),
           Positioned(
             left: 6,
             bottom: 6,

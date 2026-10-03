@@ -4,7 +4,7 @@
 .claude/settings.local.json
 
 # ---- Datos locales (evidencias subidas, volúmenes) ----
-data/
+/data/
 garlicbackend/data/
 
 # ---- Compilados ----

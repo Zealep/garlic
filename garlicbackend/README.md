@@ -29,8 +29,10 @@ com.zealep.garlicbackend
 ├── tercero/           Personas y sus roles (agricultor, proveedor)
 │   └── rol/           Base genérica de roles de persona
 ├── lote/              Punto 1 del protocolo: identificación del lote
-└── evaluacion/        Punto 2 del protocolo: calidad del lote (muestras, factores, promedios)
-    └── evidencia/     Fotos por muestra / generales
+├── evaluacion/        Punto 2 del protocolo: calidad del lote (muestras, factores, promedios)
+│   └── evidencia/     Fotos por muestra / generales
+└── compra/            Punto 3: fijación de precio, cargas (camiones), gastos vinculados, pagos,
+                       comprobantes y balance (CalculoCompra = fórmulas puras)
 ```
 Cada feature contiene su entity, request/response (records), mapper, repository, service y controller.
 
@@ -48,7 +50,9 @@ Cada feature contiene su entity, request/response (records), mapper, repository,
   `POST /{id}/cerrar` valida que esté completa y la vuelve inmutable. Reglas en `ReglasEvaluacion`.
 - **Archivos**: `StorageService` (hoy `LocalStorageService` en `garlic.storage.directorio`);
   para S3 basta otra implementación. Los archivos se borran solo si la transacción confirma.
-- **Esquema**: solo por migraciones Flyway nuevas (`V4__...`); Hibernate valida (`ddl-auto=validate`).
+- **Compra**: cargas, gastos y pagos se guardan con `PUT /lotes/{loteId}/{recurso}/{id}` (upsert idempotente con el
+  UUID del cliente: 201 crea, 200 actualiza). Las fórmulas están en `CalculoCompra` y en `docs/modelo-datos/02-compra-lote.md`.
+- **Esquema**: solo por migraciones Flyway nuevas (`V6__...`); Hibernate valida (`ddl-auto=validate`).
 
 ### Agregar un catálogo nuevo
 1. Migración con la tabla (estructura común: `empresa_id, cultivo_id, codigo, nombre, orden, activo` + auditoría).

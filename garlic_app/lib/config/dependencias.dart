@@ -2,6 +2,7 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
 import '../data/repositories/catalogos_repository.dart';
+import '../data/repositories/compra_repository.dart';
 import '../data/repositories/config_repository.dart';
 import '../data/repositories/evaluaciones_repository.dart';
 import '../data/repositories/lotes_repository.dart';
@@ -21,6 +22,7 @@ class Dependencias {
     required this.sync,
     required this.lotes,
     required this.evaluaciones,
+    required this.compra,
   });
 
   final AppDatabase db;
@@ -29,6 +31,7 @@ class Dependencias {
   final SyncRepository sync;
   final LotesRepository lotes;
   final EvaluacionesRepository evaluaciones;
+  final CompraRepository compra;
 
   static Future<Dependencias> iniciar({AppDatabase? db, ApiClient? api, ConectividadService? conectividad}) async {
     final base = db ?? AppDatabase();
@@ -44,6 +47,7 @@ class Dependencias {
       sync: sync,
       lotes: LotesRepository(db: base, api: cliente, sync: sync, catalogos: catalogos),
       evaluaciones: EvaluacionesRepository(db: base, api: cliente, sync: sync),
+      compra: CompraRepository(db: base, api: cliente, sync: sync, kv: kv),
     );
     await config.cargar();
     await catalogos.cargar();
@@ -57,5 +61,6 @@ class Dependencias {
     ChangeNotifierProvider.value(value: sync),
     Provider.value(value: lotes),
     Provider.value(value: evaluaciones),
+    Provider.value(value: compra),
   ];
 }

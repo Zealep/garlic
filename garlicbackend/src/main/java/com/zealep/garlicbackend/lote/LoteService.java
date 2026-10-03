@@ -117,6 +117,11 @@ public class LoteService {
         return mapper.toResponse(repository.saveAndFlush(lote));
     }
 
+    /** Para otros modulos que leen datos del lote (activo o anulado): 404 si no existe en la empresa. */
+    public Lote referencia(UUID id) {
+        return buscar(id);
+    }
+
     /** Para otros modulos (ej. evaluacion): lote existente y activo de la empresa. */
     public Lote referenciaActiva(UUID id) {
         return repository.findByIdAndEmpresaId(id, tenantProvider.currentEmpresaId())

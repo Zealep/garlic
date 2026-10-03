@@ -53,6 +53,19 @@ class CatalogoCrudIT extends AbstractIntegrationTest {
                 Arguments.of("clases-calidad", simple, simpleUpd, "$.nombre", "Actualizado"),
                 Arguments.of("tipos-humedad", simple, simpleUpd, "$.nombre", "Actualizado"),
                 Arguments.of("tipos-empaste", simple, simpleUpd, "$.nombre", "Actualizado"),
+                Arguments.of("condiciones-pago", simple, simpleUpd, "$.nombre", "Actualizado"),
+                Arguments.of("tipos-empaque",
+                        """
+                        {"cultivoId":"{CULTIVO}","codigo":"{COD}","nombre":"Malla"}""",
+                        """
+                        {"cultivoId":"{CULTIVO}","codigo":"{COD}","nombre":"Malla","pesoReferencialKg":40}""",
+                        "$.pesoReferencialKg", 40.0),
+                Arguments.of("tipos-gasto",
+                        """
+                        {"cultivoId":"{CULTIVO}","codigo":"{COD}","nombre":"Otros","porCarga":false}""",
+                        """
+                        {"cultivoId":"{CULTIVO}","codigo":"{COD}","nombre":"Otros","porCarga":false,"requiereDescripcion":true}""",
+                        "$.requiereDescripcion", true),
                 Arguments.of("calibres",
                         """
                         {"cultivoId":"{CULTIVO}","codigo":"{COD}","nombre":"45/50","diametroMinMm":45,"diametroMaxMm":50}""",

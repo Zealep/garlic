@@ -1,6 +1,7 @@
 # garlic_app
 
-App de campo de Garlic (Flutter) — prueba de concepto de la **evaluación de lotes de ajo**.
+App de campo de Garlic (Flutter): **evaluación de lotes de ajo** y **compra del lote** (precio, camiones, gastos,
+pagos y balance hasta la materia prima puesta en packing).
 Celular primero, adaptable a tablet y laptop, y **funciona sin conexión**.
 
 ## Correr
@@ -33,13 +34,13 @@ lib/
 ├── data/
 │   ├── services/        ApiClient (Dio, ProblemDetail → AppFailure), ConectividadService,
 │   │                    local/ AppDatabase (Drift/SQLite; wasm en web) + KvStore
-│   └── repositories/    Config, Catalogos, Lotes, Evaluaciones, Sync (motor offline)
+│   └── repositories/    Config, Catalogos, Lotes, Evaluaciones, Compra, Sync (motor offline)
 ├── domain/
-│   ├── models/          Lote, EvaluacionBorrador, FormularioEvaluacion, SyncState…
-│   └── use_cases/       ReglasEvaluacion (mismas reglas que el backend)
+│   ├── models/          Lote, EvaluacionBorrador, FormularioEvaluacion, CompraLote (fijación, carga, gasto, pago), SyncState…
+│   └── use_cases/       ReglasEvaluacion, CalculoCompra y ReglasCompra (mismas fórmulas y reglas que el backend)
 ├── ui/
 │   ├── core/            theme/ (tokens de marca), widgets/, layout/ (breakpoints, shell adaptable)
-│   └── features/        setup · inicio · lotes · evaluacion · sync  (view_models/ + views/)
+│   └── features/        setup · inicio · lotes · evaluacion · compra · sync  (view_models/ + views/)
 ├── routing/             go_router (shell con navegación adaptable + rutas a pantalla completa)
 ├── config/              Dependencias (provider)
 └── utils/               Result, Command, Formato
@@ -49,6 +50,7 @@ lib/
   cuando hay red (al encolar, al volver la conexión, cada 45 s y a pedido), con backoff exponencial.
   Los IDs los genera el teléfono y el backend crea de forma idempotente → reintentar no duplica.
   Errores de negocio (409/422) bloquean la operación y marcan el registro con el mensaje del servidor.
+  La compra (punto 3) usa operaciones genéricas `recursoGuardar` (PUT upsert) y `recursoEliminar` (DELETE; 404 = hecho).
 - **Adaptable** (flutter-build-responsive-layout): `< 600` barra inferior · `600–1024` riel · `> 1024` sidebar,
   paneles lado a lado y ancho máximo. El wizard en laptop muestra pasos + formulario + resumen en vivo.
 - **Marca**: `design-system/garlic/MASTER.md` → `lib/ui/core/theme/` (morado ajo, marfil, verde tallo, ámbar cosecha;

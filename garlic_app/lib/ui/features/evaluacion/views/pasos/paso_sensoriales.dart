@@ -6,7 +6,7 @@ import '../../../../core/theme/colores.dart';
 import '../../../../core/theme/tema.dart';
 import '../../../../core/widgets/componentes.dart';
 import '../../view_models/evaluacion_view_model.dart';
-import '../widgets/galeria_fotos.dart';
+import '../../../../core/widgets/galeria_fotos.dart';
 
 /// Paso 3: factores sensoriales (humedad, empaste, daños no visibles).
 class PasoSensoriales extends StatelessWidget {

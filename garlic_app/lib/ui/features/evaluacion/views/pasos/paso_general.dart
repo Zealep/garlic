@@ -6,7 +6,7 @@ import '../../../../core/widgets/campos.dart';
 import '../../../../core/widgets/componentes.dart';
 import '../../../../../domain/models/evaluacion.dart';
 import '../../view_models/evaluacion_view_model.dart';
-import '../widgets/galeria_fotos.dart';
+import '../../../../core/widgets/galeria_fotos.dart';
 
 /// Paso 1: datos generales (evaluador, fecha, observación).
 class PasoGeneral extends StatelessWidget {
