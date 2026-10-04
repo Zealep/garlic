@@ -40,7 +40,7 @@ lib/
 │   └── use_cases/       ReglasEvaluacion, CalculoCompra y ReglasCompra (mismas fórmulas y reglas que el backend)
 ├── ui/
 │   ├── core/            theme/ (tokens de marca), widgets/, layout/ (breakpoints, shell adaptable)
-│   └── features/        setup · inicio · lotes · evaluacion · compra · sync  (view_models/ + views/)
+│   └── features/        setup · inicio · lotes · evaluacion · compra · catalogos · sync  (view_models/ + views/)
 ├── routing/             go_router (shell con navegación adaptable + rutas a pantalla completa)
 ├── config/              Dependencias (provider)
 └── utils/               Result, Command, Formato
@@ -51,6 +51,8 @@ lib/
   Los IDs los genera el teléfono y el backend crea de forma idempotente → reintentar no duplica.
   Errores de negocio (409/422) bloquean la operación y marcan el registro con el mensaje del servidor.
   La compra (punto 3) usa operaciones genéricas `recursoGuardar` (PUT upsert) y `recursoEliminar` (DELETE; 404 = hecho).
+- **Catálogos**: pantalla genérica (en línea) definida por `DefinicionCatalogo.todas`; agregar un catálogo nuevo
+  del backend a la app = agregar su definición (campos y tipo de control).
 - **Adaptable** (flutter-build-responsive-layout): `< 600` barra inferior · `600–1024` riel · `> 1024` sidebar,
   paneles lado a lado y ancho máximo. El wizard en laptop muestra pasos + formulario + resumen en vivo.
 - **Marca**: `design-system/garlic/MASTER.md` → `lib/ui/core/theme/` (morado ajo, marfil, verde tallo, ámbar cosecha;

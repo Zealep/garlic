@@ -6,6 +6,7 @@ abstract final class Rutas {
   static const loteNuevo = '/lotes/nuevo';
   static const evaluaciones = '/evaluaciones';
   static const sync = '/sincronizar';
+  static const catalogos = '/catalogos';
 
   static String lote(String id) => '/lotes/$id';
 

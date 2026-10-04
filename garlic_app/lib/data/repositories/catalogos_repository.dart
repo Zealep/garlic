@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../domain/models/catalogo.dart';
+import '../../domain/models/definicion_catalogo.dart';
 import '../../domain/models/formulario.dart';
 import '../../utils/result.dart';
 import '../services/api/api_client.dart';
@@ -130,6 +131,39 @@ class CatalogosRepository extends ChangeNotifier {
       case Error(:final failure):
         return Result.error(failure);
     }
+  }
+
+  // ------------------------------------------------------------------ administración (requiere conexión)
+
+  /// Todos los registros de un catálogo (activos e inactivos) para administrarlo.
+  Future<Result<List<Map<String, Object?>>>> listarAdmin(DefinicionCatalogo d, String cultivoId) =>
+      _pagina(d.ruta, {if (d.porCultivo) 'cultivoId': cultivoId, 'sort': d.ordenable ? 'orden,asc' : null});
+
+  /// Crea (sin [id]) o reemplaza un registro y actualiza la caché del equipo.
+  Future<Result<void>> guardarAdmin(
+    DefinicionCatalogo d,
+    String cultivoId,
+    Map<String, Object?> valores, {
+    String? id,
+  }) async {
+    final body = d.request(valores, cultivoId);
+    final r = id == null ? await _api.post(d.ruta, body: body) : await _api.put('${d.ruta}/$id', body: body);
+    if (r case Error(:final failure)) return Result.error(failure);
+    await descargar(cultivoId);
+    return const Result.ok(null);
+  }
+
+  /// Baja lógica o reactivación (los registros históricos conservan la referencia).
+  Future<Result<void>> cambiarActivoAdmin(
+    DefinicionCatalogo d,
+    String cultivoId,
+    String id, {
+    required bool activo,
+  }) async {
+    final r = activo ? await _api.patch('${d.ruta}/$id/activar') : await _api.delete('${d.ruta}/$id');
+    if (r case Error(:final failure)) return Result.error(failure);
+    await descargar(cultivoId);
+    return const Result.ok(null);
   }
 
   CatalogoItem? buscar(List<CatalogoItem> lista, String? id) {

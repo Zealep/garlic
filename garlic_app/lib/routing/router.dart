@@ -9,6 +9,8 @@ import '../data/repositories/evaluaciones_repository.dart';
 import '../data/repositories/lotes_repository.dart';
 import '../data/repositories/sync_repository.dart';
 import '../ui/core/layout/shell_adaptativo.dart';
+import '../ui/features/catalogos/view_models/catalogos_view_model.dart';
+import '../ui/features/catalogos/views/catalogos_screen.dart';
 import '../ui/features/compra/view_models/compra_view_model.dart';
 import '../ui/features/compra/views/compra_screen.dart';
 import '../ui/features/evaluacion/view_models/bandeja_view_model.dart';
@@ -171,6 +173,22 @@ GoRouter crearRouter(ConfigRepository config) => GoRouter(
           ],
         ),
         StatefulShellBranch(routes: [GoRoute(path: Rutas.sync, builder: (context, _) => const SyncScreen())]),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: Rutas.catalogos,
+              builder:
+                  (context, _) => _ConViewModel(
+                    crear:
+                        (c) => CatalogosViewModel(
+                          catalogos: c.read<CatalogosRepository>(),
+                          config: c.read<ConfigRepository>(),
+                        ),
+                    builder: (vm) => CatalogosScreen(viewModel: vm),
+                  ),
+            ),
+          ],
+        ),
       ],
     ),
   ],

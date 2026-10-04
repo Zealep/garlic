@@ -20,6 +20,8 @@ Excel del cliente "N°1 EVALUACION CAMPO AJO 2025", hoja **"LOTE #XXX MODELO - V
 - Calidad y calibre se registran **por muestra**; humedad, empaste, daños y sanidad **por evaluación**.
 - **Calibres**: el evaluador elige del catálogo los calibres de cada muestra (incluye rangos amplios 50/60 y 60/70;
   se permiten superpuestos). **Deben sumar 100 % y son obligatorios para cerrar**; mientras se edita el borrador no se exige.
+- Catálogos (clases de calidad, calibres, empaques, gastos, …) se administran desde la app (pestaña **Catálogos**, en línea);
+  todo es dinámico: una clase nueva (ej. POROTO) aparece en la evaluación y en la fijación de precio.
 - Fotos: se toman dentro de cada sección (Datos = generales, cada muestra, Sensoriales); Sanidad no lleva fotos.
 - **Precio**: precio técnico = promedio de (Σ precio base por clase × % de calidad de cada muestra) **− gasto de llenado**;
   luego el precio pactado (manual). Se fija con una evaluación **cerrada**.

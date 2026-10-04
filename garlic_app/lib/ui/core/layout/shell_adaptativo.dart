@@ -24,6 +24,7 @@ const _destinos = [
   _Destino('Lotes', PhosphorIconsRegular.plant, PhosphorIconsFill.plant),
   _Destino('Evaluaciones', PhosphorIconsRegular.clipboardText, PhosphorIconsFill.clipboardText),
   _Destino('Sincronizar', PhosphorIconsRegular.arrowsClockwise, PhosphorIconsBold.arrowsClockwise),
+  _Destino('Catálogos', PhosphorIconsRegular.listChecks, PhosphorIconsFill.listChecks),
 ];
 
 /// Estructura principal: barra inferior (compacto), riel (medio) o sidebar (expandido).

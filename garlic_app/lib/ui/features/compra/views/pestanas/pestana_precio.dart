@@ -62,12 +62,17 @@ class PestanaPrecio extends StatelessWidget {
             children: [
               DropdownButtonFormField<String>(
                 value: vm.evaluacionesCerradas.any((e) => e.id == f.evaluacionId) ? f.evaluacionId : null,
+                isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Evaluación cerrada'),
                 items: [
                   for (final e in vm.evaluacionesCerradas)
                     DropdownMenuItem(
                       value: e.id,
-                      child: Text('${Formato.fecha(e.fecha)} · ${e.nroMuestras} muestras · ${e.evaluador ?? ''}'),
+                      child: Text(
+                        '${Formato.fecha(e.fecha)} · ${e.nroMuestras} muestras · ${e.evaluador ?? ''}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                 ],
                 onChanged: editable ? (id) => id == null ? null : vm.elegirEvaluacion(id) : null,
@@ -228,6 +233,7 @@ class _TablaMuestras extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     const num = TextStyle(fontFeatures: GTipo.tabular, fontWeight: FontWeight.w600);
     final clases = vm.clasesCalidad;
+    final prom = num.copyWith(color: GColores.primario, fontWeight: FontWeight.w800);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
@@ -251,7 +257,7 @@ class _TablaMuestras extends StatelessWidget {
               cells: [
                 DataCell(Text('% ${c.etiqueta}', style: t.bodySmall)),
                 for (final m in vm.calidadMuestras) DataCell(Text(Formato.porcentaje(m[c.id]), style: num)),
-                const DataCell(Text('')),
+                DataCell(Text(Formato.porcentaje(_promedio(vm.calidadMuestras, c.id)), style: prom)),
               ],
             ),
           DataRow(
@@ -270,6 +276,12 @@ class _TablaMuestras extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Promedio del % de una clase en las muestras que la registran (igual que la columna PROM de la evaluación).
+double? _promedio(List<Map<String, double>> muestras, String claseId) {
+  final valores = [for (final m in muestras) if (m[claseId] != null) m[claseId]!];
+  return valores.isEmpty ? null : valores.reduce((a, b) => a + b) / valores.length;
 }
 
 class _Ecuacion extends StatelessWidget {

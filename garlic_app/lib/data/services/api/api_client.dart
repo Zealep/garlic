@@ -41,6 +41,9 @@ class ApiClient {
   Future<Result<Object?>> put(String path, {Object? body}) =>
       _enviar(() => _dio.put<Object?>(path, data: body, options: _opciones()));
 
+  Future<Result<Object?>> patch(String path, {Object? body}) =>
+      _enviar(() => _dio.patch<Object?>(path, data: body, options: _opciones()));
+
   Future<Result<Object?>> delete(String path) =>
       _enviar(() => _dio.delete<Object?>(path, options: _opciones()));
 
