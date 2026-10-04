@@ -51,12 +51,20 @@ docker compose up -d
 cd garlicbackend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev     # :8080, datos demo
 cd garlic_app && flutter run -d chrome                                        # o emulador Android (10.0.2.2)
 ```
-Empresa demo: RUC `00000000000` (la app la lista vía `/dev/empresas`, solo perfil dev).
+Empresa demo: RUC `00000000000` (la app lista las empresas vía `/instalacion/empresas`).
+
+## Despliegue (servidor de pruebas del cliente)
+Ver `deploy/DESPLIEGUE.md`: Droplet de DigitalOcean + Docker Compose (Postgres, backend perfil `prod`, Caddy con
+HTTPS y usuario/clave). La app se instala como PWA en el celular.
+- **Instalación dedicada** (decisión 2026-10-04): por ahora el sistema es solo para el cliente. Con
+  `garlic.instalacion.empresa-ruc` definido, el API rechaza otras empresas (403) y la app no muestra selector.
+  El código multiempresa queda intacto para el SaaS futuro.
+- Perfil `prod`: catálogos base y empresa desde `db/inicial/R__instalacion.sql` (placeholders por variables de entorno).
 
 ## Pendientes
 - [ ] App: enviar lo nuevo directo con `POST` (hoy intenta `PUT` y ante 404 hace `POST`, lo que deja un 404 visible en la consola del navegador).
 - [ ] Verificar la app en emulador Android (en Windows requiere Modo desarrollador para compilar con plugins).
-- [ ] Autenticación JWT (reemplaza el header de tenant y el selector de empresa de desarrollo).
+- [ ] Autenticación JWT (reemplaza el header de tenant y el usuario/clave compartido de Caddy); necesaria antes de la APK.
 - [ ] Confirmar con el cliente (punto 3): modalidades "Precio Barre/Escoba" (hoja DATOS), si POROTO es clase de calidad,
       qué significa la condición CREDITO y si la liquidación se cierra (inmutable) al pagar.
 - [ ] Confirmar con el cliente: duplicado de zona por campaña, orden de fechas del lote,

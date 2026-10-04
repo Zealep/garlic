@@ -16,8 +16,8 @@ flutter pub get
 flutter run -d chrome          # web / laptop (servidor: http://localhost:8080)
 flutter run                    # emulador Android (servidor: http://10.0.2.2:8080)
 ```
-Primer uso: la pantalla **Configurar** conecta al servidor, elige la empresa (endpoint `/dev/empresas`,
-solo perfil dev) y el evaluador, y descarga catálogos y lotes para trabajar sin red.
+Primer uso: la pantalla **Configurar** conecta al servidor, elige la empresa (endpoint `/instalacion/empresas`;
+en una instalación dedicada se elige sola) y el evaluador, y descarga catálogos y lotes para trabajar sin red.
 
 > En Windows, compilar para Android/escritorio con plugins requiere activar el **Modo desarrollador**
 > (soporte de symlinks): `start ms-settings:developers`.

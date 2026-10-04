@@ -28,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import com.zealep.garlicbackend.shared.instalacion.Instalacion;
 
 @WebMvcTest(VariedadController.class)
 class VariedadControllerTest {
@@ -41,6 +42,10 @@ class VariedadControllerTest {
 
     @MockitoBean
     private VariedadService service;
+
+    /** Instalacion no dedicada (mock: dedicada() = false). */
+    @MockitoBean
+    private Instalacion instalacion;
 
     @Test
     void sinHeaderDeEmpresa_responde400() throws Exception {

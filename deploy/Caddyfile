@@ -1,0 +1,36 @@
+# HTTPS automatico (Let's Encrypt) para el dominio. La app web y el API van en el mismo dominio.
+{$DOMINIO} {
+	encode zstd gzip
+
+	# Acceso restringido mientras no exista login propio (JWT): usuario y clave compartidos.
+	# Quedan publicos: icono, manifiesto y favicon (para instalar la app) y /actuator/health (monitoreo).
+	@privado not path /manifest.json /favicon.png /icons/* /actuator/health
+	basic_auth @privado {
+		{$ACCESO_USUARIO} {$ACCESO_HASH}
+	}
+
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+	handle /instalacion/* {
+		reverse_proxy backend:8080
+	}
+	handle /actuator/health {
+		reverse_proxy backend:8080
+	}
+
+	handle {
+		root * /srv
+		# la app nueva se toma al recargar; los recursos con hash se cachean
+		@sinCache path / /index.html /flutter_service_worker.js /flutter_bootstrap.js /version.json /manifest.json
+		header @sinCache Cache-Control "no-cache"
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}

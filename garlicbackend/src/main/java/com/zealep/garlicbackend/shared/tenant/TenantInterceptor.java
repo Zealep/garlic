@@ -1,5 +1,6 @@
 package com.zealep.garlicbackend.shared.tenant;
 
+import com.zealep.garlicbackend.shared.instalacion.Instalacion;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.UUID;
@@ -10,9 +11,16 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * Resuelve la empresa desde el header X-Empresa-Id y la publica en {@link TenantContext}.
+ * En una instalacion dedicada solo acepta la empresa del cliente (403 para cualquier otra).
  */
 @Component
 public class TenantInterceptor implements HandlerInterceptor {
+
+    private final Instalacion instalacion;
+
+    public TenantInterceptor(Instalacion instalacion) {
+        this.instalacion = instalacion;
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -23,11 +31,16 @@ public class TenantInterceptor implements HandlerInterceptor {
         if (!StringUtils.hasText(header)) {
             throw new TenantRequiredException();
         }
+        UUID empresaId;
         try {
-            TenantContext.set(UUID.fromString(header.trim()));
+            empresaId = UUID.fromString(header.trim());
         } catch (IllegalArgumentException e) {
             throw new TenantRequiredException();
         }
+        if (instalacion.dedicada() && !instalacion.empresaDedicada().map(empresaId::equals).orElse(false)) {
+            throw new EmpresaNoPermitidaException();
+        }
+        TenantContext.set(empresaId);
         return true;
     }
 

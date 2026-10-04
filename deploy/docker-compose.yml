@@ -1,0 +1,66 @@
+# Servidor de pruebas / produccion del cliente: Postgres + backend + Caddy (HTTPS y app web).
+# Uso (en el servidor, dentro de /opt/garlic/deploy):  docker compose up -d --build
+name: garlic
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: garlic
+      POSTGRES_USER: garlic
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD en .env}
+      TZ: America/Lima
+      PGTZ: America/Lima
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U garlic -d garlic"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # sin puertos publicados: solo el backend lo ve
+
+  backend:
+    build: ../garlicbackend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://db:5432/garlic
+      DB_USER: garlic
+      DB_PASSWORD: ${DB_PASSWORD}
+      GARLIC_EMPRESA_RUC: ${EMPRESA_RUC:?Defina EMPRESA_RUC en .env}
+      GARLIC_EMPRESA_RAZON_SOCIAL: ${EMPRESA_RAZON_SOCIAL:?Defina EMPRESA_RAZON_SOCIAL en .env}
+      GARLIC_CAMPANIA: ${CAMPANIA:-2026}
+      GARLIC_ADMIN_NOMBRE: ${ADMIN_NOMBRE:?Defina ADMIN_NOMBRE en .env}
+      GARLIC_ADMIN_EMAIL: ${ADMIN_EMAIL:?Defina ADMIN_EMAIL en .env}
+      TZ: America/Lima
+    volumes:
+      - evidencias:/data/evidencias
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO:?Defina DOMINIO en .env}
+      ACCESO_USUARIO: ${ACCESO_USUARIO:?Defina ACCESO_USUARIO en .env}
+      ACCESO_HASH: ${ACCESO_HASH:?Defina ACCESO_HASH en .env (caddy hash-password)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  db-data:
+  evidencias:
+  caddy-data:
+  caddy-config:

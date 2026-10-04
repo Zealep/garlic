@@ -1,0 +1,27 @@
+# Instalacion dedicada (servidor de pruebas / produccion del cliente).
+# Todo se configura por variables de entorno (ver deploy/.env.example).
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/inicial
+    placeholders:
+      empresa_ruc: ${GARLIC_EMPRESA_RUC}
+      empresa_razon_social: ${GARLIC_EMPRESA_RAZON_SOCIAL}
+      campania: ${GARLIC_CAMPANIA:2026}
+      admin_nombre: ${GARLIC_ADMIN_NOMBRE}
+      admin_email: ${GARLIC_ADMIN_EMAIL}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+garlic:
+  instalacion:
+    # Solo esta empresa puede usar la instancia (el API rechaza cualquier otra con 403)
+    empresa-ruc: ${GARLIC_EMPRESA_RUC}
+  storage:
+    directorio: ${GARLIC_STORAGE_DIR:/data/evidencias}
+  # La app web se sirve en el mismo dominio que el API (Caddy): no hace falta CORS
+  cors:
+    allowed-origins:

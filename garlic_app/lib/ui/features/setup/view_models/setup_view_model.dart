@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../../data/repositories/catalogos_repository.dart';
@@ -23,7 +25,21 @@ class SetupViewModel extends ChangeNotifier {
     elegirEmpresa = Command1(_elegirEmpresa);
     finalizar = Command(_finalizar);
     final actual = config.config;
-    apiUrl = actual?.apiUrl ?? (kIsWeb ? 'http://localhost:8080' : 'http://10.0.2.2:8080');
+    apiUrl = actual?.apiUrl ?? servidorPredeterminado;
+    // Instalación publicada: el servidor es conocido, se conecta solo.
+    if (servidorFijo && actual == null) unawaited(conectar.execute());
+  }
+
+  /// `--dart-define=API_URL=https://...` al compilar (APK) fija el servidor.
+  static const _apiDefinida = String.fromEnvironment('API_URL');
+
+  /// El servidor no se pregunta: compilado con API_URL o app web publicada (mismo dominio que el API).
+  static bool get servidorFijo => _apiDefinida.isNotEmpty || (kIsWeb && kReleaseMode);
+
+  static String get servidorPredeterminado {
+    if (_apiDefinida.isNotEmpty) return _apiDefinida;
+    if (kIsWeb && kReleaseMode) return Uri.base.origin;
+    return kIsWeb ? 'http://localhost:8080' : 'http://10.0.2.2:8080';
   }
 
   final ConfigRepository _config;
@@ -50,6 +66,8 @@ class SetupViewModel extends ChangeNotifier {
       empresas = value;
       empresa = null;
       notifyListeners();
+      // instalación dedicada: una sola empresa, no hay nada que elegir
+      if (value.length == 1) await elegirEmpresa.execute(value.single);
     }
     return r;
   }

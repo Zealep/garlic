@@ -1,11 +1,11 @@
 {
-    "name": "garlic_app",
-    "short_name": "garlic_app",
+    "name": "Garlic · Compra de ajo",
+    "short_name": "Garlic",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "Garlic - Evaluacion de lotes de ajo",
+    "background_color": "#FAF6EE",
+    "theme_color": "#4A2560",
+    "description": "Evaluación, compra y pagos de lotes de ajo",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

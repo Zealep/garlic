@@ -28,7 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
         if (origenesPermitidos.isEmpty()) {
             return;
         }
-        registry.addMapping("/dev/**")
+        registry.addMapping("/instalacion/**")
                 .allowedOriginPatterns(origenesPermitidos.toArray(String[]::new))
                 .allowedMethods("GET");
         registry.addMapping("/api/**")

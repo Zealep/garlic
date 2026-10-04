@@ -18,3 +18,7 @@ garlic_app/.dart_tool/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# ---- Despliegue ----
+deploy/web/
+deploy/web.*/

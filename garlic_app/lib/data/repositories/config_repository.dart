@@ -89,7 +89,7 @@ class ConfigRepository extends ChangeNotifier {
   /// Verifica el servidor y devuelve las empresas disponibles (endpoint de desarrollo).
   Future<Result<List<EmpresaOpcion>>> probarServidor(String apiUrl) async {
     _api.configurar(baseUrl: apiUrl);
-    final r = await _api.get('/dev/empresas');
+    final r = await _api.get('/instalacion/empresas');
     return switch (r) {
       Ok(:final value) => Result.ok(
         KvStore.lista(value)

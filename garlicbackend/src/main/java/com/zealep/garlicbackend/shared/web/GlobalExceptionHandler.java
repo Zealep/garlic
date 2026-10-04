@@ -3,6 +3,7 @@ package com.zealep.garlicbackend.shared.web;
 import com.zealep.garlicbackend.shared.exception.BusinessException;
 import com.zealep.garlicbackend.shared.exception.ConflictException;
 import com.zealep.garlicbackend.shared.exception.NotFoundException;
+import com.zealep.garlicbackend.shared.tenant.EmpresaNoPermitidaException;
 import com.zealep.garlicbackend.shared.tenant.TenantRequiredException;
 import java.sql.SQLException;
 import java.util.List;
@@ -53,6 +54,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(TenantRequiredException.class)
     ProblemDetail handleTenant(TenantRequiredException ex) {
         return problem(HttpStatus.BAD_REQUEST, "Empresa no indicada", ex.getMessage());
+    }
+
+    @ExceptionHandler(EmpresaNoPermitidaException.class)
+    ProblemDetail handleEmpresaNoPermitida(EmpresaNoPermitidaException ex) {
+        return problem(HttpStatus.FORBIDDEN, "Empresa no permitida", ex.getMessage());
     }
 
     @ExceptionHandler(PropertyReferenceException.class)
