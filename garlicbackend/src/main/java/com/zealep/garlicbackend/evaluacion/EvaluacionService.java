@@ -6,6 +6,7 @@ import com.zealep.garlicbackend.evaluacion.dto.EvaluacionRequest;
 import com.zealep.garlicbackend.evaluacion.dto.EvaluacionResponse;
 import com.zealep.garlicbackend.evaluacion.dto.EvaluacionResumen;
 import com.zealep.garlicbackend.evaluacion.dto.FormularioEvaluacion;
+import com.zealep.garlicbackend.evaluacion.dto.ResultadoRequest;
 import com.zealep.garlicbackend.evaluacion.evidencia.EvidenciaService;
 import com.zealep.garlicbackend.lote.Lote;
 import com.zealep.garlicbackend.lote.LoteService;
@@ -161,6 +162,22 @@ public class EvaluacionService {
         ReglasEvaluacion.validarCierre(ev, catalogos.enfermedadesObligatorias(ev.getLote().getCultivoId()));
         ev.cerrar();
         logger.info("Evaluacion {} cerrada", id);
+        return assembler.toResponse(repository.saveAndFlush(ev), catalogos.deEvaluacion(ev));
+    }
+
+    /**
+     * Dictamen de una evaluacion cerrada (aceptada, rechazada o sin acuerdo con el agricultor). Se puede corregir;
+     * es idempotente para la sincronizacion offline. 409 si la evaluacion sigue en borrador.
+     */
+    @Transactional
+    public EvaluacionResponse definirResultado(UUID id, ResultadoRequest request) {
+        EvaluacionLote ev = buscar(id);
+        if (ev.isBorrador()) {
+            throw new ConflictException("Cierre la evaluacion antes de registrar su resultado");
+        }
+        String motivo = request.motivo() == null || request.motivo().isBlank() ? null : request.motivo().trim();
+        ev.definirResultado(request.resultado(), motivo);
+        logger.info("Evaluacion {} con resultado {}", id, request.resultado());
         return assembler.toResponse(repository.saveAndFlush(ev), catalogos.deEvaluacion(ev));
     }
 

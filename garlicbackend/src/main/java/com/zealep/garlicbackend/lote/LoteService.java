@@ -135,10 +135,11 @@ public class LoteService {
         if (!variedad.getCultivoId().equals(campania.getCultivoId())) {
             throw new BusinessException("La variedad " + variedad.getCodigo() + " no corresponde al cultivo de la campania");
         }
-        validarDuplicados(request, campania, lote.getId());
+        String codigo = codigo(request, lote, campania);
+        validarDuplicados(request, codigo, campania, lote.getId());
 
         lote.setCampania(campania);
-        lote.setCodigo(request.codigo());
+        lote.setCodigo(codigo);
         lote.setVariedad(variedad);
         lote.setAgricultor(agricultorService.referenciaActiva(request.agricultorId()));
         lote.setProveedor(request.proveedorId() == null ? null : proveedorService.referenciaActiva(request.proveedorId()));
@@ -158,14 +159,29 @@ public class LoteService {
     /**
      * Mensajes claros antes de llegar a la base; el indice unico parcial de la base es la red de seguridad.
      */
-    private void validarDuplicados(LoteRequest request, Campania campania, UUID idActual) {
+    /**
+     * Codigo del lote: el enviado; si no viene, el actual (al editar) o el siguiente correlativo de la
+     * campania (LOTE 001, LOTE 002...). La numeracion reinicia en cada campania.
+     */
+    private String codigo(LoteRequest request, Lote lote, Campania campania) {
+        if (StringUtils.hasText(request.codigo())) {
+            return request.codigo().trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
+        }
+        if (lote.getCodigo() != null && lote.getCampania() != null && lote.getCampania().getId().equals(campania.getId())) {
+            return lote.getCodigo();
+        }
+        repository.bloquearCampania(campania.getId());
+        int siguiente = repository.maxCorrelativo(tenantProvider.currentEmpresaId(), campania.getId()) + 1;
+        return "LOTE %03d".formatted(siguiente);
+    }
+
+    private void validarDuplicados(LoteRequest request, String codigo, Campania campania, UUID idActual) {
         UUID empresaId = tenantProvider.currentEmpresaId();
         String zona = Lote.normalizarZona(request.zona());
         repository.buscarActivoEnZona(empresaId, campania.getId(), zona, idActual).ifPresent(otro -> {
             throw new ConflictException("Ya existe el lote " + otro.getCodigo() + " en la zona " + zona
                     + " para la campania " + campania.getCodigo());
         });
-        String codigo = request.codigo().trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
         if (repository.existeCodigo(empresaId, campania.getId(), codigo, idActual)) {
             throw new ConflictException("Ya existe un lote con codigo " + codigo + " en la campania " + campania.getCodigo());
         }

@@ -6,6 +6,8 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/sync_repository.dart';
+import '../../../../domain/models/evaluacion.dart';
+import '../../../../domain/models/lote.dart';
 import '../../../../routing/rutas.dart';
 import '../../../../utils/formato.dart';
 import '../../../core/layout/breakpoints.dart';
@@ -14,6 +16,8 @@ import '../../../core/theme/tema.dart';
 import '../../../core/widgets/componentes.dart';
 import '../../../core/widgets/evaluacion_tile.dart';
 import '../../../core/widgets/marca.dart';
+import '../../../core/widgets/resultado_evaluacion.dart';
+import '../../../core/widgets/seguimiento.dart';
 import '../../../core/widgets/selector_lote.dart';
 import '../../../core/widgets/sync_chip.dart';
 import '../view_models/inicio_view_model.dart';
@@ -53,6 +57,8 @@ class InicioScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   _Kpis(vm: viewModel, columnas: ancho.esCompacto ? 2 : 4),
+                                  const SizedBox(height: GEspacio.xxl),
+                                  _ProximosCortes(vm: viewModel),
                                   const SizedBox(height: GEspacio.xxl),
                                   _Recientes(vm: viewModel),
                                 ],
@@ -215,7 +221,7 @@ class _Kpis extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: GEspacio.m,
       crossAxisSpacing: GEspacio.m,
-      childAspectRatio: columnas == 2 ? 1.18 : 1.9,
+      childAspectRatio: columnas == 2 ? 1.18 : 1.7,
       children: tarjetas,
     );
   }
@@ -274,7 +280,13 @@ class _Tablero extends StatelessWidget {
           children: [
             Expanded(flex: 5, child: _GraficoCalidad(vm: vm)),
             const SizedBox(width: GEspacio.xl),
-            Expanded(flex: 4, child: _Recientes(vm: vm)),
+            Expanded(
+              flex: 4,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [_ProximosCortes(vm: vm), const SizedBox(height: GEspacio.xxl), _Recientes(vm: vm)],
+              ),
+            ),
           ],
         ),
       ],
@@ -363,6 +375,81 @@ class _GraficoCalidad extends StatelessWidget {
                   ),
                 ),
       ),
+    );
+  }
+}
+
+/// Lotes cuyo corte está cerca (o pasó esta semana): es cuando se vuelve al campo a cerrar con el agricultor.
+class _ProximosCortes extends StatelessWidget {
+  const _ProximosCortes({required this.vm});
+
+  final InicioViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final lotes = vm.proximosCortes;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Icon(PhosphorIconsBold.scissors, size: 20, color: GColores.primario),
+            const SizedBox(width: GEspacio.s),
+            Expanded(child: Text('Próximos cortes', style: t.titleLarge)),
+            TextButton(onPressed: () => context.go(Rutas.lotes), child: const Text('Ver lotes')),
+          ],
+        ),
+        const SizedBox(height: GEspacio.s),
+        if (lotes.isEmpty)
+          const Card(
+            child: EstadoVacio(
+              titulo: 'Sin cortes en los próximos 14 días',
+              mensaje: 'Registra la fecha de corte en cada lote para saber cuándo volver al campo.',
+            ),
+          )
+        else
+          Card(
+            child: Column(
+              children: [
+                for (final (i, l) in lotes.indexed) ...[
+                  if (i > 0) const Divider(height: 1),
+                  _FilaCorte(lote: l, dias: vm.diasParaCorte(l)!, ultima: vm.ultimaEvaluacion(l.id)),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _FilaCorte extends StatelessWidget {
+  const _FilaCorte({required this.lote, required this.dias, this.ultima});
+
+  final Lote lote;
+  final int dias;
+  final EvaluacionResumen? ultima;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return ListTile(
+      onTap: () => context.push(Rutas.lote(lote.id)),
+      title: Text('${lote.codigo} · Zona ${lote.zona}', maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text('${lote.agricultor.nombres} · ${Formato.fechaCorta(lote.fechaCorte)}', style: t.bodySmall),
+            if (ultima != null) PastillaEstadoEvaluacion(estado: ultima!.estado, resultado: ultima!.resultado),
+          ],
+        ),
+      ),
+      trailing: PastillaCorte(dias: dias),
     );
   }
 }

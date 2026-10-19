@@ -30,7 +30,6 @@ class LoteFormViewModel extends ChangeNotifier {
   late final Command1<PersonaItem, ({String dni, String nombres})> registrarAgricultor;
 
   String? campaniaId;
-  String codigo = '';
   String zona = '';
   String? variedadId;
   String? tipoCompraId;
@@ -65,7 +64,6 @@ class LoteFormViewModel extends ChangeNotifier {
     NuevoLote(
       id: const Uuid().v4(),
       campaniaId: campaniaId!,
-      codigo: codigo.trim(),
       variedadId: variedadId!,
       agricultorId: agricultorId!,
       proveedorId: proveedorId,

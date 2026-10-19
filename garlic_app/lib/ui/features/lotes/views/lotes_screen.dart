@@ -3,11 +3,15 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../domain/models/lote.dart';
+import '../../../../domain/models/evaluacion.dart';
+import '../../../../utils/formato.dart';
 import '../../../../routing/rutas.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/theme/colores.dart';
 import '../../../core/theme/tema.dart';
 import '../../../core/widgets/componentes.dart';
+import '../../../core/widgets/resultado_evaluacion.dart';
+import '../../../core/widgets/seguimiento.dart';
 import '../../../core/widgets/sync_chip.dart';
 import '../view_models/lotes_view_model.dart';
 
@@ -62,6 +66,13 @@ class LotesScreen extends StatelessWidget {
                                 selected: viewModel.soloActivos,
                                 onSelected: viewModel.alternarActivos,
                               ),
+                              const SizedBox(width: GEspacio.s),
+                              FilterChip(
+                                avatar: const Icon(PhosphorIconsBold.scissors, size: 16),
+                                label: const Text('Próximos a cortar'),
+                                selected: viewModel.proximosCortes,
+                                onSelected: viewModel.alternarProximosCortes,
+                              ),
                               const Spacer(),
                               Text('${lotes.length} de ${viewModel.total}', style: t.bodySmall),
                             ],
@@ -79,6 +90,8 @@ class LotesScreen extends StatelessWidget {
                       mensaje:
                           viewModel.total == 0
                               ? 'Registra el primer lote con su zona, variedad y agricultor. Funciona sin conexión.'
+                              : viewModel.proximosCortes
+                              ? 'Ningún lote tiene corte en los próximos 14 días (ni atrasado esta semana).'
                               : 'Prueba con otro texto de búsqueda.',
                     ),
                   )
@@ -88,12 +101,17 @@ class LotesScreen extends StatelessWidget {
                     sliver: SliverGrid.builder(
                       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 520,
-                        mainAxisExtent: 158,
+                        mainAxisExtent: 186,
                         mainAxisSpacing: GEspacio.m,
                         crossAxisSpacing: GEspacio.m,
                       ),
                       itemCount: lotes.length,
-                      itemBuilder: (context, i) => _LoteCard(lote: lotes[i]),
+                      itemBuilder:
+                          (context, i) => _LoteCard(
+                            lote: lotes[i],
+                            ultima: viewModel.ultimaEvaluacion(lotes[i].id),
+                            diasCorte: viewModel.diasParaCorte(lotes[i]),
+                          ),
                     ),
                   ),
               ],
@@ -106,9 +124,11 @@ class LotesScreen extends StatelessWidget {
 }
 
 class _LoteCard extends StatelessWidget {
-  const _LoteCard({required this.lote});
+  const _LoteCard({required this.lote, this.ultima, this.diasCorte});
 
   final Lote lote;
+  final EvaluacionResumen? ultima;
+  final int? diasCorte;
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +165,25 @@ class _LoteCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: GEspacio.s),
+              // seguimiento: última evaluación y fecha de corte
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (ultima == null)
+                    const Pastilla(texto: 'Sin evaluar', color: GColores.tintaSuave)
+                  else
+                    PastillaEstadoEvaluacion(estado: ultima!.estado, resultado: ultima!.resultado),
+                  if (ultima?.promedioPrimera != null)
+                    Pastilla(
+                      texto: 'Primera ${Formato.porcentaje(ultima!.promedioPrimera)}',
+                      color: GColores.tinta,
+                      fondo: GColores.acentoSuave,
+                    ),
+                  if (diasCorte != null && lote.activo) PastillaCorte(dias: diasCorte!),
                 ],
               ),
               const Spacer(),

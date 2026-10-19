@@ -207,6 +207,9 @@ class SyncRepository extends ChangeNotifier {
       TipoOperacion.loteUpsert => _upsertLote(op.entidadId, payload),
       TipoOperacion.evaluacionUpsert => _upsertEvaluacion(op.entidadId, payload),
       TipoOperacion.evaluacionCerrar => _resultado(await _api.post('/api/v1/evaluaciones/${op.entidadId}/cerrar')),
+      TipoOperacion.evaluacionResultado => _resultado(
+        await _api.put('/api/v1/evaluaciones/${op.entidadId}/resultado', body: payload),
+      ),
       TipoOperacion.evidenciaSubir => _subirEvidencia(op.entidadId, payload),
       TipoOperacion.recursoGuardar => _resultado(
         await _api.put(payload['ruta']! as String, body: (payload['body']! as Map).cast<String, Object?>()),
@@ -303,7 +306,7 @@ class SyncRepository extends ChangeNotifier {
         await (_db.update(_db.lotesLocal)..where(
           (t) => t.id.equals(id),
         )).write(LotesLocalCompanion(syncState: Value(estado.name), syncError: Value(error)));
-      case TipoOperacion.evaluacionUpsert || TipoOperacion.evaluacionCerrar:
+      case TipoOperacion.evaluacionUpsert || TipoOperacion.evaluacionCerrar || TipoOperacion.evaluacionResultado:
         await (_db.update(_db.evaluacionesLocal)..where(
           (t) => t.id.equals(id),
         )).write(EvaluacionesLocalCompanion(syncState: Value(estado.name), syncError: Value(error)));

@@ -7,6 +7,7 @@ import '../../../utils/formato.dart';
 import '../theme/colores.dart';
 import '../theme/tema.dart';
 import 'componentes.dart';
+import 'resultado_evaluacion.dart';
 
 /// Fila de evaluación reutilizada en inicio, bandeja y detalle de lote.
 class EvaluacionTile extends StatelessWidget {
@@ -20,7 +21,6 @@ class EvaluacionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final e = evaluacion;
-    final cerrada = e.estado == EstadoEvaluacion.cerrada;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -55,11 +55,7 @@ class EvaluacionTile extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 4,
                       children: [
-                        Pastilla(
-                          texto: cerrada ? 'Cerrada' : 'Borrador',
-                          color: cerrada ? GColores.secundario : GColores.primario,
-                          icono: cerrada ? PhosphorIconsBold.sealCheck : PhosphorIconsBold.pencilSimpleLine,
-                        ),
+                        PastillaEstadoEvaluacion(estado: e.estado, resultado: e.resultado),
                         if (e.promedioPrimera != null)
                           Pastilla(
                             texto: 'Primera ${Formato.porcentaje(e.promedioPrimera)}',

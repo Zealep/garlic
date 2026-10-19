@@ -16,6 +16,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,6 +52,17 @@ public class EvaluacionLote extends TenantEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 15)
     private EstadoEvaluacion estado = EstadoEvaluacion.BORRADOR;
+
+    /** Dictamen tras cerrar (null = pendiente). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "resultado", length = 15)
+    private ResultadoEvaluacion resultado;
+
+    @Column(name = "motivo_resultado", length = 500)
+    private String motivoResultado;
+
+    @Column(name = "fecha_resultado")
+    private Instant fechaResultado;
 
     @OneToMany(mappedBy = "evaluacion", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("numero")
@@ -89,6 +101,28 @@ public class EvaluacionLote extends TenantEntity {
 
     public void cerrar() {
         this.estado = EstadoEvaluacion.CERRADA;
+    }
+
+    /** Registra (o corrige) el dictamen; solo en evaluaciones cerradas. Null vuelve a "pendiente". */
+    public void definirResultado(ResultadoEvaluacion resultado, String motivo) {
+        if (isBorrador()) {
+            throw new IllegalStateException("La evaluacion debe estar cerrada");
+        }
+        this.resultado = resultado;
+        this.motivoResultado = resultado == null ? null : motivo;
+        this.fechaResultado = resultado == null ? null : Instant.now();
+    }
+
+    public ResultadoEvaluacion getResultado() {
+        return resultado;
+    }
+
+    public String getMotivoResultado() {
+        return motivoResultado;
+    }
+
+    public Instant getFechaResultado() {
+        return fechaResultado;
     }
 
     // ---------------------------------------------------------------- muestras

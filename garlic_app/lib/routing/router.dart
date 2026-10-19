@@ -85,7 +85,11 @@ GoRouter crearRouter(ConfigRepository config) => GoRouter(
               path: Rutas.lotes,
               builder:
                   (context, _) => _ConViewModel(
-                    crear: (c) => LotesViewModel(lotes: c.read<LotesRepository>()),
+                    crear:
+                        (c) => LotesViewModel(
+                          lotes: c.read<LotesRepository>(),
+                          evaluaciones: c.read<EvaluacionesRepository>(),
+                        ),
                     builder: (vm) => LotesScreen(viewModel: vm),
                   ),
               routes: [

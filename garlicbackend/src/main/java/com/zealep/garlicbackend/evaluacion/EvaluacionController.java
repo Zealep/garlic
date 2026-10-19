@@ -4,6 +4,7 @@ import com.zealep.garlicbackend.evaluacion.dto.EvaluacionRequest;
 import com.zealep.garlicbackend.evaluacion.dto.EvaluacionResponse;
 import com.zealep.garlicbackend.evaluacion.dto.EvaluacionResumen;
 import com.zealep.garlicbackend.evaluacion.dto.FormularioEvaluacion;
+import com.zealep.garlicbackend.evaluacion.dto.ResultadoRequest;
 import com.zealep.garlicbackend.shared.web.Creacion;
 import com.zealep.garlicbackend.shared.web.PageResponse;
 import java.time.LocalDate;
@@ -82,6 +83,12 @@ public class EvaluacionController {
     @Operation(summary = "Cerrar (valida que este completa; idempotente si ya estaba cerrada)")
     public EvaluacionResponse cerrar(@PathVariable UUID id) {
         return service.cerrar(id);
+    }
+
+    @PutMapping("/evaluaciones/{id}/resultado")
+    @Operation(summary = "Resultado de una evaluacion cerrada: ACEPTADA, RECHAZADA o SIN_ACUERDO (null = pendiente)")
+    public EvaluacionResponse definirResultado(@PathVariable UUID id, @Valid @RequestBody ResultadoRequest request) {
+        return service.definirResultado(id, request);
     }
 
     @DeleteMapping("/evaluaciones/{id}")

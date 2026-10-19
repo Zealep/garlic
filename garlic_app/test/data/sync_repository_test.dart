@@ -155,6 +155,36 @@ void main() {
     expect(cola.single.payload, contains('"version":3'));
   });
 
+  test('el resultado de una evaluación se envía con PUT después del cierre', () async {
+    final orden = <String>[];
+    when(() => api.post(any(), body: any(named: 'body'))).thenAnswer((inv) async {
+      orden.add('POST ${inv.positionalArguments.first}');
+      return const Result.ok(<String, Object?>{});
+    });
+    when(() => api.put(any(), body: any(named: 'body'))).thenAnswer((inv) async {
+      orden.add('PUT ${inv.positionalArguments.first} ${inv.namedArguments[#body]}');
+      return const Result.ok(<String, Object?>{});
+    });
+
+    await sync.encolar(tipo: TipoOperacion.evaluacionCerrar, entidadId: 'ev-7', descripcion: 'Cierre', payload: const {});
+    for (final r in ['SIN_ACUERDO', 'ACEPTADA']) {
+      await sync.encolar(
+        tipo: TipoOperacion.evaluacionResultado,
+        entidadId: 'ev-7',
+        descripcion: 'Resultado',
+        payload: {'resultado': r, 'motivo': null},
+        reemplazar: true,
+      );
+    }
+    await sync.sincronizar();
+
+    // se envía solo el último resultado elegido
+    expect(orden, [
+      'POST /api/v1/evaluaciones/ev-7/cerrar',
+      'PUT /api/v1/evaluaciones/ev-7/resultado {resultado: ACEPTADA, motivo: null}',
+    ]);
+  });
+
   test('las operaciones se envían en el orden en que se hicieron', () async {
     final orden = <String>[];
     when(() => api.put(any(), body: any(named: 'body'))).thenAnswer((inv) async {

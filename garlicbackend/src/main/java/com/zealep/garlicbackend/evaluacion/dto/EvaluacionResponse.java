@@ -2,6 +2,7 @@ package com.zealep.garlicbackend.evaluacion.dto;
 
 import com.zealep.garlicbackend.evaluacion.EstadoEvaluacion;
 import com.zealep.garlicbackend.evaluacion.NivelHumedad;
+import com.zealep.garlicbackend.evaluacion.ResultadoEvaluacion;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -16,6 +17,9 @@ public record EvaluacionResponse(
         LocalDate fechaEvaluacion,
         String observacion,
         EstadoEvaluacion estado,
+        ResultadoEvaluacion resultado,
+        String motivoResultado,
+        Instant fechaResultado,
         List<Muestra> muestras,
         Promedios promedios,
         List<Humedad> humedad,

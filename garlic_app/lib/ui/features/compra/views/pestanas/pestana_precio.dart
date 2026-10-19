@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../../../domain/models/evaluacion.dart';
 import '../../../../../routing/rutas.dart';
 import '../../../../../utils/formato.dart';
 import '../../../../../utils/result.dart';
@@ -50,6 +51,15 @@ class PestanaPrecio extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(GEspacio.l, GEspacio.l, GEspacio.l, 120),
       children: [
+        if (vm.resultadoReferencia case final r? when r != ResultadoEvaluacion.aceptada) ...[
+          Aviso(
+            mensaje:
+                'La evaluación quedó "${r.etiqueta}". Igual puedes fijar el precio y registrar la compra '
+                '(por ejemplo, si se necesita el producto).',
+            tipo: TipoAviso.advertencia,
+          ),
+          const SizedBox(height: GEspacio.m),
+        ],
         if (vm.compra?.fijacion?.syncError != null) ...[
           Aviso(mensaje: vm.compra!.fijacion!.syncError!, tipo: TipoAviso.error),
           const SizedBox(height: GEspacio.m),

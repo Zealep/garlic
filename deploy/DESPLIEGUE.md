@@ -87,8 +87,10 @@ empaques, gastos, condiciones de pago…) y el primer usuario. **No carga datos 
 ## 6. Publicar la app web (desde tu PC con Windows)
 En la raíz del repo:
 ```powershell
-.\deploy\publicar-web.ps1 -Servidor root@164.90.12.34
+powershell -ExecutionPolicy Bypass -File .\deploy\publicar-web.ps1 -Servidor root@164.90.12.34
 ```
+(`-ExecutionPolicy Bypass` es necesario porque Windows bloquea los scripts `.ps1` por defecto; solo aplica a esta
+ejecución. Alternativa permanente para tu usuario: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.)
 Compila la app (`flutter build web --release --no-web-resources-cdn`) y la copia al servidor.
 Repite este paso cada vez que cambie la app.
 

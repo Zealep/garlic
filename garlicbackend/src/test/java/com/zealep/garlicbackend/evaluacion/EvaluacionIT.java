@@ -250,6 +250,33 @@ class EvaluacionIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void resultado_soloEnCerradas_yCorregible() throws Exception {
+        String id = JsonPath.read(crearEvaluacion(evaluacionModelo()).andReturn().getResponse().getContentAsString(), "$.id");
+        String url = "/api/v1/evaluaciones/" + id + "/resultado";
+
+        // en borrador no se dictamina
+        mvc.perform(json(put(url), empresa, "{\"resultado\":\"ACEPTADA\"}")).andExpect(status().isConflict());
+
+        mvc.perform(post("/api/v1/evaluaciones/" + id + "/cerrar").header(TenantContext.HEADER, empresa))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultado").doesNotExist());
+
+        mvc.perform(json(put(url), empresa, "{\"resultado\":\"SIN_ACUERDO\",\"motivo\":\"  Pide 3.20 por kg \"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultado").value("SIN_ACUERDO"))
+                .andExpect(jsonPath("$.motivoResultado").value("Pide 3.20 por kg"))
+                .andExpect(jsonPath("$.fechaResultado").exists());
+        // se puede corregir (luego si hubo acuerdo) y se ve en la bandeja del lote
+        mvc.perform(json(put(url), empresa, "{\"resultado\":\"ACEPTADA\"}"))
+                .andExpect(jsonPath("$.resultado").value("ACEPTADA"))
+                .andExpect(jsonPath("$.motivoResultado").doesNotExist());
+        mvc.perform(get("/api/v1/lotes/" + lote + "/evaluaciones").header(TenantContext.HEADER, empresa))
+                .andExpect(jsonPath("$[0].resultado").value("ACEPTADA"));
+        // valor desconocido -> 400
+        mvc.perform(json(put(url), empresa, "{\"resultado\":\"QUIZAS\"}")).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void reglasDeNegocio_responden422() throws Exception {
         Map<String, Object> mala = evaluacionModelo();
         muestras(mala).get(0).put("calidad", calidad("80", "10"));

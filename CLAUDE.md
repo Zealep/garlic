@@ -15,6 +15,13 @@ Excel del cliente "N°1 EVALUACION CAMPO AJO 2025", hoja **"LOTE #XXX MODELO - V
 - Modelo **híbrido**: una tabla por objeto + catálogos configurables por empresa.
 - **Humedad**: solo nivel BAJA/MEDIA/ALTA por tipo; la columna "stand by" es futura.
 - **ZONA** es un solo texto y es la clave antiduplicados: no puede haber dos lotes activos con la misma zona en la campaña.
+- **Código del lote** (2026-10-19): correlativo por campaña **asignado por el servidor** (`LOTE 001`, `002`…; reinicia en
+  cada campaña, los anulados no liberan su número). La app muestra un número provisional hasta sincronizar.
+- **Un lote puede tener varias evaluaciones.** Cada evaluación: `BORRADOR` → `CERRADA` y luego un **resultado**:
+  `ACEPTADA`, `RECHAZADA` o `SIN_ACUERDO` (no se cerró precio con el agricultor); null = pendiente, se puede corregir.
+- **La compra no depende del resultado**: un lote rechazado puede comprarse por necesidad de producto (solo se avisa).
+  La compra es **por lote** (no por evaluación).
+- **Seguimiento**: "Próximos cortes" (Inicio y filtro en Lotes) según `fecha_corte`: es cuando se vuelve al campo a cerrar.
 - **DNI LC** = DNI a cuyo nombre se emite la liquidación de compra (`lote.titular_liquidacion_id`).
 - Fechas arrancado/corte/carga pertenecen al **lote**; el **tipo de compra lo decide el evaluador**.
 - Calidad y calibre se registran **por muestra**; humedad, empaste, daños y sanidad **por evaluación**.
@@ -38,7 +45,7 @@ Excel del cliente "N°1 EVALUACION CAMPO AJO 2025", hoja **"LOTE #XXX MODELO - V
 
 ## Convenciones clave
 - Tenant por header `X-Empresa-Id` (hasta agregar JWT); nunca confiar en el body.
-- Esquema solo por **migraciones Flyway nuevas** (`V6__...`); nunca editar una ya aplicada. `ddl-auto=validate`.
+- Esquema solo por **migraciones Flyway nuevas** (`V7__...`); nunca editar una ya aplicada. `ddl-auto=validate`.
 - Errores: 400 validación · 404 · 409 duplicado/estado · 422 regla de negocio (ProblemDetail RFC 9457).
 - IDs UUID generados por el cliente para sincronización idempotente (lote, evaluación, evidencia, carga, gasto, pago,
   comprobante). Lo nuevo del punto 3 usa **PUT upsert** (201/200), así no hay 404 al sincronizar.
@@ -64,6 +71,7 @@ HTTPS y usuario/clave). La app se instala como PWA en el celular.
 ## Pendientes
 - [ ] App: enviar lo nuevo directo con `POST` (hoy intenta `PUT` y ante 404 hace `POST`, lo que deja un 404 visible en la consola del navegador).
 - [ ] Verificar la app en emulador Android (en Windows requiere Modo desarrollador para compilar con plugins).
+- [ ] Roles: quién registra / quién aprueba (el cliente no lo definió; depende de JWT).
 - [ ] Autenticación JWT (reemplaza el header de tenant y el usuario/clave compartido de Caddy); necesaria antes de la APK.
 - [ ] Confirmar con el cliente (punto 3): modalidades "Precio Barre/Escoba" (hoja DATOS), si POROTO es clase de calidad,
       qué significa la condición CREDITO y si la liquidación se cierra (inmutable) al pagar.

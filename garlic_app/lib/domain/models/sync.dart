@@ -73,6 +73,7 @@ enum TipoOperacion {
   loteUpsert('Lote'),
   evaluacionUpsert('Evaluación'),
   evaluacionCerrar('Cierre de evaluación'),
+  evaluacionResultado('Resultado de evaluación'),
   evidenciaSubir('Foto'),
 
   /// PUT idempotente de un recurso de la compra (fijación, carga, gasto, pago). Payload: `{ruta, body}`.

@@ -164,7 +164,6 @@ class NuevoLote {
   const NuevoLote({
     required this.id,
     required this.campaniaId,
-    required this.codigo,
     required this.variedadId,
     required this.agricultorId,
     required this.localidadId,
@@ -181,7 +180,6 @@ class NuevoLote {
 
   final String id;
   final String campaniaId;
-  final String codigo;
   final String variedadId;
   final String agricultorId;
   final String? proveedorId;
@@ -198,7 +196,7 @@ class NuevoLote {
   Map<String, Object?> toRequestJson() => {
     'id': id,
     'campaniaId': campaniaId,
-    'codigo': codigo,
+    // sin código: el servidor asigna el correlativo de la campaña (LOTE 001, 002, ...)
     'variedadId': variedadId,
     'agricultorId': agricultorId,
     'proveedorId': proveedorId,

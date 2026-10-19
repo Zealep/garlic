@@ -78,13 +78,15 @@ class EvaluacionesRepository {
   Future<Result<EvaluacionBorrador>> cargar(String id) async {
     final local = await (_db.select(_db.evaluacionesLocal)..where((t) => t.id.equals(id))).getSingleOrNull();
     if (local?.borradorJson != null) {
-      return Result.ok(
-        EvaluacionBorrador.fromRequestJson(
-          (jsonDecode(local!.borradorJson!) as Map).cast<String, Object?>(),
-          loteId: local.loteId,
-          estado: EstadoEvaluacion.parse(local.estado),
-        ),
+      final ev = EvaluacionBorrador.fromRequestJson(
+        (jsonDecode(local!.borradorJson!) as Map).cast<String, Object?>(),
+        loteId: local.loteId,
+        estado: EstadoEvaluacion.parse(local.estado),
       );
+      // el dictamen puede haberse registrado en otro equipo: manda el del resumen (refrescado del servidor)
+      final resumen = _resumenDe(local);
+      if (resumen.containsKey('resultado')) ev.resultado = ResultadoEvaluacion.parse(resumen['resultado']);
+      return Result.ok(ev);
     }
     final r = await _api.get('/api/v1/evaluaciones/$id');
     return switch (r) {
@@ -118,6 +120,28 @@ class EvaluacionesRepository {
     );
   }
 
+  /// Dictamen de una evaluación cerrada (aceptada / rechazada / sin acuerdo). Se guarda en el equipo y se encola
+  /// después del cierre; se puede corregir (el último valor es el que se envía).
+  Future<void> definirResultado(
+    EvaluacionBorrador ev,
+    Lote lote, {
+    required ResultadoEvaluacion? resultado,
+    String? motivo,
+    required String? evaluadorNombre,
+  }) async {
+    ev
+      ..resultado = resultado
+      ..motivoResultado = resultado == null || (motivo ?? '').trim().isEmpty ? null : motivo!.trim();
+    await _guardarLocal(ev, lote, evaluadorNombre);
+    await _sync.encolar(
+      tipo: TipoOperacion.evaluacionResultado,
+      entidadId: ev.id,
+      descripcion: 'Resultado ${resultado?.etiqueta ?? 'pendiente'} · ${lote.codigo}',
+      payload: {'resultado': resultado?.api, 'motivo': ev.motivoResultado},
+      reemplazar: true,
+    );
+  }
+
   Future<void> _guardarLocal(EvaluacionBorrador ev, Lote lote, String? evaluadorNombre) async {
     final primera = ev.promediosCalidad().values.firstOrNull;
     final resumen = EvaluacionResumen(
@@ -130,6 +154,7 @@ class EvaluacionesRepository {
       evaluador: evaluadorNombre,
       nroMuestras: ev.muestras.length,
       promedioPrimera: primera,
+      resultado: ev.resultado,
     );
     await _db
         .into(_db.evaluacionesLocal)
@@ -138,7 +163,14 @@ class EvaluacionesRepository {
             id: ev.id,
             loteId: lote.id,
             resumenJson: jsonEncode(resumen.toJson()),
-            borradorJson: Value(jsonEncode({...ev.toRequestJson(), 'estado': ev.estado.api})),
+            borradorJson: Value(
+              jsonEncode({
+                ...ev.toRequestJson(),
+                'estado': ev.estado.api,
+                'resultado': ev.resultado?.api,
+                'motivoResultado': ev.motivoResultado,
+              }),
+            ),
             estado: ev.estado.api,
             fecha: ev.fecha,
             syncState: SyncState.pendiente.name,

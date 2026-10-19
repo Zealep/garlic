@@ -16,13 +16,15 @@ import java.util.UUID;
  * Identificacion del lote.
  *
  * @param id                 opcional: UUID generado por el cliente (app offline). Si ya existe se devuelve el existente.
+ * @param codigo             opcional: si viene vacio el servidor asigna el correlativo de la campania (LOTE 001...).
+ *                           Al actualizar, vacio conserva el codigo actual.
  * @param titularLiquidacion DNI LC: datos de quien figura en la liquidacion de compra.
  *                           Si el documento ya existe se reutiliza la persona.
  */
 public record LoteRequest(
         UUID id,
         @NotNull UUID campaniaId,
-        @NotBlank @Size(max = 30) String codigo,
+        @Size(max = 30) String codigo,
         @NotNull UUID variedadId,
         @NotNull UUID agricultorId,
         UUID proveedorId,

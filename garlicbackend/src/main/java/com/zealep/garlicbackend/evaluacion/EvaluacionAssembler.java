@@ -46,6 +46,9 @@ public class EvaluacionAssembler {
                 ev.getFechaEvaluacion(),
                 ev.getObservacion(),
                 ev.getEstado(),
+                ev.getResultado(),
+                ev.getMotivoResultado(),
+                ev.getFechaResultado(),
                 muestrasRes,
                 promedios,
                 ordenados(ev.getHumedad(), HumedadObservada::tipoHumedadId, cat.tiposHumedad()).stream()
@@ -66,7 +69,7 @@ public class EvaluacionAssembler {
 
     public EvaluacionResumen toResumen(EvaluacionLote ev) {
         return new EvaluacionResumen(ev.getId(), ev.getLote().getId(), ev.getLote().getCodigo(), ev.getLote().getZona(),
-                ev.getFechaEvaluacion(), ev.getEstado(),
+                ev.getFechaEvaluacion(), ev.getEstado(), ev.getResultado(),
                 ev.getEvaluador().getNombres(), ev.getMuestras().size(), ev.getCreatedAt());
     }
 

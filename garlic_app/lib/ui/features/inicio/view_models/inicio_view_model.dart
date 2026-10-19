@@ -9,6 +9,7 @@ import '../../../../data/repositories/lotes_repository.dart';
 import '../../../../data/repositories/sync_repository.dart';
 import '../../../../domain/models/evaluacion.dart';
 import '../../../../domain/models/lote.dart';
+import '../../../../domain/use_cases/seguimiento_lotes.dart';
 import '../../../../utils/command.dart';
 import '../../../../utils/result.dart';
 
@@ -56,6 +57,13 @@ class InicioViewModel extends ChangeNotifier {
   int get borradores => _listaEvaluaciones.where((e) => e.estado == EstadoEvaluacion.borrador).length;
   int get cerradas => _listaEvaluaciones.where((e) => e.estado == EstadoEvaluacion.cerrada).length;
   List<EvaluacionResumen> get recientes => _listaEvaluaciones.take(6).toList();
+
+  /// Lotes con corte cercano (o atrasado esta semana): cuándo volver al campo a cerrar con el agricultor.
+  List<Lote> get proximosCortes => SeguimientoLotes.proximosCortes(_listaLotes, DateTime.now()).take(6).toList();
+
+  int? diasParaCorte(Lote l) => SeguimientoLotes.diasParaCorte(l, DateTime.now());
+
+  EvaluacionResumen? ultimaEvaluacion(String loteId) => SeguimientoLotes.ultimaPorLote(_listaEvaluaciones)[loteId];
 
   /// Evaluaciones con % de PRIMERA conocido (para el gráfico del tablero).
   List<EvaluacionResumen> get conCalidad => _listaEvaluaciones.where((e) => e.promedioPrimera != null).take(8).toList();

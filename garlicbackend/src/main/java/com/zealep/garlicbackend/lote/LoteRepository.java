@@ -39,4 +39,14 @@ public interface LoteRepository extends JpaRepository<Lote, UUID>, JpaSpecificat
             """)
     boolean existeCodigo(@Param("empresaId") UUID empresaId, @Param("campaniaId") UUID campaniaId,
             @Param("codigo") String codigo, @Param("excluirId") UUID excluirId);
+
+    /** Bloquea la campania hasta el fin de la transaccion: serializa la asignacion del correlativo. */
+    @Query(value = "SELECT CAST(id AS varchar) FROM campania WHERE id = :campaniaId FOR UPDATE", nativeQuery = true)
+    String bloquearCampania(@Param("campaniaId") UUID campaniaId);
+
+    /** Mayor correlativo usado en la campania (incluye anulados, para no reutilizar numeros). */
+    @Query(value = """
+            SELECT coalesce(max(CAST(substring(codigo FROM '^LOTE ?0*([0-9]+)$') AS integer)), 0)
+            FROM lote WHERE empresa_id = :empresaId AND campania_id = :campaniaId""", nativeQuery = true)
+    int maxCorrelativo(@Param("empresaId") UUID empresaId, @Param("campaniaId") UUID campaniaId);
 }

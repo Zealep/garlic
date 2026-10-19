@@ -88,6 +88,12 @@ class CompraViewModel extends ChangeNotifier {
   String? errorEvaluacion;
 
   bool get editable => lote?.activo ?? false;
+
+  /// Resultado de la evaluación usada para el precio (la compra no se bloquea si no fue aceptada).
+  ResultadoEvaluacion? get resultadoReferencia {
+    final id = fijacion?.evaluacionId ?? evaluacionesCerradas.firstOrNull?.id;
+    return evaluacionesCerradas.where((e) => e.id == id).firstOrNull?.resultado;
+  }
   List<CatalogoItem> get clasesCalidad => _catalogos.formulario?.clasesCalidad ?? const [];
   List<CatalogoItem> get tiposEmpaque => _catalogos.tiposEmpaque;
   List<CatalogoItem> get tiposGasto => _catalogos.tiposGasto;

@@ -93,6 +93,31 @@ class LoteIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void sinCodigo_elServidorAsignaElCorrelativoDeLaCampania_yReiniciaEnOtra() throws Exception {
+        assertCodigo(crear(loteSinCodigo("Z1", campania)), "LOTE 001");
+        String segundo = JsonPath.read(crear(loteSinCodigo("Z2", campania)).andReturn().getResponse().getContentAsString(), "$.id");
+        // anulado no libera su numero
+        mvc.perform(post(URL + "/" + segundo + "/anular").header(TenantContext.HEADER, empresa)).andExpect(status().isOk());
+        assertCodigo(crear(loteSinCodigo("Z3", campania)), "LOTE 003");
+        // un codigo historico manual (LOTE010) cuenta para el correlativo
+        crear(lote("LOTE010", "Z4", campania, ""));
+        assertCodigo(crear(loteSinCodigo("Z5", campania)), "LOTE 011");
+
+        String campania2026 = crearId("/api/v1/catalogos/campanias", """
+                {"cultivoId":"%s","codigo":"2026"}""".formatted(cultivo));
+        assertCodigo(crear(loteSinCodigo("Z1", campania2026)), "LOTE 001");
+    }
+
+    @Test
+    void alEditarSinCodigo_seConservaElAsignado() throws Exception {
+        String id = JsonPath.read(crear(loteSinCodigo("Z1", campania)).andReturn().getResponse().getContentAsString(), "$.id");
+        mvc.perform(json(put(URL + "/" + id), empresa, loteSinCodigo("Z1 NUEVA", campania)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.codigo").value("LOTE 001"))
+                .andExpect(jsonPath("$.zona").value("Z1 NUEVA"));
+    }
+
+    @Test
     void anular_liberaLaZona_yBloqueaCambios() throws Exception {
         String id = JsonPath.read(crear(lote("LOTE 001", "B3 P52", campania, "")).andReturn().getResponse().getContentAsString(), "$.id");
 
@@ -158,7 +183,7 @@ class LoteIT extends AbstractIntegrationTest {
 
     @Test
     void datosInvalidos_responde400() throws Exception {
-        mvc.perform(json(post(URL), empresa, lote("", "B3 P52", campania, "\"latitud\":123,")))
+        mvc.perform(json(post(URL), empresa, lote("", "", campania, "\"latitud\":123,")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.length()").value(2));
     }
@@ -191,6 +216,17 @@ class LoteIT extends AbstractIntegrationTest {
                 {%s"campaniaId":"%s","codigo":"%s","variedadId":"%s","agricultorId":"%s",
                  "localidadId":"%s","zona":"%s","tipoCompraId":"%s"}"""
                 .formatted(extra, campaniaId, codigo, variedad, agricultor, localidad, zona, tipoCompra);
+    }
+
+    private String loteSinCodigo(String zona, String campaniaId) {
+        return """
+                {"campaniaId":"%s","variedadId":"%s","agricultorId":"%s",
+                 "localidadId":"%s","zona":"%s","tipoCompraId":"%s"}"""
+                .formatted(campaniaId, variedad, agricultor, localidad, zona, tipoCompra);
+    }
+
+    private static void assertCodigo(ResultActions r, String esperado) throws Exception {
+        r.andExpect(jsonPath("$.codigo").value(esperado));
     }
 
     private ResultActions crear(String body) throws Exception {

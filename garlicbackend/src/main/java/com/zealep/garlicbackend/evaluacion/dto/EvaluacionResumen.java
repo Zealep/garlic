@@ -1,6 +1,7 @@
 package com.zealep.garlicbackend.evaluacion.dto;
 
 import com.zealep.garlicbackend.evaluacion.EstadoEvaluacion;
+import com.zealep.garlicbackend.evaluacion.ResultadoEvaluacion;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -15,6 +16,7 @@ public record EvaluacionResumen(
         String zona,
         LocalDate fechaEvaluacion,
         EstadoEvaluacion estado,
+        ResultadoEvaluacion resultado,
         String evaluador,
         int nroMuestras,
         Instant createdAt) {

@@ -29,6 +29,21 @@ enum EstadoEvaluacion {
   static EstadoEvaluacion parse(String? v) => v == 'CERRADA' ? cerrada : borrador;
 }
 
+/// Dictamen de una evaluación cerrada (null = pendiente). No bloquea la compra: un lote rechazado
+/// puede comprarse igual por necesidad de producto.
+enum ResultadoEvaluacion {
+  aceptada('ACEPTADA', 'Aceptada'),
+  rechazada('RECHAZADA', 'Rechazada'),
+  sinAcuerdo('SIN_ACUERDO', 'Sin acuerdo de precio');
+
+  const ResultadoEvaluacion(this.api, this.etiqueta);
+
+  final String api;
+  final String etiqueta;
+
+  static ResultadoEvaluacion? parse(Object? v) => values.where((r) => r.api == v).firstOrNull;
+}
+
 /// Fila de listados de evaluaciones (bandeja, historial del lote).
 class EvaluacionResumen {
   const EvaluacionResumen({
@@ -41,6 +56,7 @@ class EvaluacionResumen {
     this.zona,
     this.evaluador,
     this.promedioPrimera,
+    this.resultado,
     this.syncState = SyncState.sincronizado,
     this.syncError,
   });
@@ -59,6 +75,7 @@ class EvaluacionResumen {
     evaluador: json['evaluador'] as String?,
     nroMuestras: (json['nroMuestras'] as num?)?.toInt() ?? 0,
     promedioPrimera: (json['promedioPrimera'] as num?)?.toDouble(),
+    resultado: ResultadoEvaluacion.parse(json['resultado']),
     syncState: syncState,
     syncError: syncError,
   );
@@ -74,6 +91,9 @@ class EvaluacionResumen {
 
   /// Promedio de la primera clase de calidad (PRIMERA), si se conoce localmente.
   final double? promedioPrimera;
+
+  /// Dictamen tras cerrar (null = pendiente o borrador).
+  final ResultadoEvaluacion? resultado;
   final SyncState syncState;
   final String? syncError;
 
@@ -87,6 +107,7 @@ class EvaluacionResumen {
     'evaluador': evaluador,
     'nroMuestras': nroMuestras,
     'promedioPrimera': promedioPrimera,
+    'resultado': resultado?.api,
   };
 }
 
@@ -137,6 +158,8 @@ class EvaluacionBorrador {
     this.evaluadorId,
     this.observacion,
     this.estado = EstadoEvaluacion.borrador,
+    this.resultado,
+    this.motivoResultado,
     List<MuestraBorrador>? muestras,
     Map<String, NivelHumedad>? humedad,
     Set<String>? empastes,
@@ -162,6 +185,8 @@ class EvaluacionBorrador {
       fecha: Formato.parseFecha(json['fechaEvaluacion']) ?? DateTime.now(),
       observacion: json['observacion'] as String?,
       estado: estado ?? EstadoEvaluacion.parse(json['estado'] as String?),
+      resultado: ResultadoEvaluacion.parse(json['resultado']),
+      motivoResultado: json['motivoResultado'] as String?,
       muestras:
           lista(json['muestras'])
               .map(
@@ -205,6 +230,8 @@ class EvaluacionBorrador {
       fecha: Formato.parseFecha(json['fechaEvaluacion']) ?? DateTime.now(),
       observacion: json['observacion'] as String?,
       estado: EstadoEvaluacion.parse(json['estado'] as String?),
+      resultado: ResultadoEvaluacion.parse(json['resultado']),
+      motivoResultado: json['motivoResultado'] as String?,
       muestras:
           lista(json['muestras'])
               .map(
@@ -239,6 +266,10 @@ class EvaluacionBorrador {
   DateTime fecha;
   String? observacion;
   EstadoEvaluacion estado;
+
+  /// Dictamen (solo cerradas): aceptada, rechazada o sin acuerdo de precio. Null = pendiente.
+  ResultadoEvaluacion? resultado;
+  String? motivoResultado;
   final List<MuestraBorrador> muestras;
   final Map<String, NivelHumedad> humedad;
   final Set<String> empastes;

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../domain/models/lote.dart';
+import '../../../../domain/use_cases/seguimiento_lotes.dart';
 import '../../../../routing/rutas.dart';
 import '../../../../utils/formato.dart';
 import '../../../core/layout/breakpoints.dart';
@@ -11,6 +12,7 @@ import '../../../core/theme/tema.dart';
 import '../../../core/widgets/componentes.dart';
 import '../../../core/widgets/evaluacion_tile.dart';
 import '../../../core/widgets/marca.dart';
+import '../../../core/widgets/seguimiento.dart';
 import '../../compra/views/widgets/balance_compra.dart';
 import '../view_models/lotes_view_model.dart';
 
@@ -213,6 +215,10 @@ class _Ficha extends StatelessWidget {
         SeccionTarjeta(
           titulo: 'Fechas',
           icono: PhosphorIconsBold.calendarDots,
+          accion: switch (SeguimientoLotes.diasParaCorte(lote, DateTime.now())) {
+            final d? when lote.activo && d >= -30 => PastillaCorte(dias: d),
+            _ => null,
+          },
           child: Row(
             children: [
               _Fecha('Arrancado', lote.fechaArrancado),

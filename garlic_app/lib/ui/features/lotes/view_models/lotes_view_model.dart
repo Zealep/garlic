@@ -8,33 +8,55 @@ import '../../../../data/repositories/lotes_repository.dart';
 import '../../../../domain/models/compra.dart';
 import '../../../../domain/models/evaluacion.dart';
 import '../../../../domain/models/lote.dart';
+import '../../../../domain/use_cases/seguimiento_lotes.dart';
 import '../../../../utils/command.dart';
 import '../../../../utils/result.dart';
 
 class LotesViewModel extends ChangeNotifier {
-  LotesViewModel({required LotesRepository lotes}) : _lotes = lotes {
+  LotesViewModel({required LotesRepository lotes, required EvaluacionesRepository evaluaciones}) : _lotes = lotes {
     refrescar = Command(_lotes.refrescar);
-    _sub = lotes.observar().listen((l) {
-      _todos = l;
-      notifyListeners();
-    });
+    _subs = [
+      lotes.observar().listen((l) {
+        _todos = l;
+        notifyListeners();
+      }),
+      evaluaciones.observar().listen((e) {
+        _ultima = SeguimientoLotes.ultimaPorLote(e);
+        notifyListeners();
+      }),
+    ];
   }
 
   final LotesRepository _lotes;
-  late final StreamSubscription<List<Lote>> _sub;
+  late final List<StreamSubscription<Object?>> _subs;
   late final Command<void> refrescar;
 
   List<Lote> _todos = const [];
+  Map<String, EvaluacionResumen> _ultima = const {};
   String _q = '';
   bool _soloActivos = true;
+  bool _proximosCortes = false;
 
   String get busqueda => _q;
   bool get soloActivos => _soloActivos;
+  bool get proximosCortes => _proximosCortes;
   int get total => _todos.length;
+
+  /// Última evaluación del lote (su resultado y % de primera).
+  EvaluacionResumen? ultimaEvaluacion(String loteId) => _ultima[loteId];
+
+  int? diasParaCorte(Lote l) => SeguimientoLotes.diasParaCorte(l, DateTime.now());
+
+  /// Solo los lotes con corte cercano (7 días atrás a 14 adelante), del más urgente al más lejano.
+  void alternarProximosCortes(bool v) {
+    _proximosCortes = v;
+    notifyListeners();
+  }
 
   List<Lote> get lotes {
     final q = _q.trim().toLowerCase();
-    return _todos
+    final base = _proximosCortes ? SeguimientoLotes.proximosCortes(_todos, DateTime.now()) : _todos;
+    return base
         .where((l) => !_soloActivos || l.activo)
         .where(
           (l) =>
@@ -56,7 +78,9 @@ class LotesViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    _sub.cancel();
+    for (final s in _subs) {
+      s.cancel();
+    }
     refrescar.dispose();
     super.dispose();
   }

@@ -293,6 +293,19 @@ class EvaluacionViewModel extends ChangeNotifier {
     return const Result.ok(null);
   }
 
+  /// Dictamen tras cerrar: aceptada, rechazada o sin acuerdo de precio (null = pendiente). Se puede corregir.
+  Future<void> definirResultado(ResultadoEvaluacion? resultado, {String? motivo}) async {
+    if (borrador == null || lote == null || editable) return;
+    await _evaluaciones.definirResultado(
+      borrador!,
+      lote!,
+      resultado: resultado,
+      motivo: motivo,
+      evaluadorNombre: _nombreEvaluador(),
+    );
+    notifyListeners();
+  }
+
   String? _nombreEvaluador() =>
       _catalogos.evaluadores.where((e) => e.id == borrador!.evaluadorId).firstOrNull?.nombreVisible ??
       _config.config?.evaluadorNombre;

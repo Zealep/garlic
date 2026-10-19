@@ -9,6 +9,7 @@ import '../../../../../utils/formato.dart';
 import '../../../../core/theme/colores.dart';
 import '../../../../core/theme/tema.dart';
 import '../../../../core/widgets/componentes.dart';
+import '../../../../core/widgets/resultado_evaluacion.dart';
 import '../../view_models/evaluacion_view_model.dart';
 
 /// Paso 6: resumen con promedios (columna PROM del protocolo) y verificación antes de cerrar.
@@ -62,6 +63,7 @@ class PasoResumen extends StatelessWidget {
         const SizedBox(height: GEspacio.m),
         _DesgloseFotos(vm: vm),
         const SizedBox(height: GEspacio.l),
+        if (!vm.editable) ...[_Resultado(vm: vm), const SizedBox(height: GEspacio.l)],
         if (vm.editable) ...[
           if (pendientes.isEmpty)
             const Aviso(mensaje: 'Evaluación completa. Puedes cerrarla.', tipo: TipoAviso.exito)
@@ -300,6 +302,82 @@ class _DesgloseFotos extends StatelessWidget {
             onPressed: () => vm.irA(paso),
           ),
       ],
+    );
+  }
+}
+
+/// Dictamen tras cerrar: aceptada, rechazada o sin acuerdo de precio con el agricultor. Se puede corregir.
+class _Resultado extends StatefulWidget {
+  const _Resultado({required this.vm});
+
+  final EvaluacionViewModel vm;
+
+  @override
+  State<_Resultado> createState() => _ResultadoState();
+}
+
+class _ResultadoState extends State<_Resultado> {
+  late final _motivo = TextEditingController(text: widget.vm.borrador!.motivoResultado);
+
+  @override
+  void dispose() {
+    _motivo.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final actual = widget.vm.borrador!.resultado;
+    final (color, icono) = estiloResultado(actual);
+    return SeccionTarjeta(
+      titulo: 'Resultado de la evaluación',
+      icono: PhosphorIconsBold.gavel,
+      accion: Pastilla(texto: actual?.etiqueta ?? 'Pendiente', color: color, icono: icono),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Defínelo cuando se decida con el agricultor. No impide registrar la compra '
+            '(un lote rechazado puede comprarse por necesidad de producto).',
+            style: t.bodySmall,
+          ),
+          const SizedBox(height: GEspacio.m),
+          Wrap(
+            spacing: GEspacio.s,
+            runSpacing: GEspacio.s,
+            children: [
+              for (final r in ResultadoEvaluacion.values)
+                ChoiceChip(
+                  avatar: Icon(estiloResultado(r).$2, size: 18, color: estiloResultado(r).$1),
+                  label: Text(r.etiqueta),
+                  selected: actual == r,
+                  onSelected: (sel) => widget.vm.definirResultado(sel ? r : null, motivo: _motivo.text),
+                ),
+            ],
+          ),
+          if (actual == ResultadoEvaluacion.rechazada || actual == ResultadoEvaluacion.sinAcuerdo) ...[
+            const SizedBox(height: GEspacio.m),
+            TextField(
+              controller: _motivo,
+              maxLength: 500,
+              decoration: InputDecoration(
+                labelText: actual == ResultadoEvaluacion.sinAcuerdo ? 'Motivo (ej. precio que pide)' : 'Motivo del rechazo',
+                suffixIcon: IconButton(
+                  tooltip: 'Guardar motivo',
+                  icon: const Icon(PhosphorIconsBold.floppyDisk),
+                  onPressed: () async {
+                    await widget.vm.definirResultado(actual, motivo: _motivo.text);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Motivo guardado')));
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

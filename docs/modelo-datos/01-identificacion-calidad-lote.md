@@ -200,6 +200,9 @@ erDiagram
 | fecha_evaluacion | date | NO | |
 | observacion | text | SÍ | La celda OBS (recomendaciones de carga) |
 | estado | varchar(15) | NO | BORRADOR / CERRADA |
+| resultado | varchar(15) | SÍ | Tras cerrar: ACEPTADA / RECHAZADA / SIN_ACUERDO (sin acuerdo de precio). NULL = pendiente (V6) |
+| motivo_resultado | varchar(500) | SÍ | Por qué se rechazó o no hubo acuerdo |
+| fecha_resultado | timestamptz | SÍ | Cuándo se registró el resultado |
 
 **muestra**: muestra representativa (1..N; hoy se toman 3).
 | Columna | Tipo | Nulo | Descripción |

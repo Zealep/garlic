@@ -74,7 +74,7 @@ class LotesRepository {
       );
     }
 
-    final json = _jsonLocal(nuevo);
+    final json = {..._jsonLocal(nuevo), 'codigo': await _codigoProvisional(nuevo.campaniaId)};
     await _db.into(_db.lotesLocal).insert(_fila(json, SyncState.pendiente));
     await _sync.encolar(
       tipo: TipoOperacion.loteUpsert,
@@ -96,7 +96,6 @@ class LotesRepository {
     final req = n.toRequestJson();
     return {
       ...req,
-      'codigo': n.codigo.trim().toUpperCase(),
       'estado': 'ACTIVO',
       'campania': {'id': n.campaniaId, 'codigo': campania?.codigo, 'nombre': null},
       'cultivoId': _catalogos.formulario?.cultivoId ?? '',
@@ -123,6 +122,19 @@ class LotesRepository {
       'tipoCompra': {'id': n.tipoCompraId, 'codigo': tipoCompra?.codigo, 'nombre': tipoCompra?.nombre},
       'createdAt': DateTime.now().toIso8601String(),
     };
+  }
+
+  /// Número que tendría el lote según los lotes del equipo. El servidor asigna el definitivo al sincronizar
+  /// (puede cambiar si otro equipo registró lotes sin conexión al mismo tiempo).
+  Future<String> _codigoProvisional(String campaniaId) async {
+    final numeros =
+        (await _db.select(_db.lotesLocal).get())
+            .map(_aLote)
+            .where((l) => l.campania.id == campaniaId)
+            .map((l) => int.tryParse(RegExp(r'^LOTE ?0*(\d+)$').firstMatch(l.codigo)?.group(1) ?? ''))
+            .whereType<int>();
+    final siguiente = (numeros.isEmpty ? 0 : numeros.reduce((a, b) => a > b ? a : b)) + 1;
+    return 'LOTE ${siguiente.toString().padLeft(3, '0')}';
   }
 
   static String _normalizarZona(String z) => z.trim().replaceAll(RegExp(r'\s+'), ' ').toUpperCase();

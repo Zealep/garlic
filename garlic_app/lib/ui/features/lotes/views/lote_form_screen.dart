@@ -36,7 +36,7 @@ class _LoteFormScreenState extends State<LoteFormScreen> {
     if (r case Ok<Lote>(:final value)) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Lote ${value.codigo} guardado. Se sincronizará automáticamente.')));
+      ).showSnackBar(SnackBar(content: Text('${value.codigo} guardado (número provisional hasta sincronizar).')));
       context.pushReplacement(Rutas.lote(value.id));
     } else {
       _formKey.currentState!.validate(); // muestra el error del servidor/local en su campo
@@ -117,7 +117,7 @@ class _LoteFormScreenState extends State<LoteFormScreen> {
       ],
       const TituloGrupo(
         'Lote',
-        subtitulo: 'Código y zona identifican el lote en la campaña',
+        subtitulo: 'El número (LOTE 001, 002…) se asigna solo y reinicia en cada campaña',
         icono: PhosphorIconsBold.plant,
       ),
       _Desplegable<CatalogoItem>(
@@ -133,16 +133,6 @@ class _LoteFormScreenState extends State<LoteFormScreen> {
       Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: TextFormField(
-              initialValue: vm.codigo,
-              textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(labelText: 'Código', hintText: 'LOTE 008'),
-              onChanged: (v) => vm.codigo = v,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingrese el código' : null,
-            ),
-          ),
-          const SizedBox(width: GEspacio.m),
           Expanded(
             child: TextFormField(
               initialValue: vm.zona,

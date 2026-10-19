@@ -46,7 +46,7 @@ void main() {
     );
 
     expect(find.text('LOTE 004 · B3 P52'), findsOneWidget);
-    expect(find.text('Cerrada'), findsOneWidget);
+    expect(find.text('Cerrada · pendiente'), findsOneWidget);
     expect(find.text('Primera 80%'), findsOneWidget);
     expect(find.byTooltip('Pendiente'), findsOneWidget);
 
