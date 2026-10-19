@@ -1,6 +1,5 @@
 package com.zealep.garlicbackend.shared.instalacion;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,54 +8,45 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
- * Modo de instalacion. Con {@code garlic.instalacion.empresa-ruc} definido la instancia es
- * <b>dedicada</b> a una sola empresa: solo se ofrece esa empresa y el API rechaza cualquier otra.
- * Sin definir (desarrollo / SaaS) se listan todas las empresas activas.
+ * El sistema es de una sola empresa (la agroexportadora del cliente): {@code garlic.instalacion.empresa-ruc}
+ * indica cual. Todas las consultas se filtran por ella sin que la app la envie.
+ * <p>
+ * La columna {@code empresa_id} se conserva en el modelo (no cuesta nada y evita reestructurar la base).
+ * Sin RUC configurado (solo en los tests de integracion) la empresa se toma del header {@code X-Empresa-Id},
+ * para que cada test trabaje aislado en su propia empresa.
  */
 @Component
 public class Instalacion {
 
     private final JdbcClient jdbc;
-    private final String rucDedicado;
-    private volatile UUID empresaDedicada;
+    private final String ruc;
+    private volatile Empresa empresa;
 
-    public Instalacion(JdbcClient jdbc, @Value("${garlic.instalacion.empresa-ruc:}") String rucDedicado) {
+    public Instalacion(JdbcClient jdbc, @Value("${garlic.instalacion.empresa-ruc:}") String ruc) {
         this.jdbc = jdbc;
-        this.rucDedicado = rucDedicado == null ? "" : rucDedicado.trim();
+        this.ruc = ruc == null ? "" : ruc.trim();
     }
 
-    public boolean dedicada() {
-        return StringUtils.hasText(rucDedicado);
+    /** Hay una empresa configurada (siempre, salvo en los tests de integracion). */
+    public boolean configurada() {
+        return StringUtils.hasText(ruc);
     }
 
-    /** Empresa de la instalacion dedicada (se resuelve una vez, despues de Flyway). */
-    public Optional<UUID> empresaDedicada() {
-        if (!dedicada()) {
+    /** La empresa de la instalacion (se resuelve una vez, despues de Flyway). */
+    public Optional<Empresa> empresa() {
+        if (!configurada()) {
             return Optional.empty();
         }
-        if (empresaDedicada == null) {
-            empresaDedicada = jdbc.sql("SELECT id FROM empresa WHERE ruc = :ruc AND activo")
-                    .param("ruc", rucDedicado)
-                    .query(UUID.class)
+        if (empresa == null) {
+            empresa = jdbc.sql("SELECT id, ruc, razon_social FROM empresa WHERE ruc = :ruc AND activo")
+                    .param("ruc", ruc)
+                    .query(Empresa.class)
                     .optional()
                     .orElse(null);
         }
-        return Optional.ofNullable(empresaDedicada);
+        return Optional.ofNullable(empresa);
     }
 
-    /** Empresas que la app puede elegir en su configuracion inicial. */
-    public List<EmpresaOpcion> empresas() {
-        if (dedicada()) {
-            return jdbc.sql("SELECT id, ruc, razon_social FROM empresa WHERE ruc = :ruc AND activo")
-                    .param("ruc", rucDedicado)
-                    .query(EmpresaOpcion.class)
-                    .list();
-        }
-        return jdbc.sql("SELECT id, ruc, razon_social FROM empresa WHERE activo ORDER BY razon_social")
-                .query(EmpresaOpcion.class)
-                .list();
-    }
-
-    public record EmpresaOpcion(UUID id, String ruc, String razonSocial) {
+    public record Empresa(UUID id, String ruc, String razonSocial) {
     }
 }

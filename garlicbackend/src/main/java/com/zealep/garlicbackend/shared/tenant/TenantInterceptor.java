@@ -10,8 +10,8 @@ import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * Resuelve la empresa desde el header X-Empresa-Id y la publica en {@link TenantContext}.
- * En una instalacion dedicada solo acepta la empresa del cliente (403 para cualquier otra).
+ * Publica en {@link TenantContext} la empresa de la instalacion (el sistema es de una sola empresa).
+ * Solo sin empresa configurada (tests de integracion) se toma del header {@code X-Empresa-Id}.
  */
 @Component
 public class TenantInterceptor implements HandlerInterceptor {
@@ -27,20 +27,20 @@ public class TenantInterceptor implements HandlerInterceptor {
         if (CorsUtils.isPreFlightRequest(request)) {
             return true; // el navegador no envia headers propios en el preflight CORS
         }
+        if (instalacion.configurada()) {
+            TenantContext.set(instalacion.empresa().map(Instalacion.Empresa::id).orElseThrow(() ->
+                    new IllegalStateException("No existe la empresa de la instalacion (garlic.instalacion.empresa-ruc)")));
+            return true;
+        }
         String header = request.getHeader(TenantContext.HEADER);
         if (!StringUtils.hasText(header)) {
             throw new TenantRequiredException();
         }
-        UUID empresaId;
         try {
-            empresaId = UUID.fromString(header.trim());
+            TenantContext.set(UUID.fromString(header.trim()));
         } catch (IllegalArgumentException e) {
             throw new TenantRequiredException();
         }
-        if (instalacion.dedicada() && !instalacion.empresaDedicada().map(empresaId::equals).orElse(false)) {
-            throw new EmpresaNoPermitidaException();
-        }
-        TenantContext.set(empresaId);
         return true;
     }
 

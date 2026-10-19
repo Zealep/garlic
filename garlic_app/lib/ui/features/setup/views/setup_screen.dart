@@ -118,7 +118,7 @@ class _SetupScreenState extends State<SetupScreen> {
   );
 
   Widget _panelFormulario(TextTheme t) => ListenableBuilder(
-    listenable: Listenable.merge([vm, vm.conectar, vm.elegirEmpresa, vm.finalizar]),
+    listenable: Listenable.merge([vm, vm.conectar, vm.finalizar]),
     builder:
         (context, _) => Form(
           key: _formKey,
@@ -127,12 +127,12 @@ class _SetupScreenState extends State<SetupScreen> {
             children: [
               Text('Configurar dispositivo', style: t.headlineSmall),
               const SizedBox(height: 4),
-              Text('Paso ${vm.paso + 1} de 3', style: t.bodySmall),
+              Text('Paso ${vm.paso + 1} de 2', style: t.bodySmall),
               const SizedBox(height: GEspacio.s),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
-                  value: (vm.paso + 1) / 3,
+                  value: (vm.paso + 1) / 2,
                   minHeight: 6,
                   backgroundColor: GColores.superficieAlt,
                 ),
@@ -140,7 +140,6 @@ class _SetupScreenState extends State<SetupScreen> {
               const SizedBox(height: GEspacio.xxl),
               ...switch (vm.paso) {
                 0 => _pasoServidor(t),
-                1 => _pasoEmpresa(t),
                 _ => _pasoEvaluador(t),
               },
             ],
@@ -169,34 +168,6 @@ class _SetupScreenState extends State<SetupScreen> {
       onPressed: vm.conectar.running ? null : _conectar,
       icon: vm.conectar.running ? const _Spinner() : const Icon(PhosphorIconsBold.plugsConnected),
       label: const Text('Conectar'),
-    ),
-  ];
-
-  List<Widget> _pasoEmpresa(TextTheme t) => [
-    Text('¿Para qué empresa trabajas?', style: t.titleMedium),
-    const SizedBox(height: GEspacio.m),
-    for (final e in vm.empresas) ...[
-      Card(
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          leading: const CircleAvatar(
-            backgroundColor: GColores.primarioSuave,
-            child: Icon(PhosphorIconsFill.buildings, color: GColores.primario),
-          ),
-          title: Text(e.nombre, style: t.titleSmall),
-          subtitle: Text('RUC ${e.ruc}'),
-          trailing: vm.elegirEmpresa.running ? const _Spinner(oscuro: true) : const Icon(PhosphorIconsBold.caretRight),
-          onTap: vm.elegirEmpresa.running ? null : () => vm.elegirEmpresa.execute(e),
-        ),
-      ),
-      const SizedBox(height: GEspacio.s),
-    ],
-    if (vm.elegirEmpresa.failure != null) Aviso(mensaje: vm.elegirEmpresa.failure!.message, tipo: TipoAviso.error),
-    TextButton.icon(
-      onPressed: vm.volver,
-      icon: const Icon(PhosphorIconsBold.arrowLeft),
-      label: const Text('Cambiar servidor'),
     ),
   ];
 
@@ -230,7 +201,7 @@ class _SetupScreenState extends State<SetupScreen> {
     TextButton.icon(
       onPressed: vm.volver,
       icon: const Icon(PhosphorIconsBold.arrowLeft),
-      label: const Text('Otra empresa'),
+      label: const Text('Cambiar servidor'),
     ),
   ];
 }
@@ -261,14 +232,9 @@ class _Beneficio extends StatelessWidget {
 }
 
 class _Spinner extends StatelessWidget {
-  const _Spinner({this.oscuro = false});
-
-  final bool oscuro;
+  const _Spinner();
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 18,
-    height: 18,
-    child: CircularProgressIndicator(strokeWidth: 2.2, color: oscuro ? GColores.primario : Colors.white),
-  );
+  Widget build(BuildContext context) =>
+      const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white));
 }

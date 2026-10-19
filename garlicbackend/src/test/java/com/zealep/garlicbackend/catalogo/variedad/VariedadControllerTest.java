@@ -43,7 +43,7 @@ class VariedadControllerTest {
     @MockitoBean
     private VariedadService service;
 
-    /** Instalacion no dedicada (mock: dedicada() = false). */
+    /** Sin empresa configurada (mock: configurada() = false): la empresa sale del header. */
     @MockitoBean
     private Instalacion instalacion;
 

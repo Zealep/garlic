@@ -80,9 +80,10 @@ erDiagram
 
 ## 3. Diccionario de datos
 
-### 3.A Base / SaaS
+### 3.A Base
 
-**empresa**: la empresa cliente del sistema (tenant).
+**empresa**: la empresa que usa el sistema (una sola; `garlic.instalacion.empresa-ruc`). Las tablas conservan
+`empresa_id`, que el servidor llena siempre con ella.
 | Columna | Tipo | Nulo | Descripción |
 |---|---|---|---|
 | id | uuid | NO | PK |

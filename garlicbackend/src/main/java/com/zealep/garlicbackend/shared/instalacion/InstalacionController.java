@@ -1,14 +1,13 @@
 package com.zealep.garlicbackend.shared.instalacion;
 
+import com.zealep.garlicbackend.shared.exception.NotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Configuracion inicial de la app (fuera de /api: no requiere X-Empresa-Id).
- * Reemplazara el selector de empresa cuando exista autenticacion (JWT).
+ * Datos de la instalacion para la configuracion inicial de la app.
  */
 @RestController
 @Tag(name = "Instalacion")
@@ -20,9 +19,10 @@ public class InstalacionController {
         this.instalacion = instalacion;
     }
 
-    @GetMapping("/instalacion/empresas")
-    @Operation(summary = "Empresas disponibles (instalacion dedicada: solo la del cliente)")
-    public List<Instalacion.EmpresaOpcion> empresas() {
-        return instalacion.empresas();
+    @GetMapping("/instalacion/empresa")
+    @Operation(summary = "Empresa que usa el sistema")
+    public Instalacion.Empresa empresa() {
+        return instalacion.empresa()
+                .orElseThrow(() -> new NotFoundException("La instalacion no tiene una empresa configurada (garlic.instalacion.empresa-ruc)"));
     }
 }

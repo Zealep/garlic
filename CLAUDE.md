@@ -1,7 +1,8 @@
 # App Garlic — contexto para Claude Code
 
-SaaS agrícola (inicio: **ajo**) para la agroexportadora de un amigo del usuario, pensado para ofrecerse luego
-a otras empresas (**multi-tenant desde el día 1**; RLS de PostgreSQL diferido hasta el 2.º cliente).
+Sistema de compra de ajo en campo **dedicado a una sola empresa**: la agroexportadora de un amigo del usuario.
+**No es un SaaS** (decisión 2026-10-19): no se diseña para otros clientes. La columna `empresa_id` se conserva en el
+modelo (el servidor la llena con la empresa de la instalación) para no reestructurar la base.
 Idioma del proyecto: **español** (código de dominio, UI, docs y respuestas).
 
 ## Fuente de requisitos
@@ -44,7 +45,9 @@ Excel del cliente "N°1 EVALUACION CAMPO AJO 2025", hoja **"LOTE #XXX MODELO - V
 - `docs/modelo-datos/` — modelo y diccionario de datos.
 
 ## Convenciones clave
-- Tenant por header `X-Empresa-Id` (hasta agregar JWT); nunca confiar en el body.
+- **Una sola empresa**: `garlic.instalacion.empresa-ruc` (dev: `00000000000`, prod: `.env`). El servidor fija esa
+  empresa en `TenantContext` para cada request; la app **no** envía empresa. El header `X-Empresa-Id` solo se usa en los
+  tests de integración (sin RUC configurado) para aislar cada test.
 - Esquema solo por **migraciones Flyway nuevas** (`V7__...`); nunca editar una ya aplicada. `ddl-auto=validate`.
 - Errores: 400 validación · 404 · 409 duplicado/estado · 422 regla de negocio (ProblemDetail RFC 9457).
 - IDs UUID generados por el cliente para sincronización idempotente (lote, evaluación, evidencia, carga, gasto, pago,
@@ -58,21 +61,19 @@ docker compose up -d
 cd garlicbackend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev     # :8080, datos demo
 cd garlic_app && flutter run -d chrome                                        # o emulador Android (10.0.2.2)
 ```
-Empresa demo: RUC `00000000000` (la app lista las empresas vía `/instalacion/empresas`).
+Empresa demo: RUC `00000000000` (`GET /instalacion/empresa` la devuelve; la app la usa sin elegirla).
 
 ## Despliegue (servidor de pruebas del cliente)
 Ver `deploy/DESPLIEGUE.md`: Droplet de DigitalOcean + Docker Compose (Postgres, backend perfil `prod`, Caddy con
 HTTPS y usuario/clave). La app se instala como PWA en el celular.
-- **Instalación dedicada** (decisión 2026-10-04): por ahora el sistema es solo para el cliente. Con
-  `garlic.instalacion.empresa-ruc` definido, el API rechaza otras empresas (403) y la app no muestra selector.
-  El código multiempresa queda intacto para el SaaS futuro.
+- La empresa del cliente se define con `EMPRESA_RUC` en el `.env` del servidor.
 - Perfil `prod`: catálogos base y empresa desde `db/inicial/R__instalacion.sql` (placeholders por variables de entorno).
 
 ## Pendientes
 - [ ] App: enviar lo nuevo directo con `POST` (hoy intenta `PUT` y ante 404 hace `POST`, lo que deja un 404 visible en la consola del navegador).
 - [ ] Verificar la app en emulador Android (en Windows requiere Modo desarrollador para compilar con plugins).
 - [ ] Roles: quién registra / quién aprueba (el cliente no lo definió; depende de JWT).
-- [ ] Autenticación JWT (reemplaza el header de tenant y el usuario/clave compartido de Caddy); necesaria antes de la APK.
+- [ ] Autenticación JWT con usuarios (reemplaza el usuario/clave compartido de Caddy); necesaria antes de la APK.
 - [ ] Confirmar con el cliente (punto 3): modalidades "Precio Barre/Escoba" (hoja DATOS), si POROTO es clase de calidad,
       qué significa la condición CREDITO y si la liquidación se cierra (inmutable) al pagar.
 - [ ] Confirmar con el cliente: duplicado de zona por campaña, orden de fechas del lote,

@@ -1,7 +1,8 @@
 # App Garlic
 
-SaaS agrícola para agroexportadoras, empezando por el **ajo**: evaluación de lotes en campo
-(protocolo de compra: identificación y calidad del lote), con app móvil que funciona sin conexión.
+Sistema de compra de **ajo** en campo para una agroexportadora: identificación y evaluación de lotes,
+fijación de precio, camiones, gastos, pagos y balance hasta la materia prima puesta en packing.
+App móvil/web que funciona sin conexión.
 
 | Carpeta | Contenido |
 |---|---|

@@ -1,6 +1,6 @@
 # garlicbackend
 
-API del SaaS agrícola (evaluación de lotes de ajo). Spring Boot 4.1 · Java 21 · PostgreSQL 16 · Flyway.
+API de Garlic (compra de ajo en campo: lotes, evaluación, compra y pagos). Spring Boot 4.1 · Java 21 · PostgreSQL 16 · Flyway.
 
 ## Arranque
 ```bash
@@ -21,7 +21,7 @@ cada test crea sus propias empresas, así no dependen de datos previos.
 ## Arquitectura: monolito modular por feature
 ```
 com.zealep.garlicbackend
-├── shared/            Transversal: tenant (X-Empresa-Id), errores RFC 9457, auditoría, OpenAPI,
+├── shared/            Transversal: empresa de la instalación, errores RFC 9457, auditoría, OpenAPI,
 │                      almacenamiento de archivos (storage), validaciones comunes
 ├── catalogo/          Catálogos por empresa (variedades, calibres, enfermedades, …)
 │   └── base/          CRUD genérico: CatalogoEntity, AbstractCatalogoService/Controller
@@ -37,8 +37,9 @@ com.zealep.garlicbackend
 Cada feature contiene su entity, request/response (records), mapper, repository, service y controller.
 
 ### Convenciones
-- **Tenant**: nunca se confía en el body; el `empresaId` sale de `TenantProvider` y toda consulta filtra por él.
-  Hoy lo resuelve `TenantInterceptor` desde el header; con JWT solo cambia esa implementación.
+- **Una sola empresa**: el sistema es de la agroexportadora del cliente (`garlic.instalacion.empresa-ruc`).
+  `TenantInterceptor` fija esa empresa en cada request y toda consulta filtra por `TenantProvider` (la columna
+  `empresa_id` se conserva). Solo sin RUC configurado (tests de integración) se toma del header `X-Empresa-Id`.
 - **Referencias entre módulos**: se validan con `referenciaActiva(id)` del servicio dueño
   (422 si no existe en la empresa o está inactiva). No se accede al repositorio de otro módulo.
 - **Errores**: 400 validación · 404 no existe · 409 duplicado/estado · 422 regla de negocio o referencia inválida.

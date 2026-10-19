@@ -68,7 +68,7 @@ class ConfigRepository extends ChangeNotifier {
     final json = KvStore.mapa(await _kv.leer(_clave));
     _config = json == null ? null : AppConfig.fromJson(json);
     if (_config != null) {
-      _api.configurar(baseUrl: _config!.apiUrl, empresaId: _config!.empresaId);
+      _api.configurar(baseUrl: _config!.apiUrl);
     }
     notifyListeners();
   }
@@ -76,7 +76,7 @@ class ConfigRepository extends ChangeNotifier {
   Future<void> guardar(AppConfig config) async {
     await _kv.escribir(_clave, config.toJson());
     _config = config;
-    _api.configurar(baseUrl: config.apiUrl, empresaId: config.empresaId);
+    _api.configurar(baseUrl: config.apiUrl);
     notifyListeners();
   }
 
@@ -86,29 +86,24 @@ class ConfigRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Verifica el servidor y devuelve las empresas disponibles (endpoint de desarrollo).
-  Future<Result<List<EmpresaOpcion>>> probarServidor(String apiUrl) async {
+  /// Verifica el servidor y devuelve la empresa que usa el sistema.
+  Future<Result<EmpresaOpcion>> probarServidor(String apiUrl) async {
     _api.configurar(baseUrl: apiUrl);
-    final r = await _api.get('/instalacion/empresas');
+    final r = await _api.get('/instalacion/empresa');
     return switch (r) {
-      Ok(:final value) => Result.ok(
-        KvStore.lista(value)
-            .map(
-              (e) =>
-                  EmpresaOpcion(id: e['id']! as String, nombre: e['razonSocial']! as String, ruc: e['ruc']! as String),
-            )
-            .toList(),
-      ),
+      Ok(:final value) => switch (KvStore.mapa(value)) {
+        final e? => Result.ok(
+          EmpresaOpcion(id: e['id']! as String, nombre: e['razonSocial']! as String, ruc: e['ruc']! as String),
+        ),
+        null => const Result.error(AppFailure(FailureKind.desconocido, 'Respuesta inesperada del servidor')),
+      },
       Error(:final failure) => Result.error(failure),
     };
   }
 
-  /// Evaluadores activos y cultivo principal de la empresa elegida.
-  Future<Result<({List<PersonaItem> evaluadores, List<CatalogoItem> cultivos})>> datosEmpresa(
-    String apiUrl,
-    String empresaId,
-  ) async {
-    _api.configurar(baseUrl: apiUrl, empresaId: empresaId);
+  /// Evaluadores activos y cultivo principal de la empresa.
+  Future<Result<({List<PersonaItem> evaluadores, List<CatalogoItem> cultivos})>> datosEmpresa(String apiUrl) async {
+    _api.configurar(baseUrl: apiUrl);
     final usuarios = await _api.get('/api/v1/usuarios', query: {'activo': true, 'size': 100});
     final cultivos = await _api.get('/api/v1/catalogos/cultivos');
     if (usuarios case Error(:final failure)) return Result.error(failure);

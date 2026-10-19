@@ -6,7 +6,6 @@ import '../../../utils/result.dart';
 
 /// Cliente HTTP del backend Garlic. Servicio sin estado de negocio: solo transporte.
 ///
-/// - Agrega el header de empresa (tenant) a cada request.
 /// - Traduce errores (ProblemDetail RFC 9457) a [AppFailure] sin lanzar excepciones.
 class ApiClient {
   ApiClient({Dio? dio})
@@ -20,16 +19,12 @@ class ApiClient {
             ),
           );
 
-  static const empresaHeader = 'X-Empresa-Id';
-
   final Dio _dio;
-  String? _empresaId;
 
   String get baseUrl => _dio.options.baseUrl;
 
-  void configurar({required String baseUrl, String? empresaId}) {
+  void configurar({required String baseUrl}) {
     _dio.options.baseUrl = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
-    _empresaId = empresaId;
   }
 
   Future<Result<Object?>> get(String path, {Map<String, Object?>? query}) =>
@@ -67,7 +62,8 @@ class ApiClient {
     return _enviar(() => _dio.post<Object?>(path, data: form, options: _opciones()));
   }
 
-  Options _opciones() => Options(headers: {if (_empresaId != null) empresaHeader: _empresaId});
+  // El sistema es de una sola empresa: el servidor la conoce, no se envía.
+  Options _opciones() => Options();
 
   Future<Result<Object?>> _enviar(Future<Response<Object?>> Function() request) async {
     try {

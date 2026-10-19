@@ -18,7 +18,7 @@ springdoc:
 
 garlic:
   instalacion:
-    # Solo esta empresa puede usar la instancia (el API rechaza cualquier otra con 403)
+    # La empresa que usa el sistema
     empresa-ruc: ${GARLIC_EMPRESA_RUC}
   storage:
     directorio: ${GARLIC_STORAGE_DIR:/data/evidencias}

@@ -10,6 +10,9 @@ logging:
     org.hibernate.SQL: DEBUG
 
 garlic:
+  instalacion:
+    # empresa demo del seed (db/seed/R__seed_demo.sql)
+    empresa-ruc: "00000000000"
   cors:
     # App Flutter web / dashboards en desarrollo
     allowed-origins: http://localhost:*,http://127.0.0.1:*

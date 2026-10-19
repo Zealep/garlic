@@ -1,7 +1,7 @@
 # Despliegue del servidor de pruebas (instalación dedicada al cliente)
 
 Objetivo: que el cliente valide el MVP desde su celular y su laptop en un entorno controlado,
-**solo para su empresa**, con HTTPS y acceso restringido.
+con HTTPS y acceso restringido. El sistema es **solo para su empresa**.
 
 ```
 Internet ──HTTPS──► Caddy (certificado automático + usuario/clave)
@@ -69,7 +69,7 @@ nano .env
 ```
 - `DOMINIO`: la IP con guiones + `.sslip.io` (ej. `164-90-12-34.sslip.io`) o tu dominio
   (antes crea un registro **A** del dominio a la IP).
-- `EMPRESA_RUC` / `EMPRESA_RAZON_SOCIAL`: la empresa de tu amigo. **Es la única que podrá usar la instancia.**
+- `EMPRESA_RUC` / `EMPRESA_RAZON_SOCIAL`: la empresa de tu amigo (el sistema trabaja solo con ella).
 - `ADMIN_NOMBRE` / `ADMIN_EMAIL`: primer usuario (sale como evaluador en la app).
 - `DB_PASSWORD`: la clave generada.
 - `ACCESO_USUARIO` / `ACCESO_HASH`: usuario y hash de la clave de acceso. **En el `.env` cada `$` del hash va doble (`$$`).**
@@ -96,7 +96,7 @@ Repite este paso cada vez que cambie la app.
 
 ## 7. Probar
 1. Abre `https://164-90-12-34.sslip.io` → pide usuario y clave (los de `ACCESO_*`).
-2. La configuración inicial es automática: detecta el servidor y la única empresa; solo eliges el evaluador.
+2. La configuración inicial es automática: detecta el servidor y la empresa; solo eliges el evaluador.
 3. Verifica: `https://.../actuator/health` responde `{"status":"UP"}`.
 
 ## 8. Instalar en el celular (fase de pruebas: PWA, sin tienda)
@@ -146,8 +146,6 @@ Monitoreo gratuito: [UptimeRobot](https://uptimerobot.com) apuntando a `https://
 ## Seguridad en esta fase (importante)
 - Acceso por **usuario y clave compartidos** (Caddy) + **HTTPS**. Suficiente para una prueba controlada;
   **no** distingue personas: todos los cambios figuran sin autor.
-- La instancia es **dedicada**: el API solo atiende a la empresa de `EMPRESA_RUC` (cualquier otra → 403)
-  y la app no muestra selector de empresas. Para volver a modo SaaS basta no definir
-  `garlic.instalacion.empresa-ruc` (el código multiempresa sigue intacto).
+- El sistema es de **una sola empresa** (`EMPRESA_RUC`): el servidor la fija en cada consulta; la app no la envía.
 - Swagger/OpenAPI está desactivado en producción. Postgres no tiene puertos públicos.
 - Pendiente antes de uso real: **login con usuarios (JWT)** y roles.

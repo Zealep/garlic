@@ -10,7 +10,8 @@ import '../../../../domain/models/catalogo.dart';
 import '../../../../utils/command.dart';
 import '../../../../utils/result.dart';
 
-/// Primer uso: servidor → empresa → evaluador → descarga de catálogos para trabajar sin red.
+/// Primer uso: servidor → evaluador → descarga de catálogos para trabajar sin red.
+/// La empresa la define el servidor (el sistema es de una sola empresa).
 class SetupViewModel extends ChangeNotifier {
   SetupViewModel({
     required ConfigRepository config,
@@ -22,7 +23,6 @@ class SetupViewModel extends ChangeNotifier {
        _lotes = lotes,
        _evaluaciones = evaluaciones {
     conectar = Command(_conectar);
-    elegirEmpresa = Command1(_elegirEmpresa);
     finalizar = Command(_finalizar);
     final actual = config.config;
     apiUrl = actual?.apiUrl ?? servidorPredeterminado;
@@ -47,36 +47,26 @@ class SetupViewModel extends ChangeNotifier {
   final LotesRepository _lotes;
   final EvaluacionesRepository _evaluaciones;
 
-  late final Command<List<EmpresaOpcion>> conectar;
-  late final Command1<void, EmpresaOpcion> elegirEmpresa;
+  late final Command<void> conectar;
   late final Command<void> finalizar;
 
   late String apiUrl;
-  List<EmpresaOpcion> empresas = const [];
   EmpresaOpcion? empresa;
   List<PersonaItem> evaluadores = const [];
   PersonaItem? evaluador;
   CatalogoItem? cultivo;
 
-  int get paso => empresa == null ? (empresas.isEmpty ? 0 : 1) : 2;
+  /// 0 = servidor, 1 = evaluador.
+  int get paso => empresa == null ? 0 : 1;
 
-  Future<Result<List<EmpresaOpcion>>> _conectar() async {
-    final r = await _config.probarServidor(apiUrl.trim());
-    if (r case Ok(:final value)) {
-      empresas = value;
-      empresa = null;
-      notifyListeners();
-      // instalación dedicada: una sola empresa, no hay nada que elegir
-      if (value.length == 1) await elegirEmpresa.execute(value.single);
-    }
-    return r;
-  }
-
-  Future<Result<void>> _elegirEmpresa(EmpresaOpcion e) async {
-    final r = await _config.datosEmpresa(apiUrl.trim(), e.id);
-    switch (r) {
+  Future<Result<void>> _conectar() async {
+    final url = apiUrl.trim();
+    final r = await _config.probarServidor(url);
+    if (r case Error(:final failure)) return Result.error(failure);
+    final datos = await _config.datosEmpresa(url);
+    switch (datos) {
       case Ok(:final value):
-        empresa = e;
+        empresa = (r as Ok<EmpresaOpcion>).value;
         evaluadores = value.evaluadores;
         evaluador = evaluadores.length == 1 ? evaluadores.first : null;
         cultivo = value.cultivos.where((c) => c.codigo == 'AJO').firstOrNull ?? value.cultivos.firstOrNull;
@@ -93,17 +83,13 @@ class SetupViewModel extends ChangeNotifier {
   }
 
   void volver() {
-    if (empresa != null) {
-      empresa = null;
-    } else {
-      empresas = const [];
-    }
+    empresa = null;
     notifyListeners();
   }
 
   Future<Result<void>> _finalizar() async {
     if (empresa == null || evaluador == null || cultivo == null) {
-      return const Result.error(AppFailure(FailureKind.validacion, 'Seleccione empresa y evaluador'));
+      return const Result.error(AppFailure(FailureKind.validacion, 'Seleccione el evaluador'));
     }
     await _config.guardar(
       AppConfig(
