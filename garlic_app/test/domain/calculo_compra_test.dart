@@ -14,7 +14,8 @@ const calidadExcel = [
   {primera: 75.0, abiertos: 25.0},
 ];
 
-Carga camion(String id) => Carga(id: id, fecha: DateTime(2025, 10, 20), kg: 15000, precioKg: 2.8, cantidadEmpaques: 375);
+Carga camion(String id) =>
+    Carga(id: id, fecha: DateTime(2025, 10, 20), kg: 15000, precioKg: 2.8, cantidadEmpaques: 375);
 
 void main() {
   group('Fijación de precio (ejemplo del Excel)', () {
@@ -95,7 +96,10 @@ void main() {
       final g = GastoVinculado(id: 'g', tipoGastoId: 't', fecha: DateTime(2025), monto: 70);
       expect(ReglasCompra.gasto(g, otros), contains('Describa'));
       expect(ReglasCompra.gasto(g..descripcion = 'Viáticos', otros), isNull);
-      expect(ReglasCompra.pago(Pago(id: 'p', fecha: DateTime(2025), condicionPagoId: 'c', monto: 0)), 'Ingrese el monto');
+      expect(
+        ReglasCompra.pago(Pago(id: 'p', fecha: DateTime(2025), condicionPagoId: 'c', monto: 0)),
+        'Ingrese el monto',
+      );
     });
   });
 }

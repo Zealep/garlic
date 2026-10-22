@@ -3,8 +3,7 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
-class $KvEntriesTable extends KvEntries
-    with TableInfo<$KvEntriesTable, KvEntry> {
+class $KvEntriesTable extends KvEntries with TableInfo<$KvEntriesTable, KvEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -27,9 +26,7 @@ class $KvEntriesTable extends KvEntries
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _actualizadoMeta = const VerificationMeta(
-    'actualizado',
-  );
+  static const VerificationMeta _actualizadoMeta = const VerificationMeta('actualizado');
   @override
   late final GeneratedColumn<DateTime> actualizado = GeneratedColumn<DateTime>(
     'actualizado',
@@ -46,36 +43,21 @@ class $KvEntriesTable extends KvEntries
   String get actualTableName => $name;
   static const String $name = 'kv_entries';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<KvEntry> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<KvEntry> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('clave')) {
-      context.handle(
-        _claveMeta,
-        clave.isAcceptableOrUnknown(data['clave']!, _claveMeta),
-      );
+      context.handle(_claveMeta, clave.isAcceptableOrUnknown(data['clave']!, _claveMeta));
     } else if (isInserting) {
       context.missing(_claveMeta);
     }
     if (data.containsKey('valor')) {
-      context.handle(
-        _valorMeta,
-        valor.isAcceptableOrUnknown(data['valor']!, _valorMeta),
-      );
+      context.handle(_valorMeta, valor.isAcceptableOrUnknown(data['valor']!, _valorMeta));
     } else if (isInserting) {
       context.missing(_valorMeta);
     }
     if (data.containsKey('actualizado')) {
-      context.handle(
-        _actualizadoMeta,
-        actualizado.isAcceptableOrUnknown(
-          data['actualizado']!,
-          _actualizadoMeta,
-        ),
-      );
+      context.handle(_actualizadoMeta, actualizado.isAcceptableOrUnknown(data['actualizado']!, _actualizadoMeta));
     } else if (isInserting) {
       context.missing(_actualizadoMeta);
     }
@@ -88,21 +70,9 @@ class $KvEntriesTable extends KvEntries
   KvEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return KvEntry(
-      clave:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}clave'],
-          )!,
-      valor:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}valor'],
-          )!,
-      actualizado:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}actualizado'],
-          )!,
+      clave: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}clave'])!,
+      valor: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}valor'])!,
+      actualizado: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}actualizado'])!,
     );
   }
 
@@ -116,11 +86,7 @@ class KvEntry extends DataClass implements Insertable<KvEntry> {
   final String clave;
   final String valor;
   final DateTime actualizado;
-  const KvEntry({
-    required this.clave,
-    required this.valor,
-    required this.actualizado,
-  });
+  const KvEntry({required this.clave, required this.valor, required this.actualizado});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -131,17 +97,10 @@ class KvEntry extends DataClass implements Insertable<KvEntry> {
   }
 
   KvEntriesCompanion toCompanion(bool nullToAbsent) {
-    return KvEntriesCompanion(
-      clave: Value(clave),
-      valor: Value(valor),
-      actualizado: Value(actualizado),
-    );
+    return KvEntriesCompanion(clave: Value(clave), valor: Value(valor), actualizado: Value(actualizado));
   }
 
-  factory KvEntry.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory KvEntry.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return KvEntry(
       clave: serializer.fromJson<String>(json['clave']),
@@ -160,17 +119,12 @@ class KvEntry extends DataClass implements Insertable<KvEntry> {
   }
 
   KvEntry copyWith({String? clave, String? valor, DateTime? actualizado}) =>
-      KvEntry(
-        clave: clave ?? this.clave,
-        valor: valor ?? this.valor,
-        actualizado: actualizado ?? this.actualizado,
-      );
+      KvEntry(clave: clave ?? this.clave, valor: valor ?? this.valor, actualizado: actualizado ?? this.actualizado);
   KvEntry copyWithCompanion(KvEntriesCompanion data) {
     return KvEntry(
       clave: data.clave.present ? data.clave.value : this.clave,
       valor: data.valor.present ? data.valor.value : this.valor,
-      actualizado:
-          data.actualizado.present ? data.actualizado.value : this.actualizado,
+      actualizado: data.actualizado.present ? data.actualizado.value : this.actualizado,
     );
   }
 
@@ -272,8 +226,7 @@ class KvEntriesCompanion extends UpdateCompanion<KvEntry> {
   }
 }
 
-class $LotesLocalTable extends LotesLocal
-    with TableInfo<$LotesLocalTable, LotesLocalData> {
+class $LotesLocalTable extends LotesLocal with TableInfo<$LotesLocalTable, LotesLocalData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -314,9 +267,7 @@ class $LotesLocalTable extends LotesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _agricultorMeta = const VerificationMeta(
-    'agricultor',
-  );
+  static const VerificationMeta _agricultorMeta = const VerificationMeta('agricultor');
   @override
   late final GeneratedColumn<String> agricultor = GeneratedColumn<String>(
     'agricultor',
@@ -334,9 +285,7 @@ class $LotesLocalTable extends LotesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _syncStateMeta = const VerificationMeta(
-    'syncState',
-  );
+  static const VerificationMeta _syncStateMeta = const VerificationMeta('syncState');
   @override
   late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
     'sync_state',
@@ -345,9 +294,7 @@ class $LotesLocalTable extends LotesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _syncErrorMeta = const VerificationMeta(
-    'syncError',
-  );
+  static const VerificationMeta _syncErrorMeta = const VerificationMeta('syncError');
   @override
   late final GeneratedColumn<String> syncError = GeneratedColumn<String>(
     'sync_error',
@@ -356,9 +303,7 @@ class $LotesLocalTable extends LotesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _actualizadoMeta = const VerificationMeta(
-    'actualizado',
-  );
+  static const VerificationMeta _actualizadoMeta = const VerificationMeta('actualizado');
   @override
   late final GeneratedColumn<DateTime> actualizado = GeneratedColumn<DateTime>(
     'actualizado',
@@ -368,27 +313,14 @@ class $LotesLocalTable extends LotesLocal
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    json,
-    codigo,
-    zona,
-    agricultor,
-    estado,
-    syncState,
-    syncError,
-    actualizado,
-  ];
+  List<GeneratedColumn> get $columns => [id, json, codigo, zona, agricultor, estado, syncState, syncError, actualizado];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'lotes_local';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<LotesLocalData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<LotesLocalData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -397,67 +329,40 @@ class $LotesLocalTable extends LotesLocal
       context.missing(_idMeta);
     }
     if (data.containsKey('json')) {
-      context.handle(
-        _jsonMeta,
-        json.isAcceptableOrUnknown(data['json']!, _jsonMeta),
-      );
+      context.handle(_jsonMeta, json.isAcceptableOrUnknown(data['json']!, _jsonMeta));
     } else if (isInserting) {
       context.missing(_jsonMeta);
     }
     if (data.containsKey('codigo')) {
-      context.handle(
-        _codigoMeta,
-        codigo.isAcceptableOrUnknown(data['codigo']!, _codigoMeta),
-      );
+      context.handle(_codigoMeta, codigo.isAcceptableOrUnknown(data['codigo']!, _codigoMeta));
     } else if (isInserting) {
       context.missing(_codigoMeta);
     }
     if (data.containsKey('zona')) {
-      context.handle(
-        _zonaMeta,
-        zona.isAcceptableOrUnknown(data['zona']!, _zonaMeta),
-      );
+      context.handle(_zonaMeta, zona.isAcceptableOrUnknown(data['zona']!, _zonaMeta));
     } else if (isInserting) {
       context.missing(_zonaMeta);
     }
     if (data.containsKey('agricultor')) {
-      context.handle(
-        _agricultorMeta,
-        agricultor.isAcceptableOrUnknown(data['agricultor']!, _agricultorMeta),
-      );
+      context.handle(_agricultorMeta, agricultor.isAcceptableOrUnknown(data['agricultor']!, _agricultorMeta));
     } else if (isInserting) {
       context.missing(_agricultorMeta);
     }
     if (data.containsKey('estado')) {
-      context.handle(
-        _estadoMeta,
-        estado.isAcceptableOrUnknown(data['estado']!, _estadoMeta),
-      );
+      context.handle(_estadoMeta, estado.isAcceptableOrUnknown(data['estado']!, _estadoMeta));
     } else if (isInserting) {
       context.missing(_estadoMeta);
     }
     if (data.containsKey('sync_state')) {
-      context.handle(
-        _syncStateMeta,
-        syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta),
-      );
+      context.handle(_syncStateMeta, syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta));
     } else if (isInserting) {
       context.missing(_syncStateMeta);
     }
     if (data.containsKey('sync_error')) {
-      context.handle(
-        _syncErrorMeta,
-        syncError.isAcceptableOrUnknown(data['sync_error']!, _syncErrorMeta),
-      );
+      context.handle(_syncErrorMeta, syncError.isAcceptableOrUnknown(data['sync_error']!, _syncErrorMeta));
     }
     if (data.containsKey('actualizado')) {
-      context.handle(
-        _actualizadoMeta,
-        actualizado.isAcceptableOrUnknown(
-          data['actualizado']!,
-          _actualizadoMeta,
-        ),
-      );
+      context.handle(_actualizadoMeta, actualizado.isAcceptableOrUnknown(data['actualizado']!, _actualizadoMeta));
     } else if (isInserting) {
       context.missing(_actualizadoMeta);
     }
@@ -470,50 +375,15 @@ class $LotesLocalTable extends LotesLocal
   LotesLocalData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LotesLocalData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      json:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}json'],
-          )!,
-      codigo:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}codigo'],
-          )!,
-      zona:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}zona'],
-          )!,
-      agricultor:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}agricultor'],
-          )!,
-      estado:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}estado'],
-          )!,
-      syncState:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}sync_state'],
-          )!,
-      syncError: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}sync_error'],
-      ),
-      actualizado:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}actualizado'],
-          )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      json: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}json'])!,
+      codigo: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}codigo'])!,
+      zona: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}zona'])!,
+      agricultor: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}agricultor'])!,
+      estado: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}estado'])!,
+      syncState: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sync_state'])!,
+      syncError: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sync_error']),
+      actualizado: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}actualizado'])!,
     );
   }
 
@@ -570,18 +440,12 @@ class LotesLocalData extends DataClass implements Insertable<LotesLocalData> {
       agricultor: Value(agricultor),
       estado: Value(estado),
       syncState: Value(syncState),
-      syncError:
-          syncError == null && nullToAbsent
-              ? const Value.absent()
-              : Value(syncError),
+      syncError: syncError == null && nullToAbsent ? const Value.absent() : Value(syncError),
       actualizado: Value(actualizado),
     );
   }
 
-  factory LotesLocalData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory LotesLocalData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LotesLocalData(
       id: serializer.fromJson<String>(json['id']),
@@ -638,13 +502,11 @@ class LotesLocalData extends DataClass implements Insertable<LotesLocalData> {
       json: data.json.present ? data.json.value : this.json,
       codigo: data.codigo.present ? data.codigo.value : this.codigo,
       zona: data.zona.present ? data.zona.value : this.zona,
-      agricultor:
-          data.agricultor.present ? data.agricultor.value : this.agricultor,
+      agricultor: data.agricultor.present ? data.agricultor.value : this.agricultor,
       estado: data.estado.present ? data.estado.value : this.estado,
       syncState: data.syncState.present ? data.syncState.value : this.syncState,
       syncError: data.syncError.present ? data.syncError.value : this.syncError,
-      actualizado:
-          data.actualizado.present ? data.actualizado.value : this.actualizado,
+      actualizado: data.actualizado.present ? data.actualizado.value : this.actualizado,
     );
   }
 
@@ -665,17 +527,7 @@ class LotesLocalData extends DataClass implements Insertable<LotesLocalData> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    json,
-    codigo,
-    zona,
-    agricultor,
-    estado,
-    syncState,
-    syncError,
-    actualizado,
-  );
+  int get hashCode => Object.hash(id, json, codigo, zona, agricultor, estado, syncState, syncError, actualizado);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -839,8 +691,7 @@ class LotesLocalCompanion extends UpdateCompanion<LotesLocalData> {
   }
 }
 
-class $EvaluacionesLocalTable extends EvaluacionesLocal
-    with TableInfo<$EvaluacionesLocalTable, EvaluacionesLocalData> {
+class $EvaluacionesLocalTable extends EvaluacionesLocal with TableInfo<$EvaluacionesLocalTable, EvaluacionesLocalData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -863,9 +714,7 @@ class $EvaluacionesLocalTable extends EvaluacionesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _resumenJsonMeta = const VerificationMeta(
-    'resumenJson',
-  );
+  static const VerificationMeta _resumenJsonMeta = const VerificationMeta('resumenJson');
   @override
   late final GeneratedColumn<String> resumenJson = GeneratedColumn<String>(
     'resumen_json',
@@ -874,9 +723,7 @@ class $EvaluacionesLocalTable extends EvaluacionesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _borradorJsonMeta = const VerificationMeta(
-    'borradorJson',
-  );
+  static const VerificationMeta _borradorJsonMeta = const VerificationMeta('borradorJson');
   @override
   late final GeneratedColumn<String> borradorJson = GeneratedColumn<String>(
     'borrador_json',
@@ -903,9 +750,7 @@ class $EvaluacionesLocalTable extends EvaluacionesLocal
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _syncStateMeta = const VerificationMeta(
-    'syncState',
-  );
+  static const VerificationMeta _syncStateMeta = const VerificationMeta('syncState');
   @override
   late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
     'sync_state',
@@ -914,9 +759,7 @@ class $EvaluacionesLocalTable extends EvaluacionesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _syncErrorMeta = const VerificationMeta(
-    'syncError',
-  );
+  static const VerificationMeta _syncErrorMeta = const VerificationMeta('syncError');
   @override
   late final GeneratedColumn<String> syncError = GeneratedColumn<String>(
     'sync_error',
@@ -925,9 +768,7 @@ class $EvaluacionesLocalTable extends EvaluacionesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _actualizadoMeta = const VerificationMeta(
-    'actualizado',
-  );
+  static const VerificationMeta _actualizadoMeta = const VerificationMeta('actualizado');
   @override
   late final GeneratedColumn<DateTime> actualizado = GeneratedColumn<DateTime>(
     'actualizado',
@@ -954,10 +795,7 @@ class $EvaluacionesLocalTable extends EvaluacionesLocal
   String get actualTableName => $name;
   static const String $name = 'evaluaciones_local';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<EvaluacionesLocalData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<EvaluacionesLocalData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -966,71 +804,38 @@ class $EvaluacionesLocalTable extends EvaluacionesLocal
       context.missing(_idMeta);
     }
     if (data.containsKey('lote_id')) {
-      context.handle(
-        _loteIdMeta,
-        loteId.isAcceptableOrUnknown(data['lote_id']!, _loteIdMeta),
-      );
+      context.handle(_loteIdMeta, loteId.isAcceptableOrUnknown(data['lote_id']!, _loteIdMeta));
     } else if (isInserting) {
       context.missing(_loteIdMeta);
     }
     if (data.containsKey('resumen_json')) {
-      context.handle(
-        _resumenJsonMeta,
-        resumenJson.isAcceptableOrUnknown(
-          data['resumen_json']!,
-          _resumenJsonMeta,
-        ),
-      );
+      context.handle(_resumenJsonMeta, resumenJson.isAcceptableOrUnknown(data['resumen_json']!, _resumenJsonMeta));
     } else if (isInserting) {
       context.missing(_resumenJsonMeta);
     }
     if (data.containsKey('borrador_json')) {
-      context.handle(
-        _borradorJsonMeta,
-        borradorJson.isAcceptableOrUnknown(
-          data['borrador_json']!,
-          _borradorJsonMeta,
-        ),
-      );
+      context.handle(_borradorJsonMeta, borradorJson.isAcceptableOrUnknown(data['borrador_json']!, _borradorJsonMeta));
     }
     if (data.containsKey('estado')) {
-      context.handle(
-        _estadoMeta,
-        estado.isAcceptableOrUnknown(data['estado']!, _estadoMeta),
-      );
+      context.handle(_estadoMeta, estado.isAcceptableOrUnknown(data['estado']!, _estadoMeta));
     } else if (isInserting) {
       context.missing(_estadoMeta);
     }
     if (data.containsKey('fecha')) {
-      context.handle(
-        _fechaMeta,
-        fecha.isAcceptableOrUnknown(data['fecha']!, _fechaMeta),
-      );
+      context.handle(_fechaMeta, fecha.isAcceptableOrUnknown(data['fecha']!, _fechaMeta));
     } else if (isInserting) {
       context.missing(_fechaMeta);
     }
     if (data.containsKey('sync_state')) {
-      context.handle(
-        _syncStateMeta,
-        syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta),
-      );
+      context.handle(_syncStateMeta, syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta));
     } else if (isInserting) {
       context.missing(_syncStateMeta);
     }
     if (data.containsKey('sync_error')) {
-      context.handle(
-        _syncErrorMeta,
-        syncError.isAcceptableOrUnknown(data['sync_error']!, _syncErrorMeta),
-      );
+      context.handle(_syncErrorMeta, syncError.isAcceptableOrUnknown(data['sync_error']!, _syncErrorMeta));
     }
     if (data.containsKey('actualizado')) {
-      context.handle(
-        _actualizadoMeta,
-        actualizado.isAcceptableOrUnknown(
-          data['actualizado']!,
-          _actualizadoMeta,
-        ),
-      );
+      context.handle(_actualizadoMeta, actualizado.isAcceptableOrUnknown(data['actualizado']!, _actualizadoMeta));
     } else if (isInserting) {
       context.missing(_actualizadoMeta);
     }
@@ -1043,49 +848,15 @@ class $EvaluacionesLocalTable extends EvaluacionesLocal
   EvaluacionesLocalData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return EvaluacionesLocalData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      loteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}lote_id'],
-          )!,
-      resumenJson:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}resumen_json'],
-          )!,
-      borradorJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}borrador_json'],
-      ),
-      estado:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}estado'],
-          )!,
-      fecha:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}fecha'],
-          )!,
-      syncState:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}sync_state'],
-          )!,
-      syncError: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}sync_error'],
-      ),
-      actualizado:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}actualizado'],
-          )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      loteId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}lote_id'])!,
+      resumenJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}resumen_json'])!,
+      borradorJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}borrador_json']),
+      estado: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}estado'])!,
+      fecha: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}fecha'])!,
+      syncState: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sync_state'])!,
+      syncError: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sync_error']),
+      actualizado: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}actualizado'])!,
     );
   }
 
@@ -1095,8 +866,7 @@ class $EvaluacionesLocalTable extends EvaluacionesLocal
   }
 }
 
-class EvaluacionesLocalData extends DataClass
-    implements Insertable<EvaluacionesLocalData> {
+class EvaluacionesLocalData extends DataClass implements Insertable<EvaluacionesLocalData> {
   final String id;
   final String loteId;
   final String resumenJson;
@@ -1141,25 +911,16 @@ class EvaluacionesLocalData extends DataClass
       id: Value(id),
       loteId: Value(loteId),
       resumenJson: Value(resumenJson),
-      borradorJson:
-          borradorJson == null && nullToAbsent
-              ? const Value.absent()
-              : Value(borradorJson),
+      borradorJson: borradorJson == null && nullToAbsent ? const Value.absent() : Value(borradorJson),
       estado: Value(estado),
       fecha: Value(fecha),
       syncState: Value(syncState),
-      syncError:
-          syncError == null && nullToAbsent
-              ? const Value.absent()
-              : Value(syncError),
+      syncError: syncError == null && nullToAbsent ? const Value.absent() : Value(syncError),
       actualizado: Value(actualizado),
     );
   }
 
-  factory EvaluacionesLocalData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory EvaluacionesLocalData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return EvaluacionesLocalData(
       id: serializer.fromJson<String>(json['id']),
@@ -1214,18 +975,13 @@ class EvaluacionesLocalData extends DataClass
     return EvaluacionesLocalData(
       id: data.id.present ? data.id.value : this.id,
       loteId: data.loteId.present ? data.loteId.value : this.loteId,
-      resumenJson:
-          data.resumenJson.present ? data.resumenJson.value : this.resumenJson,
-      borradorJson:
-          data.borradorJson.present
-              ? data.borradorJson.value
-              : this.borradorJson,
+      resumenJson: data.resumenJson.present ? data.resumenJson.value : this.resumenJson,
+      borradorJson: data.borradorJson.present ? data.borradorJson.value : this.borradorJson,
       estado: data.estado.present ? data.estado.value : this.estado,
       fecha: data.fecha.present ? data.fecha.value : this.fecha,
       syncState: data.syncState.present ? data.syncState.value : this.syncState,
       syncError: data.syncError.present ? data.syncError.value : this.syncError,
-      actualizado:
-          data.actualizado.present ? data.actualizado.value : this.actualizado,
+      actualizado: data.actualizado.present ? data.actualizado.value : this.actualizado,
     );
   }
 
@@ -1246,17 +1002,8 @@ class EvaluacionesLocalData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    loteId,
-    resumenJson,
-    borradorJson,
-    estado,
-    fecha,
-    syncState,
-    syncError,
-    actualizado,
-  );
+  int get hashCode =>
+      Object.hash(id, loteId, resumenJson, borradorJson, estado, fecha, syncState, syncError, actualizado);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1272,8 +1019,7 @@ class EvaluacionesLocalData extends DataClass
           other.actualizado == this.actualizado);
 }
 
-class EvaluacionesLocalCompanion
-    extends UpdateCompanion<EvaluacionesLocalData> {
+class EvaluacionesLocalCompanion extends UpdateCompanion<EvaluacionesLocalData> {
   final Value<String> id;
   final Value<String> loteId;
   final Value<String> resumenJson;
@@ -1420,8 +1166,7 @@ class EvaluacionesLocalCompanion
   }
 }
 
-class $EvidenciasLocalTable extends EvidenciasLocal
-    with TableInfo<$EvidenciasLocalTable, EvidenciasLocalData> {
+class $EvidenciasLocalTable extends EvidenciasLocal with TableInfo<$EvidenciasLocalTable, EvidenciasLocalData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1435,9 +1180,7 @@ class $EvidenciasLocalTable extends EvidenciasLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _evaluacionIdMeta = const VerificationMeta(
-    'evaluacionId',
-  );
+  static const VerificationMeta _evaluacionIdMeta = const VerificationMeta('evaluacionId');
   @override
   late final GeneratedColumn<String> evaluacionId = GeneratedColumn<String>(
     'evaluacion_id',
@@ -1446,9 +1189,7 @@ class $EvidenciasLocalTable extends EvidenciasLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _muestraNumeroMeta = const VerificationMeta(
-    'muestraNumero',
-  );
+  static const VerificationMeta _muestraNumeroMeta = const VerificationMeta('muestraNumero');
   @override
   late final GeneratedColumn<int> muestraNumero = GeneratedColumn<int>(
     'muestra_numero',
@@ -1484,9 +1225,7 @@ class $EvidenciasLocalTable extends EvidenciasLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _syncStateMeta = const VerificationMeta(
-    'syncState',
-  );
+  static const VerificationMeta _syncStateMeta = const VerificationMeta('syncState');
   @override
   late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
     'sync_state',
@@ -1505,26 +1244,14 @@ class $EvidenciasLocalTable extends EvidenciasLocal
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    evaluacionId,
-    muestraNumero,
-    factor,
-    bytes,
-    mime,
-    syncState,
-    creado,
-  ];
+  List<GeneratedColumn> get $columns => [id, evaluacionId, muestraNumero, factor, bytes, mime, syncState, creado];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'evidencias_local';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<EvidenciasLocalData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<EvidenciasLocalData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -1533,60 +1260,36 @@ class $EvidenciasLocalTable extends EvidenciasLocal
       context.missing(_idMeta);
     }
     if (data.containsKey('evaluacion_id')) {
-      context.handle(
-        _evaluacionIdMeta,
-        evaluacionId.isAcceptableOrUnknown(
-          data['evaluacion_id']!,
-          _evaluacionIdMeta,
-        ),
-      );
+      context.handle(_evaluacionIdMeta, evaluacionId.isAcceptableOrUnknown(data['evaluacion_id']!, _evaluacionIdMeta));
     } else if (isInserting) {
       context.missing(_evaluacionIdMeta);
     }
     if (data.containsKey('muestra_numero')) {
       context.handle(
         _muestraNumeroMeta,
-        muestraNumero.isAcceptableOrUnknown(
-          data['muestra_numero']!,
-          _muestraNumeroMeta,
-        ),
+        muestraNumero.isAcceptableOrUnknown(data['muestra_numero']!, _muestraNumeroMeta),
       );
     }
     if (data.containsKey('factor')) {
-      context.handle(
-        _factorMeta,
-        factor.isAcceptableOrUnknown(data['factor']!, _factorMeta),
-      );
+      context.handle(_factorMeta, factor.isAcceptableOrUnknown(data['factor']!, _factorMeta));
     }
     if (data.containsKey('bytes')) {
-      context.handle(
-        _bytesMeta,
-        bytes.isAcceptableOrUnknown(data['bytes']!, _bytesMeta),
-      );
+      context.handle(_bytesMeta, bytes.isAcceptableOrUnknown(data['bytes']!, _bytesMeta));
     } else if (isInserting) {
       context.missing(_bytesMeta);
     }
     if (data.containsKey('mime')) {
-      context.handle(
-        _mimeMeta,
-        mime.isAcceptableOrUnknown(data['mime']!, _mimeMeta),
-      );
+      context.handle(_mimeMeta, mime.isAcceptableOrUnknown(data['mime']!, _mimeMeta));
     } else if (isInserting) {
       context.missing(_mimeMeta);
     }
     if (data.containsKey('sync_state')) {
-      context.handle(
-        _syncStateMeta,
-        syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta),
-      );
+      context.handle(_syncStateMeta, syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta));
     } else if (isInserting) {
       context.missing(_syncStateMeta);
     }
     if (data.containsKey('creado')) {
-      context.handle(
-        _creadoMeta,
-        creado.isAcceptableOrUnknown(data['creado']!, _creadoMeta),
-      );
+      context.handle(_creadoMeta, creado.isAcceptableOrUnknown(data['creado']!, _creadoMeta));
     } else if (isInserting) {
       context.missing(_creadoMeta);
     }
@@ -1599,44 +1302,14 @@ class $EvidenciasLocalTable extends EvidenciasLocal
   EvidenciasLocalData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return EvidenciasLocalData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      evaluacionId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}evaluacion_id'],
-          )!,
-      muestraNumero: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}muestra_numero'],
-      ),
-      factor: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}factor'],
-      ),
-      bytes:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.blob,
-            data['${effectivePrefix}bytes'],
-          )!,
-      mime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}mime'],
-          )!,
-      syncState:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}sync_state'],
-          )!,
-      creado:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}creado'],
-          )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      evaluacionId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}evaluacion_id'])!,
+      muestraNumero: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}muestra_numero']),
+      factor: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}factor']),
+      bytes: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}bytes'])!,
+      mime: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}mime'])!,
+      syncState: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sync_state'])!,
+      creado: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}creado'])!,
     );
   }
 
@@ -1646,8 +1319,7 @@ class $EvidenciasLocalTable extends EvidenciasLocal
   }
 }
 
-class EvidenciasLocalData extends DataClass
-    implements Insertable<EvidenciasLocalData> {
+class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLocalData> {
   final String id;
   final String evaluacionId;
   final int? muestraNumero;
@@ -1688,12 +1360,8 @@ class EvidenciasLocalData extends DataClass
     return EvidenciasLocalCompanion(
       id: Value(id),
       evaluacionId: Value(evaluacionId),
-      muestraNumero:
-          muestraNumero == null && nullToAbsent
-              ? const Value.absent()
-              : Value(muestraNumero),
-      factor:
-          factor == null && nullToAbsent ? const Value.absent() : Value(factor),
+      muestraNumero: muestraNumero == null && nullToAbsent ? const Value.absent() : Value(muestraNumero),
+      factor: factor == null && nullToAbsent ? const Value.absent() : Value(factor),
       bytes: Value(bytes),
       mime: Value(mime),
       syncState: Value(syncState),
@@ -1701,10 +1369,7 @@ class EvidenciasLocalData extends DataClass
     );
   }
 
-  factory EvidenciasLocalData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory EvidenciasLocalData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return EvidenciasLocalData(
       id: serializer.fromJson<String>(json['id']),
@@ -1744,8 +1409,7 @@ class EvidenciasLocalData extends DataClass
   }) => EvidenciasLocalData(
     id: id ?? this.id,
     evaluacionId: evaluacionId ?? this.evaluacionId,
-    muestraNumero:
-        muestraNumero.present ? muestraNumero.value : this.muestraNumero,
+    muestraNumero: muestraNumero.present ? muestraNumero.value : this.muestraNumero,
     factor: factor.present ? factor.value : this.factor,
     bytes: bytes ?? this.bytes,
     mime: mime ?? this.mime,
@@ -1755,14 +1419,8 @@ class EvidenciasLocalData extends DataClass
   EvidenciasLocalData copyWithCompanion(EvidenciasLocalCompanion data) {
     return EvidenciasLocalData(
       id: data.id.present ? data.id.value : this.id,
-      evaluacionId:
-          data.evaluacionId.present
-              ? data.evaluacionId.value
-              : this.evaluacionId,
-      muestraNumero:
-          data.muestraNumero.present
-              ? data.muestraNumero.value
-              : this.muestraNumero,
+      evaluacionId: data.evaluacionId.present ? data.evaluacionId.value : this.evaluacionId,
+      muestraNumero: data.muestraNumero.present ? data.muestraNumero.value : this.muestraNumero,
       factor: data.factor.present ? data.factor.value : this.factor,
       bytes: data.bytes.present ? data.bytes.value : this.bytes,
       mime: data.mime.present ? data.mime.value : this.mime,
@@ -1787,16 +1445,8 @@ class EvidenciasLocalData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    evaluacionId,
-    muestraNumero,
-    factor,
-    $driftBlobEquality.hash(bytes),
-    mime,
-    syncState,
-    creado,
-  );
+  int get hashCode =>
+      Object.hash(id, evaluacionId, muestraNumero, factor, $driftBlobEquality.hash(bytes), mime, syncState, creado);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1988,9 +1638,7 @@ class $MovimientosCompraLocalTable extends MovimientosCompraLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _syncStateMeta = const VerificationMeta(
-    'syncState',
-  );
+  static const VerificationMeta _syncStateMeta = const VerificationMeta('syncState');
   @override
   late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
     'sync_state',
@@ -1999,9 +1647,7 @@ class $MovimientosCompraLocalTable extends MovimientosCompraLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _syncErrorMeta = const VerificationMeta(
-    'syncError',
-  );
+  static const VerificationMeta _syncErrorMeta = const VerificationMeta('syncError');
   @override
   late final GeneratedColumn<String> syncError = GeneratedColumn<String>(
     'sync_error',
@@ -2010,9 +1656,7 @@ class $MovimientosCompraLocalTable extends MovimientosCompraLocal
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _actualizadoMeta = const VerificationMeta(
-    'actualizado',
-  );
+  static const VerificationMeta _actualizadoMeta = const VerificationMeta('actualizado');
   @override
   late final GeneratedColumn<DateTime> actualizado = GeneratedColumn<DateTime>(
     'actualizado',
@@ -2022,25 +1666,14 @@ class $MovimientosCompraLocalTable extends MovimientosCompraLocal
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    loteId,
-    tipo,
-    json,
-    syncState,
-    syncError,
-    actualizado,
-  ];
+  List<GeneratedColumn> get $columns => [id, loteId, tipo, json, syncState, syncError, actualizado];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'movimientos_compra_local';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<MovimientosCompraLocalData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<MovimientosCompraLocalData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -2049,51 +1682,30 @@ class $MovimientosCompraLocalTable extends MovimientosCompraLocal
       context.missing(_idMeta);
     }
     if (data.containsKey('lote_id')) {
-      context.handle(
-        _loteIdMeta,
-        loteId.isAcceptableOrUnknown(data['lote_id']!, _loteIdMeta),
-      );
+      context.handle(_loteIdMeta, loteId.isAcceptableOrUnknown(data['lote_id']!, _loteIdMeta));
     } else if (isInserting) {
       context.missing(_loteIdMeta);
     }
     if (data.containsKey('tipo')) {
-      context.handle(
-        _tipoMeta,
-        tipo.isAcceptableOrUnknown(data['tipo']!, _tipoMeta),
-      );
+      context.handle(_tipoMeta, tipo.isAcceptableOrUnknown(data['tipo']!, _tipoMeta));
     } else if (isInserting) {
       context.missing(_tipoMeta);
     }
     if (data.containsKey('json')) {
-      context.handle(
-        _jsonMeta,
-        json.isAcceptableOrUnknown(data['json']!, _jsonMeta),
-      );
+      context.handle(_jsonMeta, json.isAcceptableOrUnknown(data['json']!, _jsonMeta));
     } else if (isInserting) {
       context.missing(_jsonMeta);
     }
     if (data.containsKey('sync_state')) {
-      context.handle(
-        _syncStateMeta,
-        syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta),
-      );
+      context.handle(_syncStateMeta, syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta));
     } else if (isInserting) {
       context.missing(_syncStateMeta);
     }
     if (data.containsKey('sync_error')) {
-      context.handle(
-        _syncErrorMeta,
-        syncError.isAcceptableOrUnknown(data['sync_error']!, _syncErrorMeta),
-      );
+      context.handle(_syncErrorMeta, syncError.isAcceptableOrUnknown(data['sync_error']!, _syncErrorMeta));
     }
     if (data.containsKey('actualizado')) {
-      context.handle(
-        _actualizadoMeta,
-        actualizado.isAcceptableOrUnknown(
-          data['actualizado']!,
-          _actualizadoMeta,
-        ),
-      );
+      context.handle(_actualizadoMeta, actualizado.isAcceptableOrUnknown(data['actualizado']!, _actualizadoMeta));
     } else if (isInserting) {
       context.missing(_actualizadoMeta);
     }
@@ -2103,46 +1715,16 @@ class $MovimientosCompraLocalTable extends MovimientosCompraLocal
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  MovimientosCompraLocalData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  MovimientosCompraLocalData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MovimientosCompraLocalData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      loteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}lote_id'],
-          )!,
-      tipo:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}tipo'],
-          )!,
-      json:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}json'],
-          )!,
-      syncState:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}sync_state'],
-          )!,
-      syncError: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}sync_error'],
-      ),
-      actualizado:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}actualizado'],
-          )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      loteId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}lote_id'])!,
+      tipo: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}tipo'])!,
+      json: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}json'])!,
+      syncState: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sync_state'])!,
+      syncError: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sync_error']),
+      actualizado: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}actualizado'])!,
     );
   }
 
@@ -2152,8 +1734,7 @@ class $MovimientosCompraLocalTable extends MovimientosCompraLocal
   }
 }
 
-class MovimientosCompraLocalData extends DataClass
-    implements Insertable<MovimientosCompraLocalData> {
+class MovimientosCompraLocalData extends DataClass implements Insertable<MovimientosCompraLocalData> {
   final String id;
   final String loteId;
   final String tipo;
@@ -2192,18 +1773,12 @@ class MovimientosCompraLocalData extends DataClass
       tipo: Value(tipo),
       json: Value(json),
       syncState: Value(syncState),
-      syncError:
-          syncError == null && nullToAbsent
-              ? const Value.absent()
-              : Value(syncError),
+      syncError: syncError == null && nullToAbsent ? const Value.absent() : Value(syncError),
       actualizado: Value(actualizado),
     );
   }
 
-  factory MovimientosCompraLocalData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory MovimientosCompraLocalData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MovimientosCompraLocalData(
       id: serializer.fromJson<String>(json['id']),
@@ -2246,9 +1821,7 @@ class MovimientosCompraLocalData extends DataClass
     syncError: syncError.present ? syncError.value : this.syncError,
     actualizado: actualizado ?? this.actualizado,
   );
-  MovimientosCompraLocalData copyWithCompanion(
-    MovimientosCompraLocalCompanion data,
-  ) {
+  MovimientosCompraLocalData copyWithCompanion(MovimientosCompraLocalCompanion data) {
     return MovimientosCompraLocalData(
       id: data.id.present ? data.id.value : this.id,
       loteId: data.loteId.present ? data.loteId.value : this.loteId,
@@ -2256,8 +1829,7 @@ class MovimientosCompraLocalData extends DataClass
       json: data.json.present ? data.json.value : this.json,
       syncState: data.syncState.present ? data.syncState.value : this.syncState,
       syncError: data.syncError.present ? data.syncError.value : this.syncError,
-      actualizado:
-          data.actualizado.present ? data.actualizado.value : this.actualizado,
+      actualizado: data.actualizado.present ? data.actualizado.value : this.actualizado,
     );
   }
 
@@ -2276,8 +1848,7 @@ class MovimientosCompraLocalData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, loteId, tipo, json, syncState, syncError, actualizado);
+  int get hashCode => Object.hash(id, loteId, tipo, json, syncState, syncError, actualizado);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2291,8 +1862,7 @@ class MovimientosCompraLocalData extends DataClass
           other.actualizado == this.actualizado);
 }
 
-class MovimientosCompraLocalCompanion
-    extends UpdateCompanion<MovimientosCompraLocalData> {
+class MovimientosCompraLocalCompanion extends UpdateCompanion<MovimientosCompraLocalData> {
   final Value<String> id;
   final Value<String> loteId;
   final Value<String> tipo;
@@ -2416,8 +1986,7 @@ class MovimientosCompraLocalCompanion
   }
 }
 
-class $ComprobantesLocalTable extends ComprobantesLocal
-    with TableInfo<$ComprobantesLocalTable, ComprobantesLocalData> {
+class $ComprobantesLocalTable extends ComprobantesLocal with TableInfo<$ComprobantesLocalTable, ComprobantesLocalData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2440,9 +2009,7 @@ class $ComprobantesLocalTable extends ComprobantesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _entidadMeta = const VerificationMeta(
-    'entidad',
-  );
+  static const VerificationMeta _entidadMeta = const VerificationMeta('entidad');
   @override
   late final GeneratedColumn<String> entidad = GeneratedColumn<String>(
     'entidad',
@@ -2451,9 +2018,7 @@ class $ComprobantesLocalTable extends ComprobantesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _entidadIdMeta = const VerificationMeta(
-    'entidadId',
-  );
+  static const VerificationMeta _entidadIdMeta = const VerificationMeta('entidadId');
   @override
   late final GeneratedColumn<String> entidadId = GeneratedColumn<String>(
     'entidad_id',
@@ -2480,9 +2045,7 @@ class $ComprobantesLocalTable extends ComprobantesLocal
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _syncStateMeta = const VerificationMeta(
-    'syncState',
-  );
+  static const VerificationMeta _syncStateMeta = const VerificationMeta('syncState');
   @override
   late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
     'sync_state',
@@ -2501,26 +2064,14 @@ class $ComprobantesLocalTable extends ComprobantesLocal
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    loteId,
-    entidad,
-    entidadId,
-    bytes,
-    mime,
-    syncState,
-    creado,
-  ];
+  List<GeneratedColumn> get $columns => [id, loteId, entidad, entidadId, bytes, mime, syncState, creado];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'comprobantes_local';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ComprobantesLocalData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ComprobantesLocalData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -2529,58 +2080,37 @@ class $ComprobantesLocalTable extends ComprobantesLocal
       context.missing(_idMeta);
     }
     if (data.containsKey('lote_id')) {
-      context.handle(
-        _loteIdMeta,
-        loteId.isAcceptableOrUnknown(data['lote_id']!, _loteIdMeta),
-      );
+      context.handle(_loteIdMeta, loteId.isAcceptableOrUnknown(data['lote_id']!, _loteIdMeta));
     } else if (isInserting) {
       context.missing(_loteIdMeta);
     }
     if (data.containsKey('entidad')) {
-      context.handle(
-        _entidadMeta,
-        entidad.isAcceptableOrUnknown(data['entidad']!, _entidadMeta),
-      );
+      context.handle(_entidadMeta, entidad.isAcceptableOrUnknown(data['entidad']!, _entidadMeta));
     } else if (isInserting) {
       context.missing(_entidadMeta);
     }
     if (data.containsKey('entidad_id')) {
-      context.handle(
-        _entidadIdMeta,
-        entidadId.isAcceptableOrUnknown(data['entidad_id']!, _entidadIdMeta),
-      );
+      context.handle(_entidadIdMeta, entidadId.isAcceptableOrUnknown(data['entidad_id']!, _entidadIdMeta));
     } else if (isInserting) {
       context.missing(_entidadIdMeta);
     }
     if (data.containsKey('bytes')) {
-      context.handle(
-        _bytesMeta,
-        bytes.isAcceptableOrUnknown(data['bytes']!, _bytesMeta),
-      );
+      context.handle(_bytesMeta, bytes.isAcceptableOrUnknown(data['bytes']!, _bytesMeta));
     } else if (isInserting) {
       context.missing(_bytesMeta);
     }
     if (data.containsKey('mime')) {
-      context.handle(
-        _mimeMeta,
-        mime.isAcceptableOrUnknown(data['mime']!, _mimeMeta),
-      );
+      context.handle(_mimeMeta, mime.isAcceptableOrUnknown(data['mime']!, _mimeMeta));
     } else if (isInserting) {
       context.missing(_mimeMeta);
     }
     if (data.containsKey('sync_state')) {
-      context.handle(
-        _syncStateMeta,
-        syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta),
-      );
+      context.handle(_syncStateMeta, syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta));
     } else if (isInserting) {
       context.missing(_syncStateMeta);
     }
     if (data.containsKey('creado')) {
-      context.handle(
-        _creadoMeta,
-        creado.isAcceptableOrUnknown(data['creado']!, _creadoMeta),
-      );
+      context.handle(_creadoMeta, creado.isAcceptableOrUnknown(data['creado']!, _creadoMeta));
     } else if (isInserting) {
       context.missing(_creadoMeta);
     }
@@ -2593,46 +2123,14 @@ class $ComprobantesLocalTable extends ComprobantesLocal
   ComprobantesLocalData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ComprobantesLocalData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      loteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}lote_id'],
-          )!,
-      entidad:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}entidad'],
-          )!,
-      entidadId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}entidad_id'],
-          )!,
-      bytes:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.blob,
-            data['${effectivePrefix}bytes'],
-          )!,
-      mime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}mime'],
-          )!,
-      syncState:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}sync_state'],
-          )!,
-      creado:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}creado'],
-          )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      loteId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}lote_id'])!,
+      entidad: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}entidad'])!,
+      entidadId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}entidad_id'])!,
+      bytes: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}bytes'])!,
+      mime: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}mime'])!,
+      syncState: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sync_state'])!,
+      creado: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}creado'])!,
     );
   }
 
@@ -2642,8 +2140,7 @@ class $ComprobantesLocalTable extends ComprobantesLocal
   }
 }
 
-class ComprobantesLocalData extends DataClass
-    implements Insertable<ComprobantesLocalData> {
+class ComprobantesLocalData extends DataClass implements Insertable<ComprobantesLocalData> {
   final String id;
   final String loteId;
   final String entidad;
@@ -2689,10 +2186,7 @@ class ComprobantesLocalData extends DataClass
     );
   }
 
-  factory ComprobantesLocalData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ComprobantesLocalData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ComprobantesLocalData(
       id: serializer.fromJson<String>(json['id']),
@@ -2768,16 +2262,8 @@ class ComprobantesLocalData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    loteId,
-    entidad,
-    entidadId,
-    $driftBlobEquality.hash(bytes),
-    mime,
-    syncState,
-    creado,
-  );
+  int get hashCode =>
+      Object.hash(id, loteId, entidad, entidadId, $driftBlobEquality.hash(bytes), mime, syncState, creado);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2792,8 +2278,7 @@ class ComprobantesLocalData extends DataClass
           other.creado == this.creado);
 }
 
-class ComprobantesLocalCompanion
-    extends UpdateCompanion<ComprobantesLocalData> {
+class ComprobantesLocalCompanion extends UpdateCompanion<ComprobantesLocalData> {
   final Value<String> id;
   final Value<String> loteId;
   final Value<String> entidad;
@@ -2944,9 +2429,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxData> {
     hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'),
   );
   static const VerificationMeta _tipoMeta = const VerificationMeta('tipo');
   @override
@@ -2957,9 +2440,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxData> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _entidadIdMeta = const VerificationMeta(
-    'entidadId',
-  );
+  static const VerificationMeta _entidadIdMeta = const VerificationMeta('entidadId');
   @override
   late final GeneratedColumn<String> entidadId = GeneratedColumn<String>(
     'entidad_id',
@@ -2968,9 +2449,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxData> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _descripcionMeta = const VerificationMeta(
-    'descripcion',
-  );
+  static const VerificationMeta _descripcionMeta = const VerificationMeta('descripcion');
   @override
   late final GeneratedColumn<String> descripcion = GeneratedColumn<String>(
     'descripcion',
@@ -2979,9 +2458,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxData> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _payloadMeta = const VerificationMeta(
-    'payload',
-  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta('payload');
   @override
   late final GeneratedColumn<String> payload = GeneratedColumn<String>(
     'payload',
@@ -2990,9 +2467,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxData> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _intentosMeta = const VerificationMeta(
-    'intentos',
-  );
+  static const VerificationMeta _intentosMeta = const VerificationMeta('intentos');
   @override
   late final GeneratedColumn<int> intentos = GeneratedColumn<int>(
     'intentos',
@@ -3002,9 +2477,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxData> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _ultimoErrorMeta = const VerificationMeta(
-    'ultimoError',
-  );
+  static const VerificationMeta _ultimoErrorMeta = const VerificationMeta('ultimoError');
   @override
   late final GeneratedColumn<String> ultimoError = GeneratedColumn<String>(
     'ultimo_error',
@@ -3013,9 +2486,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxData> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _bloqueadaMeta = const VerificationMeta(
-    'bloqueada',
-  );
+  static const VerificationMeta _bloqueadaMeta = const VerificationMeta('bloqueada');
   @override
   late final GeneratedColumn<bool> bloqueada = GeneratedColumn<bool>(
     'bloqueada',
@@ -3023,9 +2494,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxData> {
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("bloqueada" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("bloqueada" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _creadoMeta = const VerificationMeta('creado');
@@ -3055,79 +2524,43 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxData> {
   String get actualTableName => $name;
   static const String $name = 'outbox';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<OutboxData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<OutboxData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('seq')) {
-      context.handle(
-        _seqMeta,
-        seq.isAcceptableOrUnknown(data['seq']!, _seqMeta),
-      );
+      context.handle(_seqMeta, seq.isAcceptableOrUnknown(data['seq']!, _seqMeta));
     }
     if (data.containsKey('tipo')) {
-      context.handle(
-        _tipoMeta,
-        tipo.isAcceptableOrUnknown(data['tipo']!, _tipoMeta),
-      );
+      context.handle(_tipoMeta, tipo.isAcceptableOrUnknown(data['tipo']!, _tipoMeta));
     } else if (isInserting) {
       context.missing(_tipoMeta);
     }
     if (data.containsKey('entidad_id')) {
-      context.handle(
-        _entidadIdMeta,
-        entidadId.isAcceptableOrUnknown(data['entidad_id']!, _entidadIdMeta),
-      );
+      context.handle(_entidadIdMeta, entidadId.isAcceptableOrUnknown(data['entidad_id']!, _entidadIdMeta));
     } else if (isInserting) {
       context.missing(_entidadIdMeta);
     }
     if (data.containsKey('descripcion')) {
-      context.handle(
-        _descripcionMeta,
-        descripcion.isAcceptableOrUnknown(
-          data['descripcion']!,
-          _descripcionMeta,
-        ),
-      );
+      context.handle(_descripcionMeta, descripcion.isAcceptableOrUnknown(data['descripcion']!, _descripcionMeta));
     } else if (isInserting) {
       context.missing(_descripcionMeta);
     }
     if (data.containsKey('payload')) {
-      context.handle(
-        _payloadMeta,
-        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
-      );
+      context.handle(_payloadMeta, payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta));
     } else if (isInserting) {
       context.missing(_payloadMeta);
     }
     if (data.containsKey('intentos')) {
-      context.handle(
-        _intentosMeta,
-        intentos.isAcceptableOrUnknown(data['intentos']!, _intentosMeta),
-      );
+      context.handle(_intentosMeta, intentos.isAcceptableOrUnknown(data['intentos']!, _intentosMeta));
     }
     if (data.containsKey('ultimo_error')) {
-      context.handle(
-        _ultimoErrorMeta,
-        ultimoError.isAcceptableOrUnknown(
-          data['ultimo_error']!,
-          _ultimoErrorMeta,
-        ),
-      );
+      context.handle(_ultimoErrorMeta, ultimoError.isAcceptableOrUnknown(data['ultimo_error']!, _ultimoErrorMeta));
     }
     if (data.containsKey('bloqueada')) {
-      context.handle(
-        _bloqueadaMeta,
-        bloqueada.isAcceptableOrUnknown(data['bloqueada']!, _bloqueadaMeta),
-      );
+      context.handle(_bloqueadaMeta, bloqueada.isAcceptableOrUnknown(data['bloqueada']!, _bloqueadaMeta));
     }
     if (data.containsKey('creado')) {
-      context.handle(
-        _creadoMeta,
-        creado.isAcceptableOrUnknown(data['creado']!, _creadoMeta),
-      );
+      context.handle(_creadoMeta, creado.isAcceptableOrUnknown(data['creado']!, _creadoMeta));
     } else if (isInserting) {
       context.missing(_creadoMeta);
     }
@@ -3140,50 +2573,15 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxData> {
   OutboxData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return OutboxData(
-      seq:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}seq'],
-          )!,
-      tipo:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}tipo'],
-          )!,
-      entidadId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}entidad_id'],
-          )!,
-      descripcion:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}descripcion'],
-          )!,
-      payload:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}payload'],
-          )!,
-      intentos:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}intentos'],
-          )!,
-      ultimoError: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}ultimo_error'],
-      ),
-      bloqueada:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}bloqueada'],
-          )!,
-      creado:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}creado'],
-          )!,
+      seq: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}seq'])!,
+      tipo: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}tipo'])!,
+      entidadId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}entidad_id'])!,
+      descripcion: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}descripcion'])!,
+      payload: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}payload'])!,
+      intentos: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}intentos'])!,
+      ultimoError: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}ultimo_error']),
+      bloqueada: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}bloqueada'])!,
+      creado: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}creado'])!,
     );
   }
 
@@ -3239,19 +2637,13 @@ class OutboxData extends DataClass implements Insertable<OutboxData> {
       descripcion: Value(descripcion),
       payload: Value(payload),
       intentos: Value(intentos),
-      ultimoError:
-          ultimoError == null && nullToAbsent
-              ? const Value.absent()
-              : Value(ultimoError),
+      ultimoError: ultimoError == null && nullToAbsent ? const Value.absent() : Value(ultimoError),
       bloqueada: Value(bloqueada),
       creado: Value(creado),
     );
   }
 
-  factory OutboxData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory OutboxData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return OutboxData(
       seq: serializer.fromJson<int>(json['seq']),
@@ -3307,12 +2699,10 @@ class OutboxData extends DataClass implements Insertable<OutboxData> {
       seq: data.seq.present ? data.seq.value : this.seq,
       tipo: data.tipo.present ? data.tipo.value : this.tipo,
       entidadId: data.entidadId.present ? data.entidadId.value : this.entidadId,
-      descripcion:
-          data.descripcion.present ? data.descripcion.value : this.descripcion,
+      descripcion: data.descripcion.present ? data.descripcion.value : this.descripcion,
       payload: data.payload.present ? data.payload.value : this.payload,
       intentos: data.intentos.present ? data.intentos.value : this.intentos,
-      ultimoError:
-          data.ultimoError.present ? data.ultimoError.value : this.ultimoError,
+      ultimoError: data.ultimoError.present ? data.ultimoError.value : this.ultimoError,
       bloqueada: data.bloqueada.present ? data.bloqueada.value : this.bloqueada,
       creado: data.creado.present ? data.creado.value : this.creado,
     );
@@ -3335,17 +2725,7 @@ class OutboxData extends DataClass implements Insertable<OutboxData> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    seq,
-    tipo,
-    entidadId,
-    descripcion,
-    payload,
-    intentos,
-    ultimoError,
-    bloqueada,
-    creado,
-  );
+  int get hashCode => Object.hash(seq, tipo, entidadId, descripcion, payload, intentos, ultimoError, bloqueada, creado);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3500,19 +2880,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $KvEntriesTable kvEntries = $KvEntriesTable(this);
   late final $LotesLocalTable lotesLocal = $LotesLocalTable(this);
-  late final $EvaluacionesLocalTable evaluacionesLocal =
-      $EvaluacionesLocalTable(this);
-  late final $EvidenciasLocalTable evidenciasLocal = $EvidenciasLocalTable(
-    this,
-  );
-  late final $MovimientosCompraLocalTable movimientosCompraLocal =
-      $MovimientosCompraLocalTable(this);
-  late final $ComprobantesLocalTable comprobantesLocal =
-      $ComprobantesLocalTable(this);
+  late final $EvaluacionesLocalTable evaluacionesLocal = $EvaluacionesLocalTable(this);
+  late final $EvidenciasLocalTable evidenciasLocal = $EvidenciasLocalTable(this);
+  late final $MovimientosCompraLocalTable movimientosCompraLocal = $MovimientosCompraLocalTable(this);
+  late final $ComprobantesLocalTable comprobantesLocal = $ComprobantesLocalTable(this);
   late final $OutboxTable outbox = $OutboxTable(this);
   @override
-  Iterable<TableInfo<Table, Object?>> get allTables =>
-      allSchemaEntities.whereType<TableInfo<Table, Object?>>();
+  Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     kvEntries,
@@ -3540,8 +2914,7 @@ typedef $$KvEntriesTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$KvEntriesTableFilterComposer
-    extends Composer<_$AppDatabase, $KvEntriesTable> {
+class $$KvEntriesTableFilterComposer extends Composer<_$AppDatabase, $KvEntriesTable> {
   $$KvEntriesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -3549,24 +2922,17 @@ class $$KvEntriesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get clave => $composableBuilder(
-    column: $table.clave,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get clave =>
+      $composableBuilder(column: $table.clave, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get valor => $composableBuilder(
-    column: $table.valor,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get valor =>
+      $composableBuilder(column: $table.valor, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => ColumnFilters(column));
 }
 
-class $$KvEntriesTableOrderingComposer
-    extends Composer<_$AppDatabase, $KvEntriesTable> {
+class $$KvEntriesTableOrderingComposer extends Composer<_$AppDatabase, $KvEntriesTable> {
   $$KvEntriesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -3574,24 +2940,17 @@ class $$KvEntriesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get clave => $composableBuilder(
-    column: $table.clave,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get clave =>
+      $composableBuilder(column: $table.clave, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get valor => $composableBuilder(
-    column: $table.valor,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get valor =>
+      $composableBuilder(column: $table.valor, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => ColumnOrderings(column));
 }
 
-class $$KvEntriesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $KvEntriesTable> {
+class $$KvEntriesTableAnnotationComposer extends Composer<_$AppDatabase, $KvEntriesTable> {
   $$KvEntriesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -3599,16 +2958,12 @@ class $$KvEntriesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get clave =>
-      $composableBuilder(column: $table.clave, builder: (column) => column);
+  GeneratedColumn<String> get clave => $composableBuilder(column: $table.clave, builder: (column) => column);
 
-  GeneratedColumn<String> get valor =>
-      $composableBuilder(column: $table.valor, builder: (column) => column);
+  GeneratedColumn<String> get valor => $composableBuilder(column: $table.valor, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => column);
 }
 
 class $$KvEntriesTableTableManager
@@ -3631,46 +2986,24 @@ class $$KvEntriesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$KvEntriesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$KvEntriesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$KvEntriesTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$KvEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$KvEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$KvEntriesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> clave = const Value.absent(),
                 Value<String> valor = const Value.absent(),
                 Value<DateTime> actualizado = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => KvEntriesCompanion(
-                clave: clave,
-                valor: valor,
-                actualizado: actualizado,
-                rowid: rowid,
-              ),
+              }) => KvEntriesCompanion(clave: clave, valor: valor, actualizado: actualizado, rowid: rowid),
           createCompanionCallback:
               ({
                 required String clave,
                 required String valor,
                 required DateTime actualizado,
                 Value<int> rowid = const Value.absent(),
-              }) => KvEntriesCompanion.insert(
-                clave: clave,
-                valor: valor,
-                actualizado: actualizado,
-                rowid: rowid,
-              ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+              }) => KvEntriesCompanion.insert(clave: clave, valor: valor, actualizado: actualizado, rowid: rowid),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -3717,8 +3050,7 @@ typedef $$LotesLocalTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$LotesLocalTableFilterComposer
-    extends Composer<_$AppDatabase, $LotesLocalTable> {
+class $$LotesLocalTableFilterComposer extends Composer<_$AppDatabase, $LotesLocalTable> {
   $$LotesLocalTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -3726,54 +3058,32 @@ class $$LotesLocalTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get json => $composableBuilder(
-    column: $table.json,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get json => $composableBuilder(column: $table.json, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get codigo => $composableBuilder(
-    column: $table.codigo,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get codigo =>
+      $composableBuilder(column: $table.codigo, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get zona => $composableBuilder(
-    column: $table.zona,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get zona => $composableBuilder(column: $table.zona, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get agricultor => $composableBuilder(
-    column: $table.agricultor,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get agricultor =>
+      $composableBuilder(column: $table.agricultor, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get estado => $composableBuilder(
-    column: $table.estado,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get estado =>
+      $composableBuilder(column: $table.estado, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get syncState => $composableBuilder(
-    column: $table.syncState,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get syncError => $composableBuilder(
-    column: $table.syncError,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get syncError =>
+      $composableBuilder(column: $table.syncError, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => ColumnFilters(column));
 }
 
-class $$LotesLocalTableOrderingComposer
-    extends Composer<_$AppDatabase, $LotesLocalTable> {
+class $$LotesLocalTableOrderingComposer extends Composer<_$AppDatabase, $LotesLocalTable> {
   $$LotesLocalTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -3781,54 +3091,34 @@ class $$LotesLocalTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get json => $composableBuilder(
-    column: $table.json,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get json =>
+      $composableBuilder(column: $table.json, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get codigo => $composableBuilder(
-    column: $table.codigo,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get codigo =>
+      $composableBuilder(column: $table.codigo, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get zona => $composableBuilder(
-    column: $table.zona,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get zona =>
+      $composableBuilder(column: $table.zona, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get agricultor => $composableBuilder(
-    column: $table.agricultor,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get agricultor =>
+      $composableBuilder(column: $table.agricultor, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get estado => $composableBuilder(
-    column: $table.estado,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get estado =>
+      $composableBuilder(column: $table.estado, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get syncState => $composableBuilder(
-    column: $table.syncState,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get syncError => $composableBuilder(
-    column: $table.syncError,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get syncError =>
+      $composableBuilder(column: $table.syncError, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => ColumnOrderings(column));
 }
 
-class $$LotesLocalTableAnnotationComposer
-    extends Composer<_$AppDatabase, $LotesLocalTable> {
+class $$LotesLocalTableAnnotationComposer extends Composer<_$AppDatabase, $LotesLocalTable> {
   $$LotesLocalTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -3836,36 +3126,24 @@ class $$LotesLocalTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get json =>
-      $composableBuilder(column: $table.json, builder: (column) => column);
+  GeneratedColumn<String> get json => $composableBuilder(column: $table.json, builder: (column) => column);
 
-  GeneratedColumn<String> get codigo =>
-      $composableBuilder(column: $table.codigo, builder: (column) => column);
+  GeneratedColumn<String> get codigo => $composableBuilder(column: $table.codigo, builder: (column) => column);
 
-  GeneratedColumn<String> get zona =>
-      $composableBuilder(column: $table.zona, builder: (column) => column);
+  GeneratedColumn<String> get zona => $composableBuilder(column: $table.zona, builder: (column) => column);
 
-  GeneratedColumn<String> get agricultor => $composableBuilder(
-    column: $table.agricultor,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get agricultor => $composableBuilder(column: $table.agricultor, builder: (column) => column);
 
-  GeneratedColumn<String> get estado =>
-      $composableBuilder(column: $table.estado, builder: (column) => column);
+  GeneratedColumn<String> get estado => $composableBuilder(column: $table.estado, builder: (column) => column);
 
-  GeneratedColumn<String> get syncState =>
-      $composableBuilder(column: $table.syncState, builder: (column) => column);
+  GeneratedColumn<String> get syncState => $composableBuilder(column: $table.syncState, builder: (column) => column);
 
-  GeneratedColumn<String> get syncError =>
-      $composableBuilder(column: $table.syncError, builder: (column) => column);
+  GeneratedColumn<String> get syncError => $composableBuilder(column: $table.syncError, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => column);
 }
 
 class $$LotesLocalTableTableManager
@@ -3879,10 +3157,7 @@ class $$LotesLocalTableTableManager
           $$LotesLocalTableAnnotationComposer,
           $$LotesLocalTableCreateCompanionBuilder,
           $$LotesLocalTableUpdateCompanionBuilder,
-          (
-            LotesLocalData,
-            BaseReferences<_$AppDatabase, $LotesLocalTable, LotesLocalData>,
-          ),
+          (LotesLocalData, BaseReferences<_$AppDatabase, $LotesLocalTable, LotesLocalData>),
           LotesLocalData,
           PrefetchHooks Function()
         > {
@@ -3891,12 +3166,9 @@ class $$LotesLocalTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$LotesLocalTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$LotesLocalTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$LotesLocalTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$LotesLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$LotesLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$LotesLocalTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -3945,16 +3217,7 @@ class $$LotesLocalTableTableManager
                 actualizado: actualizado,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -3970,10 +3233,7 @@ typedef $$LotesLocalTableProcessedTableManager =
       $$LotesLocalTableAnnotationComposer,
       $$LotesLocalTableCreateCompanionBuilder,
       $$LotesLocalTableUpdateCompanionBuilder,
-      (
-        LotesLocalData,
-        BaseReferences<_$AppDatabase, $LotesLocalTable, LotesLocalData>,
-      ),
+      (LotesLocalData, BaseReferences<_$AppDatabase, $LotesLocalTable, LotesLocalData>),
       LotesLocalData,
       PrefetchHooks Function()
     >;
@@ -4004,8 +3264,7 @@ typedef $$EvaluacionesLocalTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$EvaluacionesLocalTableFilterComposer
-    extends Composer<_$AppDatabase, $EvaluacionesLocalTable> {
+class $$EvaluacionesLocalTableFilterComposer extends Composer<_$AppDatabase, $EvaluacionesLocalTable> {
   $$EvaluacionesLocalTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -4013,54 +3272,34 @@ class $$EvaluacionesLocalTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get loteId => $composableBuilder(
-    column: $table.loteId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get loteId =>
+      $composableBuilder(column: $table.loteId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get resumenJson => $composableBuilder(
-    column: $table.resumenJson,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get resumenJson =>
+      $composableBuilder(column: $table.resumenJson, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get borradorJson => $composableBuilder(
-    column: $table.borradorJson,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get borradorJson =>
+      $composableBuilder(column: $table.borradorJson, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get estado => $composableBuilder(
-    column: $table.estado,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get estado =>
+      $composableBuilder(column: $table.estado, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get fecha => $composableBuilder(
-    column: $table.fecha,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get syncState => $composableBuilder(
-    column: $table.syncState,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get syncError => $composableBuilder(
-    column: $table.syncError,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get syncError =>
+      $composableBuilder(column: $table.syncError, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => ColumnFilters(column));
 }
 
-class $$EvaluacionesLocalTableOrderingComposer
-    extends Composer<_$AppDatabase, $EvaluacionesLocalTable> {
+class $$EvaluacionesLocalTableOrderingComposer extends Composer<_$AppDatabase, $EvaluacionesLocalTable> {
   $$EvaluacionesLocalTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4068,54 +3307,34 @@ class $$EvaluacionesLocalTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get loteId => $composableBuilder(
-    column: $table.loteId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get loteId =>
+      $composableBuilder(column: $table.loteId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get resumenJson => $composableBuilder(
-    column: $table.resumenJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get resumenJson =>
+      $composableBuilder(column: $table.resumenJson, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get borradorJson => $composableBuilder(
-    column: $table.borradorJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get borradorJson =>
+      $composableBuilder(column: $table.borradorJson, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get estado => $composableBuilder(
-    column: $table.estado,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get estado =>
+      $composableBuilder(column: $table.estado, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get fecha => $composableBuilder(
-    column: $table.fecha,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get syncState => $composableBuilder(
-    column: $table.syncState,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get syncError => $composableBuilder(
-    column: $table.syncError,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get syncError =>
+      $composableBuilder(column: $table.syncError, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => ColumnOrderings(column));
 }
 
-class $$EvaluacionesLocalTableAnnotationComposer
-    extends Composer<_$AppDatabase, $EvaluacionesLocalTable> {
+class $$EvaluacionesLocalTableAnnotationComposer extends Composer<_$AppDatabase, $EvaluacionesLocalTable> {
   $$EvaluacionesLocalTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4123,38 +3342,26 @@ class $$EvaluacionesLocalTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get loteId =>
-      $composableBuilder(column: $table.loteId, builder: (column) => column);
+  GeneratedColumn<String> get loteId => $composableBuilder(column: $table.loteId, builder: (column) => column);
 
-  GeneratedColumn<String> get resumenJson => $composableBuilder(
-    column: $table.resumenJson,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get resumenJson =>
+      $composableBuilder(column: $table.resumenJson, builder: (column) => column);
 
-  GeneratedColumn<String> get borradorJson => $composableBuilder(
-    column: $table.borradorJson,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get borradorJson =>
+      $composableBuilder(column: $table.borradorJson, builder: (column) => column);
 
-  GeneratedColumn<String> get estado =>
-      $composableBuilder(column: $table.estado, builder: (column) => column);
+  GeneratedColumn<String> get estado => $composableBuilder(column: $table.estado, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get fecha =>
-      $composableBuilder(column: $table.fecha, builder: (column) => column);
+  GeneratedColumn<DateTime> get fecha => $composableBuilder(column: $table.fecha, builder: (column) => column);
 
-  GeneratedColumn<String> get syncState =>
-      $composableBuilder(column: $table.syncState, builder: (column) => column);
+  GeneratedColumn<String> get syncState => $composableBuilder(column: $table.syncState, builder: (column) => column);
 
-  GeneratedColumn<String> get syncError =>
-      $composableBuilder(column: $table.syncError, builder: (column) => column);
+  GeneratedColumn<String> get syncError => $composableBuilder(column: $table.syncError, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => column);
 }
 
 class $$EvaluacionesLocalTableTableManager
@@ -4168,39 +3375,18 @@ class $$EvaluacionesLocalTableTableManager
           $$EvaluacionesLocalTableAnnotationComposer,
           $$EvaluacionesLocalTableCreateCompanionBuilder,
           $$EvaluacionesLocalTableUpdateCompanionBuilder,
-          (
-            EvaluacionesLocalData,
-            BaseReferences<
-              _$AppDatabase,
-              $EvaluacionesLocalTable,
-              EvaluacionesLocalData
-            >,
-          ),
+          (EvaluacionesLocalData, BaseReferences<_$AppDatabase, $EvaluacionesLocalTable, EvaluacionesLocalData>),
           EvaluacionesLocalData,
           PrefetchHooks Function()
         > {
-  $$EvaluacionesLocalTableTableManager(
-    _$AppDatabase db,
-    $EvaluacionesLocalTable table,
-  ) : super(
+  $$EvaluacionesLocalTableTableManager(_$AppDatabase db, $EvaluacionesLocalTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$EvaluacionesLocalTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer:
-              () => $$EvaluacionesLocalTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer:
-              () => $$EvaluacionesLocalTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$EvaluacionesLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$EvaluacionesLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$EvaluacionesLocalTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -4249,16 +3435,7 @@ class $$EvaluacionesLocalTableTableManager
                 actualizado: actualizado,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -4274,14 +3451,7 @@ typedef $$EvaluacionesLocalTableProcessedTableManager =
       $$EvaluacionesLocalTableAnnotationComposer,
       $$EvaluacionesLocalTableCreateCompanionBuilder,
       $$EvaluacionesLocalTableUpdateCompanionBuilder,
-      (
-        EvaluacionesLocalData,
-        BaseReferences<
-          _$AppDatabase,
-          $EvaluacionesLocalTable,
-          EvaluacionesLocalData
-        >,
-      ),
+      (EvaluacionesLocalData, BaseReferences<_$AppDatabase, $EvaluacionesLocalTable, EvaluacionesLocalData>),
       EvaluacionesLocalData,
       PrefetchHooks Function()
     >;
@@ -4310,8 +3480,7 @@ typedef $$EvidenciasLocalTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$EvidenciasLocalTableFilterComposer
-    extends Composer<_$AppDatabase, $EvidenciasLocalTable> {
+class $$EvidenciasLocalTableFilterComposer extends Composer<_$AppDatabase, $EvidenciasLocalTable> {
   $$EvidenciasLocalTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -4319,49 +3488,30 @@ class $$EvidenciasLocalTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get evaluacionId => $composableBuilder(
-    column: $table.evaluacionId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get evaluacionId =>
+      $composableBuilder(column: $table.evaluacionId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get muestraNumero => $composableBuilder(
-    column: $table.muestraNumero,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get muestraNumero =>
+      $composableBuilder(column: $table.muestraNumero, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get factor => $composableBuilder(
-    column: $table.factor,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get factor =>
+      $composableBuilder(column: $table.factor, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<Uint8List> get bytes => $composableBuilder(
-    column: $table.bytes,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<Uint8List> get bytes =>
+      $composableBuilder(column: $table.bytes, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get mime => $composableBuilder(
-    column: $table.mime,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get mime => $composableBuilder(column: $table.mime, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get syncState => $composableBuilder(
-    column: $table.syncState,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get creado => $composableBuilder(
-    column: $table.creado,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get creado =>
+      $composableBuilder(column: $table.creado, builder: (column) => ColumnFilters(column));
 }
 
-class $$EvidenciasLocalTableOrderingComposer
-    extends Composer<_$AppDatabase, $EvidenciasLocalTable> {
+class $$EvidenciasLocalTableOrderingComposer extends Composer<_$AppDatabase, $EvidenciasLocalTable> {
   $$EvidenciasLocalTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4369,49 +3519,31 @@ class $$EvidenciasLocalTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get evaluacionId => $composableBuilder(
-    column: $table.evaluacionId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get evaluacionId =>
+      $composableBuilder(column: $table.evaluacionId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get muestraNumero => $composableBuilder(
-    column: $table.muestraNumero,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get muestraNumero =>
+      $composableBuilder(column: $table.muestraNumero, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get factor => $composableBuilder(
-    column: $table.factor,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get factor =>
+      $composableBuilder(column: $table.factor, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<Uint8List> get bytes => $composableBuilder(
-    column: $table.bytes,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<Uint8List> get bytes =>
+      $composableBuilder(column: $table.bytes, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get mime => $composableBuilder(
-    column: $table.mime,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get mime =>
+      $composableBuilder(column: $table.mime, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get syncState => $composableBuilder(
-    column: $table.syncState,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get creado => $composableBuilder(
-    column: $table.creado,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get creado =>
+      $composableBuilder(column: $table.creado, builder: (column) => ColumnOrderings(column));
 }
 
-class $$EvidenciasLocalTableAnnotationComposer
-    extends Composer<_$AppDatabase, $EvidenciasLocalTable> {
+class $$EvidenciasLocalTableAnnotationComposer extends Composer<_$AppDatabase, $EvidenciasLocalTable> {
   $$EvidenciasLocalTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4419,33 +3551,23 @@ class $$EvidenciasLocalTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get evaluacionId => $composableBuilder(
-    column: $table.evaluacionId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get evaluacionId =>
+      $composableBuilder(column: $table.evaluacionId, builder: (column) => column);
 
-  GeneratedColumn<int> get muestraNumero => $composableBuilder(
-    column: $table.muestraNumero,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get muestraNumero =>
+      $composableBuilder(column: $table.muestraNumero, builder: (column) => column);
 
-  GeneratedColumn<String> get factor =>
-      $composableBuilder(column: $table.factor, builder: (column) => column);
+  GeneratedColumn<String> get factor => $composableBuilder(column: $table.factor, builder: (column) => column);
 
-  GeneratedColumn<Uint8List> get bytes =>
-      $composableBuilder(column: $table.bytes, builder: (column) => column);
+  GeneratedColumn<Uint8List> get bytes => $composableBuilder(column: $table.bytes, builder: (column) => column);
 
-  GeneratedColumn<String> get mime =>
-      $composableBuilder(column: $table.mime, builder: (column) => column);
+  GeneratedColumn<String> get mime => $composableBuilder(column: $table.mime, builder: (column) => column);
 
-  GeneratedColumn<String> get syncState =>
-      $composableBuilder(column: $table.syncState, builder: (column) => column);
+  GeneratedColumn<String> get syncState => $composableBuilder(column: $table.syncState, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get creado =>
-      $composableBuilder(column: $table.creado, builder: (column) => column);
+  GeneratedColumn<DateTime> get creado => $composableBuilder(column: $table.creado, builder: (column) => column);
 }
 
 class $$EvidenciasLocalTableTableManager
@@ -4459,37 +3581,18 @@ class $$EvidenciasLocalTableTableManager
           $$EvidenciasLocalTableAnnotationComposer,
           $$EvidenciasLocalTableCreateCompanionBuilder,
           $$EvidenciasLocalTableUpdateCompanionBuilder,
-          (
-            EvidenciasLocalData,
-            BaseReferences<
-              _$AppDatabase,
-              $EvidenciasLocalTable,
-              EvidenciasLocalData
-            >,
-          ),
+          (EvidenciasLocalData, BaseReferences<_$AppDatabase, $EvidenciasLocalTable, EvidenciasLocalData>),
           EvidenciasLocalData,
           PrefetchHooks Function()
         > {
-  $$EvidenciasLocalTableTableManager(
-    _$AppDatabase db,
-    $EvidenciasLocalTable table,
-  ) : super(
+  $$EvidenciasLocalTableTableManager(_$AppDatabase db, $EvidenciasLocalTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () =>
-                  $$EvidenciasLocalTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$EvidenciasLocalTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer:
-              () => $$EvidenciasLocalTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$EvidenciasLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$EvidenciasLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$EvidenciasLocalTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -4534,16 +3637,7 @@ class $$EvidenciasLocalTableTableManager
                 creado: creado,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -4559,14 +3653,7 @@ typedef $$EvidenciasLocalTableProcessedTableManager =
       $$EvidenciasLocalTableAnnotationComposer,
       $$EvidenciasLocalTableCreateCompanionBuilder,
       $$EvidenciasLocalTableUpdateCompanionBuilder,
-      (
-        EvidenciasLocalData,
-        BaseReferences<
-          _$AppDatabase,
-          $EvidenciasLocalTable,
-          EvidenciasLocalData
-        >,
-      ),
+      (EvidenciasLocalData, BaseReferences<_$AppDatabase, $EvidenciasLocalTable, EvidenciasLocalData>),
       EvidenciasLocalData,
       PrefetchHooks Function()
     >;
@@ -4593,8 +3680,7 @@ typedef $$MovimientosCompraLocalTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$MovimientosCompraLocalTableFilterComposer
-    extends Composer<_$AppDatabase, $MovimientosCompraLocalTable> {
+class $$MovimientosCompraLocalTableFilterComposer extends Composer<_$AppDatabase, $MovimientosCompraLocalTable> {
   $$MovimientosCompraLocalTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -4602,44 +3688,26 @@ class $$MovimientosCompraLocalTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get loteId => $composableBuilder(
-    column: $table.loteId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get loteId =>
+      $composableBuilder(column: $table.loteId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get tipo => $composableBuilder(
-    column: $table.tipo,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get tipo => $composableBuilder(column: $table.tipo, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get json => $composableBuilder(
-    column: $table.json,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get json => $composableBuilder(column: $table.json, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get syncState => $composableBuilder(
-    column: $table.syncState,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get syncError => $composableBuilder(
-    column: $table.syncError,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get syncError =>
+      $composableBuilder(column: $table.syncError, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => ColumnFilters(column));
 }
 
-class $$MovimientosCompraLocalTableOrderingComposer
-    extends Composer<_$AppDatabase, $MovimientosCompraLocalTable> {
+class $$MovimientosCompraLocalTableOrderingComposer extends Composer<_$AppDatabase, $MovimientosCompraLocalTable> {
   $$MovimientosCompraLocalTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4647,44 +3715,28 @@ class $$MovimientosCompraLocalTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get loteId => $composableBuilder(
-    column: $table.loteId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get loteId =>
+      $composableBuilder(column: $table.loteId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get tipo => $composableBuilder(
-    column: $table.tipo,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get tipo =>
+      $composableBuilder(column: $table.tipo, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get json => $composableBuilder(
-    column: $table.json,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get json =>
+      $composableBuilder(column: $table.json, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get syncState => $composableBuilder(
-    column: $table.syncState,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get syncError => $composableBuilder(
-    column: $table.syncError,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get syncError =>
+      $composableBuilder(column: $table.syncError, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => ColumnOrderings(column));
 }
 
-class $$MovimientosCompraLocalTableAnnotationComposer
-    extends Composer<_$AppDatabase, $MovimientosCompraLocalTable> {
+class $$MovimientosCompraLocalTableAnnotationComposer extends Composer<_$AppDatabase, $MovimientosCompraLocalTable> {
   $$MovimientosCompraLocalTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4692,28 +3744,20 @@ class $$MovimientosCompraLocalTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get loteId =>
-      $composableBuilder(column: $table.loteId, builder: (column) => column);
+  GeneratedColumn<String> get loteId => $composableBuilder(column: $table.loteId, builder: (column) => column);
 
-  GeneratedColumn<String> get tipo =>
-      $composableBuilder(column: $table.tipo, builder: (column) => column);
+  GeneratedColumn<String> get tipo => $composableBuilder(column: $table.tipo, builder: (column) => column);
 
-  GeneratedColumn<String> get json =>
-      $composableBuilder(column: $table.json, builder: (column) => column);
+  GeneratedColumn<String> get json => $composableBuilder(column: $table.json, builder: (column) => column);
 
-  GeneratedColumn<String> get syncState =>
-      $composableBuilder(column: $table.syncState, builder: (column) => column);
+  GeneratedColumn<String> get syncState => $composableBuilder(column: $table.syncState, builder: (column) => column);
 
-  GeneratedColumn<String> get syncError =>
-      $composableBuilder(column: $table.syncError, builder: (column) => column);
+  GeneratedColumn<String> get syncError => $composableBuilder(column: $table.syncError, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get actualizado => $composableBuilder(
-    column: $table.actualizado,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get actualizado =>
+      $composableBuilder(column: $table.actualizado, builder: (column) => column);
 }
 
 class $$MovimientosCompraLocalTableTableManager
@@ -4729,37 +3773,19 @@ class $$MovimientosCompraLocalTableTableManager
           $$MovimientosCompraLocalTableUpdateCompanionBuilder,
           (
             MovimientosCompraLocalData,
-            BaseReferences<
-              _$AppDatabase,
-              $MovimientosCompraLocalTable,
-              MovimientosCompraLocalData
-            >,
+            BaseReferences<_$AppDatabase, $MovimientosCompraLocalTable, MovimientosCompraLocalData>,
           ),
           MovimientosCompraLocalData,
           PrefetchHooks Function()
         > {
-  $$MovimientosCompraLocalTableTableManager(
-    _$AppDatabase db,
-    $MovimientosCompraLocalTable table,
-  ) : super(
+  $$MovimientosCompraLocalTableTableManager(_$AppDatabase db, $MovimientosCompraLocalTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$MovimientosCompraLocalTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer:
-              () => $$MovimientosCompraLocalTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer:
-              () => $$MovimientosCompraLocalTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$MovimientosCompraLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$MovimientosCompraLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$MovimientosCompraLocalTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -4800,16 +3826,7 @@ class $$MovimientosCompraLocalTableTableManager
                 actualizado: actualizado,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -4827,11 +3844,7 @@ typedef $$MovimientosCompraLocalTableProcessedTableManager =
       $$MovimientosCompraLocalTableUpdateCompanionBuilder,
       (
         MovimientosCompraLocalData,
-        BaseReferences<
-          _$AppDatabase,
-          $MovimientosCompraLocalTable,
-          MovimientosCompraLocalData
-        >,
+        BaseReferences<_$AppDatabase, $MovimientosCompraLocalTable, MovimientosCompraLocalData>,
       ),
       MovimientosCompraLocalData,
       PrefetchHooks Function()
@@ -4861,8 +3874,7 @@ typedef $$ComprobantesLocalTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$ComprobantesLocalTableFilterComposer
-    extends Composer<_$AppDatabase, $ComprobantesLocalTable> {
+class $$ComprobantesLocalTableFilterComposer extends Composer<_$AppDatabase, $ComprobantesLocalTable> {
   $$ComprobantesLocalTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -4870,49 +3882,30 @@ class $$ComprobantesLocalTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get loteId => $composableBuilder(
-    column: $table.loteId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get loteId =>
+      $composableBuilder(column: $table.loteId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get entidad => $composableBuilder(
-    column: $table.entidad,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get entidad =>
+      $composableBuilder(column: $table.entidad, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get entidadId => $composableBuilder(
-    column: $table.entidadId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get entidadId =>
+      $composableBuilder(column: $table.entidadId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<Uint8List> get bytes => $composableBuilder(
-    column: $table.bytes,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<Uint8List> get bytes =>
+      $composableBuilder(column: $table.bytes, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get mime => $composableBuilder(
-    column: $table.mime,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get mime => $composableBuilder(column: $table.mime, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get syncState => $composableBuilder(
-    column: $table.syncState,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get creado => $composableBuilder(
-    column: $table.creado,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get creado =>
+      $composableBuilder(column: $table.creado, builder: (column) => ColumnFilters(column));
 }
 
-class $$ComprobantesLocalTableOrderingComposer
-    extends Composer<_$AppDatabase, $ComprobantesLocalTable> {
+class $$ComprobantesLocalTableOrderingComposer extends Composer<_$AppDatabase, $ComprobantesLocalTable> {
   $$ComprobantesLocalTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4920,49 +3913,31 @@ class $$ComprobantesLocalTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get loteId => $composableBuilder(
-    column: $table.loteId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get loteId =>
+      $composableBuilder(column: $table.loteId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get entidad => $composableBuilder(
-    column: $table.entidad,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get entidad =>
+      $composableBuilder(column: $table.entidad, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get entidadId => $composableBuilder(
-    column: $table.entidadId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get entidadId =>
+      $composableBuilder(column: $table.entidadId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<Uint8List> get bytes => $composableBuilder(
-    column: $table.bytes,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<Uint8List> get bytes =>
+      $composableBuilder(column: $table.bytes, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get mime => $composableBuilder(
-    column: $table.mime,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get mime =>
+      $composableBuilder(column: $table.mime, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get syncState => $composableBuilder(
-    column: $table.syncState,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get creado => $composableBuilder(
-    column: $table.creado,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get creado =>
+      $composableBuilder(column: $table.creado, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ComprobantesLocalTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ComprobantesLocalTable> {
+class $$ComprobantesLocalTableAnnotationComposer extends Composer<_$AppDatabase, $ComprobantesLocalTable> {
   $$ComprobantesLocalTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4970,29 +3945,21 @@ class $$ComprobantesLocalTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get loteId =>
-      $composableBuilder(column: $table.loteId, builder: (column) => column);
+  GeneratedColumn<String> get loteId => $composableBuilder(column: $table.loteId, builder: (column) => column);
 
-  GeneratedColumn<String> get entidad =>
-      $composableBuilder(column: $table.entidad, builder: (column) => column);
+  GeneratedColumn<String> get entidad => $composableBuilder(column: $table.entidad, builder: (column) => column);
 
-  GeneratedColumn<String> get entidadId =>
-      $composableBuilder(column: $table.entidadId, builder: (column) => column);
+  GeneratedColumn<String> get entidadId => $composableBuilder(column: $table.entidadId, builder: (column) => column);
 
-  GeneratedColumn<Uint8List> get bytes =>
-      $composableBuilder(column: $table.bytes, builder: (column) => column);
+  GeneratedColumn<Uint8List> get bytes => $composableBuilder(column: $table.bytes, builder: (column) => column);
 
-  GeneratedColumn<String> get mime =>
-      $composableBuilder(column: $table.mime, builder: (column) => column);
+  GeneratedColumn<String> get mime => $composableBuilder(column: $table.mime, builder: (column) => column);
 
-  GeneratedColumn<String> get syncState =>
-      $composableBuilder(column: $table.syncState, builder: (column) => column);
+  GeneratedColumn<String> get syncState => $composableBuilder(column: $table.syncState, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get creado =>
-      $composableBuilder(column: $table.creado, builder: (column) => column);
+  GeneratedColumn<DateTime> get creado => $composableBuilder(column: $table.creado, builder: (column) => column);
 }
 
 class $$ComprobantesLocalTableTableManager
@@ -5006,39 +3973,18 @@ class $$ComprobantesLocalTableTableManager
           $$ComprobantesLocalTableAnnotationComposer,
           $$ComprobantesLocalTableCreateCompanionBuilder,
           $$ComprobantesLocalTableUpdateCompanionBuilder,
-          (
-            ComprobantesLocalData,
-            BaseReferences<
-              _$AppDatabase,
-              $ComprobantesLocalTable,
-              ComprobantesLocalData
-            >,
-          ),
+          (ComprobantesLocalData, BaseReferences<_$AppDatabase, $ComprobantesLocalTable, ComprobantesLocalData>),
           ComprobantesLocalData,
           PrefetchHooks Function()
         > {
-  $$ComprobantesLocalTableTableManager(
-    _$AppDatabase db,
-    $ComprobantesLocalTable table,
-  ) : super(
+  $$ComprobantesLocalTableTableManager(_$AppDatabase db, $ComprobantesLocalTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$ComprobantesLocalTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer:
-              () => $$ComprobantesLocalTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer:
-              () => $$ComprobantesLocalTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ComprobantesLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ComprobantesLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ComprobantesLocalTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -5083,16 +4029,7 @@ class $$ComprobantesLocalTableTableManager
                 creado: creado,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -5108,14 +4045,7 @@ typedef $$ComprobantesLocalTableProcessedTableManager =
       $$ComprobantesLocalTableAnnotationComposer,
       $$ComprobantesLocalTableCreateCompanionBuilder,
       $$ComprobantesLocalTableUpdateCompanionBuilder,
-      (
-        ComprobantesLocalData,
-        BaseReferences<
-          _$AppDatabase,
-          $ComprobantesLocalTable,
-          ComprobantesLocalData
-        >,
-      ),
+      (ComprobantesLocalData, BaseReferences<_$AppDatabase, $ComprobantesLocalTable, ComprobantesLocalData>),
       ComprobantesLocalData,
       PrefetchHooks Function()
     >;
@@ -5144,8 +4074,7 @@ typedef $$OutboxTableUpdateCompanionBuilder =
       Value<DateTime> creado,
     });
 
-class $$OutboxTableFilterComposer
-    extends Composer<_$AppDatabase, $OutboxTable> {
+class $$OutboxTableFilterComposer extends Composer<_$AppDatabase, $OutboxTable> {
   $$OutboxTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5153,54 +4082,33 @@ class $$OutboxTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get seq => $composableBuilder(column: $table.seq, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get tipo => $composableBuilder(
-    column: $table.tipo,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get tipo => $composableBuilder(column: $table.tipo, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get entidadId => $composableBuilder(
-    column: $table.entidadId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get entidadId =>
+      $composableBuilder(column: $table.entidadId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get descripcion => $composableBuilder(
-    column: $table.descripcion,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get descripcion =>
+      $composableBuilder(column: $table.descripcion, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get payload => $composableBuilder(
-    column: $table.payload,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get intentos => $composableBuilder(
-    column: $table.intentos,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get intentos =>
+      $composableBuilder(column: $table.intentos, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get ultimoError => $composableBuilder(
-    column: $table.ultimoError,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get ultimoError =>
+      $composableBuilder(column: $table.ultimoError, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get bloqueada => $composableBuilder(
-    column: $table.bloqueada,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get bloqueada =>
+      $composableBuilder(column: $table.bloqueada, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get creado => $composableBuilder(
-    column: $table.creado,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get creado =>
+      $composableBuilder(column: $table.creado, builder: (column) => ColumnFilters(column));
 }
 
-class $$OutboxTableOrderingComposer
-    extends Composer<_$AppDatabase, $OutboxTable> {
+class $$OutboxTableOrderingComposer extends Composer<_$AppDatabase, $OutboxTable> {
   $$OutboxTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5208,54 +4116,34 @@ class $$OutboxTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get seq => $composableBuilder(column: $table.seq, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get tipo => $composableBuilder(
-    column: $table.tipo,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get tipo =>
+      $composableBuilder(column: $table.tipo, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get entidadId => $composableBuilder(
-    column: $table.entidadId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get entidadId =>
+      $composableBuilder(column: $table.entidadId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get descripcion => $composableBuilder(
-    column: $table.descripcion,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get descripcion =>
+      $composableBuilder(column: $table.descripcion, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get payload => $composableBuilder(
-    column: $table.payload,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get intentos => $composableBuilder(
-    column: $table.intentos,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get intentos =>
+      $composableBuilder(column: $table.intentos, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get ultimoError => $composableBuilder(
-    column: $table.ultimoError,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get ultimoError =>
+      $composableBuilder(column: $table.ultimoError, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get bloqueada => $composableBuilder(
-    column: $table.bloqueada,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get bloqueada =>
+      $composableBuilder(column: $table.bloqueada, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get creado => $composableBuilder(
-    column: $table.creado,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get creado =>
+      $composableBuilder(column: $table.creado, builder: (column) => ColumnOrderings(column));
 }
 
-class $$OutboxTableAnnotationComposer
-    extends Composer<_$AppDatabase, $OutboxTable> {
+class $$OutboxTableAnnotationComposer extends Composer<_$AppDatabase, $OutboxTable> {
   $$OutboxTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5263,36 +4151,25 @@ class $$OutboxTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get seq =>
-      $composableBuilder(column: $table.seq, builder: (column) => column);
+  GeneratedColumn<int> get seq => $composableBuilder(column: $table.seq, builder: (column) => column);
 
-  GeneratedColumn<String> get tipo =>
-      $composableBuilder(column: $table.tipo, builder: (column) => column);
+  GeneratedColumn<String> get tipo => $composableBuilder(column: $table.tipo, builder: (column) => column);
 
-  GeneratedColumn<String> get entidadId =>
-      $composableBuilder(column: $table.entidadId, builder: (column) => column);
+  GeneratedColumn<String> get entidadId => $composableBuilder(column: $table.entidadId, builder: (column) => column);
 
-  GeneratedColumn<String> get descripcion => $composableBuilder(
-    column: $table.descripcion,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get descripcion =>
+      $composableBuilder(column: $table.descripcion, builder: (column) => column);
 
-  GeneratedColumn<String> get payload =>
-      $composableBuilder(column: $table.payload, builder: (column) => column);
+  GeneratedColumn<String> get payload => $composableBuilder(column: $table.payload, builder: (column) => column);
 
-  GeneratedColumn<int> get intentos =>
-      $composableBuilder(column: $table.intentos, builder: (column) => column);
+  GeneratedColumn<int> get intentos => $composableBuilder(column: $table.intentos, builder: (column) => column);
 
-  GeneratedColumn<String> get ultimoError => $composableBuilder(
-    column: $table.ultimoError,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get ultimoError =>
+      $composableBuilder(column: $table.ultimoError, builder: (column) => column);
 
-  GeneratedColumn<bool> get bloqueada =>
-      $composableBuilder(column: $table.bloqueada, builder: (column) => column);
+  GeneratedColumn<bool> get bloqueada => $composableBuilder(column: $table.bloqueada, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get creado =>
-      $composableBuilder(column: $table.creado, builder: (column) => column);
+  GeneratedColumn<DateTime> get creado => $composableBuilder(column: $table.creado, builder: (column) => column);
 }
 
 class $$OutboxTableTableManager
@@ -5315,12 +4192,9 @@ class $$OutboxTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$OutboxTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$OutboxTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$OutboxTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$OutboxTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$OutboxTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$OutboxTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> seq = const Value.absent(),
@@ -5365,16 +4239,7 @@ class $$OutboxTableTableManager
                 bloqueada: bloqueada,
                 creado: creado,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -5398,21 +4263,15 @@ typedef $$OutboxTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
-  $$KvEntriesTableTableManager get kvEntries =>
-      $$KvEntriesTableTableManager(_db, _db.kvEntries);
-  $$LotesLocalTableTableManager get lotesLocal =>
-      $$LotesLocalTableTableManager(_db, _db.lotesLocal);
+  $$KvEntriesTableTableManager get kvEntries => $$KvEntriesTableTableManager(_db, _db.kvEntries);
+  $$LotesLocalTableTableManager get lotesLocal => $$LotesLocalTableTableManager(_db, _db.lotesLocal);
   $$EvaluacionesLocalTableTableManager get evaluacionesLocal =>
       $$EvaluacionesLocalTableTableManager(_db, _db.evaluacionesLocal);
   $$EvidenciasLocalTableTableManager get evidenciasLocal =>
       $$EvidenciasLocalTableTableManager(_db, _db.evidenciasLocal);
   $$MovimientosCompraLocalTableTableManager get movimientosCompraLocal =>
-      $$MovimientosCompraLocalTableTableManager(
-        _db,
-        _db.movimientosCompraLocal,
-      );
+      $$MovimientosCompraLocalTableTableManager(_db, _db.movimientosCompraLocal);
   $$ComprobantesLocalTableTableManager get comprobantesLocal =>
       $$ComprobantesLocalTableTableManager(_db, _db.comprobantesLocal);
-  $$OutboxTableTableManager get outbox =>
-      $$OutboxTableTableManager(_db, _db.outbox);
+  $$OutboxTableTableManager get outbox => $$OutboxTableTableManager(_db, _db.outbox);
 }

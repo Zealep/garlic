@@ -166,7 +166,12 @@ void main() {
       return const Result.ok(<String, Object?>{});
     });
 
-    await sync.encolar(tipo: TipoOperacion.evaluacionCerrar, entidadId: 'ev-7', descripcion: 'Cierre', payload: const {});
+    await sync.encolar(
+      tipo: TipoOperacion.evaluacionCerrar,
+      entidadId: 'ev-7',
+      descripcion: 'Cierre',
+      payload: const {},
+    );
     for (final r in ['SIN_ACUERDO', 'ACEPTADA']) {
       await sync.encolar(
         tipo: TipoOperacion.evaluacionResultado,

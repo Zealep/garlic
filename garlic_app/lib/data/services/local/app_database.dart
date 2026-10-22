@@ -104,7 +104,15 @@ class Outbox extends Table {
 }
 
 @DriftDatabase(
-  tables: [KvEntries, LotesLocal, EvaluacionesLocal, EvidenciasLocal, MovimientosCompraLocal, ComprobantesLocal, Outbox],
+  tables: [
+    KvEntries,
+    LotesLocal,
+    EvaluacionesLocal,
+    EvidenciasLocal,
+    MovimientosCompraLocal,
+    ComprobantesLocal,
+    Outbox,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _abrir());

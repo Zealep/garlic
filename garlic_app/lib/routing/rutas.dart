@@ -18,4 +18,7 @@ abstract final class Rutas {
 
   /// Abrir una evaluación existente (editar borrador o ver cerrada).
   static String evaluacion(String loteId, String id) => '/lotes/$loteId/evaluaciones/$id';
+
+  /// Comparar dos evaluaciones (de lotes distintos o del mismo).
+  static String comparar(String a, String b) => '/evaluaciones/comparar?a=$a&b=$b';
 }

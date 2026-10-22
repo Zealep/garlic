@@ -39,8 +39,7 @@ class ApiClient {
   Future<Result<Object?>> patch(String path, {Object? body}) =>
       _enviar(() => _dio.patch<Object?>(path, data: body, options: _opciones()));
 
-  Future<Result<Object?>> delete(String path) =>
-      _enviar(() => _dio.delete<Object?>(path, options: _opciones()));
+  Future<Result<Object?>> delete(String path) => _enviar(() => _dio.delete<Object?>(path, options: _opciones()));
 
   /// Sube un archivo (multipart) con campos adicionales.
   Future<Result<Object?>> subirArchivo(

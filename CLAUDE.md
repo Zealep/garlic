@@ -23,6 +23,10 @@ Excel del cliente "N°1 EVALUACION CAMPO AJO 2025", hoja **"LOTE #XXX MODELO - V
 - **La compra no depende del resultado**: un lote rechazado puede comprarse por necesidad de producto (solo se avisa).
   La compra es **por lote** (no por evaluación).
 - **Seguimiento**: "Próximos cortes" (Inicio y filtro en Lotes) según `fecha_corte`: es cuando se vuelve al campo a cerrar.
+- **Comparar evaluaciones** (2026-10-21, solo app): 2 evaluaciones **cerradas** (de lotes distintos o del mismo), desde la
+  bandeja ("Comparar") o el detalle del lote. Resalta el mejor valor **solo** donde la dirección es clara (más % de la
+  primera clase, más valor por kg, menos enfermedades/incidencia/daños; "NO CONTIENE" no es daño) y calcula el precio
+  técnico de ambas con **los mismos precios base**. Sin puntaje global (los pesos los tendría que definir el cliente).
 - **DNI LC** = DNI a cuyo nombre se emite la liquidación de compra (`lote.titular_liquidacion_id`).
 - Fechas arrancado/corte/carga pertenecen al **lote**; el **tipo de compra lo decide el evaluador**.
 - Calidad y calibre se registran **por muestra**; humedad, empaste, daños y sanidad **por evaluación**.
@@ -76,5 +80,6 @@ HTTPS y usuario/clave). La app se instala como PWA en el celular.
 - [ ] Autenticación JWT con usuarios (reemplaza el usuario/clave compartido de Caddy); necesaria antes de la APK.
 - [ ] Confirmar con el cliente (punto 3): modalidades "Precio Barre/Escoba" (hoja DATOS), si POROTO es clase de calidad,
       qué significa la condición CREDITO y si la liquidación se cierra (inmutable) al pagar.
+- [ ] Confirmar con el cliente si quiere un puntaje global en "Comparar" (y con qué pesos por factor).
 - [ ] Confirmar con el cliente: duplicado de zona por campaña, orden de fechas del lote,
       motivo de anulación del lote.

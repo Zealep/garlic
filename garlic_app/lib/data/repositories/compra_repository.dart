@@ -155,7 +155,12 @@ class CompraRepository {
   );
 
   /// Elimina en el equipo (con sus fotos) y encola el borrado en el servidor.
-  Future<void> eliminar({required String loteId, required String id, required String tipo, required String descripcion}) async {
+  Future<void> eliminar({
+    required String loteId,
+    required String id,
+    required String tipo,
+    required String descripcion,
+  }) async {
     await _sync.descartarDeEntidad(id);
     final fotos = await (_db.select(_db.comprobantesLocal)..where((t) => t.entidadId.equals(id))).get();
     for (final f in fotos) {

@@ -94,6 +94,7 @@ class CompraViewModel extends ChangeNotifier {
     final id = fijacion?.evaluacionId ?? evaluacionesCerradas.firstOrNull?.id;
     return evaluacionesCerradas.where((e) => e.id == id).firstOrNull?.resultado;
   }
+
   List<CatalogoItem> get clasesCalidad => _catalogos.formulario?.clasesCalidad ?? const [];
   List<CatalogoItem> get tiposEmpaque => _catalogos.tiposEmpaque;
   List<CatalogoItem> get tiposGasto => _catalogos.tiposGasto;

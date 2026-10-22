@@ -23,20 +23,23 @@ class FijacionPrecio {
   }) : preciosBase = preciosBase ?? {};
 
   /// Acepta el request guardado en el equipo o la respuesta del servidor (`precios: [{claseCalidadId, precioBase}]`).
-  factory FijacionPrecio.fromJson(Map<String, Object?> json, {SyncState syncState = SyncState.sincronizado, String? syncError}) =>
-      FijacionPrecio(
-        evaluacionId: json['evaluacionId']! as String,
-        preciosBase: {
-          for (final p in (json['precios'] as List<Object?>? ?? const []).cast<Map<String, Object?>>())
-            p['claseCalidadId']! as String: _num(p['precioBase']) ?? 0,
-        },
-        gastoLlenado: _num(json['gastoLlenado']) ?? 0,
-        precioPactado: _num(json['precioPactado']),
-        fechaPacto: Formato.parseFecha(json['fechaPacto']),
-        observacion: json['observacion'] as String?,
-        syncState: syncState,
-        syncError: syncError,
-      );
+  factory FijacionPrecio.fromJson(
+    Map<String, Object?> json, {
+    SyncState syncState = SyncState.sincronizado,
+    String? syncError,
+  }) => FijacionPrecio(
+    evaluacionId: json['evaluacionId']! as String,
+    preciosBase: {
+      for (final p in (json['precios'] as List<Object?>? ?? const []).cast<Map<String, Object?>>())
+        p['claseCalidadId']! as String: _num(p['precioBase']) ?? 0,
+    },
+    gastoLlenado: _num(json['gastoLlenado']) ?? 0,
+    precioPactado: _num(json['precioPactado']),
+    fechaPacto: Formato.parseFecha(json['fechaPacto']),
+    observacion: json['observacion'] as String?,
+    syncState: syncState,
+    syncError: syncError,
+  );
 
   String evaluacionId;
   final Map<String, double> preciosBase;
@@ -81,20 +84,23 @@ class Carga {
     this.syncError,
   });
 
-  factory Carga.fromJson(Map<String, Object?> json, {SyncState syncState = SyncState.sincronizado, String? syncError}) =>
-      Carga(
-        id: json['id']! as String,
-        fecha: Formato.parseFecha(json['fecha']) ?? DateTime.now(),
-        kg: _num(json['kg']) ?? 0,
-        precioKg: _num(json['precioKg']) ?? 0,
-        destarePct: _num(json['destarePct']) ?? 1,
-        cantidadEmpaques: (json['cantidadEmpaques'] as num?)?.toInt() ?? 0,
-        tipoEmpaqueId: json['tipoEmpaqueId'] as String?,
-        placa: json['placa'] as String?,
-        observacion: json['observacion'] as String?,
-        syncState: syncState,
-        syncError: syncError,
-      );
+  factory Carga.fromJson(
+    Map<String, Object?> json, {
+    SyncState syncState = SyncState.sincronizado,
+    String? syncError,
+  }) => Carga(
+    id: json['id']! as String,
+    fecha: Formato.parseFecha(json['fecha']) ?? DateTime.now(),
+    kg: _num(json['kg']) ?? 0,
+    precioKg: _num(json['precioKg']) ?? 0,
+    destarePct: _num(json['destarePct']) ?? 1,
+    cantidadEmpaques: (json['cantidadEmpaques'] as num?)?.toInt() ?? 0,
+    tipoEmpaqueId: json['tipoEmpaqueId'] as String?,
+    placa: json['placa'] as String?,
+    observacion: json['observacion'] as String?,
+    syncState: syncState,
+    syncError: syncError,
+  );
 
   final String id;
   DateTime fecha;

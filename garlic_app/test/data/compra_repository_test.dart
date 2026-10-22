@@ -50,7 +50,8 @@ void main() {
     await db.close();
   });
 
-  Pago pago(String id, double monto) => Pago(id: id, fecha: DateTime(2025, 10, 21), condicionPagoId: 'cta', monto: monto);
+  Pago pago(String id, double monto) =>
+      Pago(id: id, fecha: DateTime(2025, 10, 21), condicionPagoId: 'cta', monto: monto);
 
   test('pago sin conexión: queda pendiente y luego se envía con PUT idempotente', () async {
     when(() => api.put(any(), body: any(named: 'body'))).thenAnswer((_) async => const Result.error(_sinRed));

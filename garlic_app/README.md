@@ -40,7 +40,7 @@ lib/
 │   └── use_cases/       ReglasEvaluacion, CalculoCompra y ReglasCompra (mismas fórmulas y reglas que el backend)
 ├── ui/
 │   ├── core/            theme/ (tokens de marca), widgets/, layout/ (breakpoints, shell adaptable)
-│   └── features/        setup · inicio · lotes · evaluacion · compra · catalogos · sync  (view_models/ + views/)
+│   └── features/        setup · inicio · lotes · evaluacion · comparacion · compra · catalogos · sync  (view_models/ + views/)
 ├── routing/             go_router (shell con navegación adaptable + rutas a pantalla completa)
 ├── config/              Dependencias (provider)
 └── utils/               Result, Command, Formato

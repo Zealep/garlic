@@ -11,11 +11,20 @@ import 'resultado_evaluacion.dart';
 
 /// Fila de evaluación reutilizada en inicio, bandeja y detalle de lote.
 class EvaluacionTile extends StatelessWidget {
-  const EvaluacionTile({super.key, required this.evaluacion, required this.onTap, this.mostrarLote = true});
+  const EvaluacionTile({
+    super.key,
+    required this.evaluacion,
+    required this.onTap,
+    this.mostrarLote = true,
+    this.seleccionada,
+  });
 
   final EvaluacionResumen evaluacion;
   final VoidCallback onTap;
   final bool mostrarLote;
+
+  /// Modo selección (comparar): no null muestra una casilla en lugar de la flecha.
+  final bool? seleccionada;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +32,13 @@ class EvaluacionTile extends StatelessWidget {
     final e = evaluacion;
     return Card(
       clipBehavior: Clip.antiAlias,
+      shape:
+          seleccionada ?? false
+              ? RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(GRadio.tarjeta),
+                side: const BorderSide(color: GColores.primario, width: 2),
+              )
+              : null,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -69,7 +85,10 @@ class EvaluacionTile extends StatelessWidget {
               ),
               EstadoSync(estado: e.syncState, compacto: true),
               const SizedBox(width: 4),
-              const Icon(PhosphorIconsBold.caretRight, size: 18, color: GColores.tintaSuave),
+              if (seleccionada case final sel?)
+                Checkbox(value: sel, onChanged: (_) => onTap())
+              else
+                const Icon(PhosphorIconsBold.caretRight, size: 18, color: GColores.tintaSuave),
             ],
           ),
         ),

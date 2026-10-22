@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../../domain/models/evaluacion.dart';
 import '../../../../domain/models/lote.dart';
 import '../../../../domain/use_cases/seguimiento_lotes.dart';
 import '../../../../routing/rutas.dart';
@@ -263,6 +264,8 @@ class _Historial extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    // ya vienen de la más reciente a la más antigua
+    final cerradas = vm.evaluaciones.where((e) => e.estado == EstadoEvaluacion.cerrada).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -272,7 +275,17 @@ class _Historial extends StatelessWidget {
           onTap: () => context.push(Rutas.compra(lote.id)),
         ),
         const SizedBox(height: GEspacio.xl),
-        Text('Evaluaciones de calidad', style: t.titleLarge),
+        Row(
+          children: [
+            Expanded(child: Text('Evaluaciones de calidad', style: t.titleLarge)),
+            if (cerradas.length >= 2)
+              TextButton.icon(
+                onPressed: () => context.push(Rutas.comparar(cerradas[0].id, cerradas[1].id)),
+                icon: const Icon(PhosphorIconsBold.scales),
+                label: const Text('Comparar'),
+              ),
+          ],
+        ),
         const SizedBox(height: GEspacio.m),
         if (vm.evaluaciones.isEmpty)
           const Card(

@@ -11,6 +11,8 @@ import '../data/repositories/sync_repository.dart';
 import '../ui/core/layout/shell_adaptativo.dart';
 import '../ui/features/catalogos/view_models/catalogos_view_model.dart';
 import '../ui/features/catalogos/views/catalogos_screen.dart';
+import '../ui/features/comparacion/view_models/comparacion_view_model.dart';
+import '../ui/features/comparacion/views/comparacion_screen.dart';
 import '../ui/features/compra/view_models/compra_view_model.dart';
 import '../ui/features/compra/views/compra_screen.dart';
 import '../ui/features/evaluacion/view_models/bandeja_view_model.dart';
@@ -173,6 +175,29 @@ GoRouter crearRouter(ConfigRepository config) => GoRouter(
                         ),
                     builder: (vm) => BandejaScreen(viewModel: vm),
                   ),
+              routes: [
+                GoRoute(
+                  path: 'comparar',
+                  parentNavigatorKey: _raiz,
+                  builder: (context, state) {
+                    final q = state.uri.queryParameters;
+                    final (a, b) = (q['a'] ?? '', q['b'] ?? '');
+                    return _ConViewModel(
+                      key: ValueKey('comparar-$a-$b'),
+                      crear:
+                          (c) => ComparacionViewModel(
+                            idA: a,
+                            idB: b,
+                            evaluaciones: c.read<EvaluacionesRepository>(),
+                            lotes: c.read<LotesRepository>(),
+                            catalogos: c.read<CatalogosRepository>(),
+                            compra: c.read<CompraRepository>(),
+                          ),
+                      builder: (vm) => ComparacionScreen(viewModel: vm),
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),

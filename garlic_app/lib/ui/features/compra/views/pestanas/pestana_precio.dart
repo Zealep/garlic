@@ -290,7 +290,10 @@ class _TablaMuestras extends StatelessWidget {
 
 /// Promedio del % de una clase en las muestras que la registran (igual que la columna PROM de la evaluación).
 double? _promedio(List<Map<String, double>> muestras, String claseId) {
-  final valores = [for (final m in muestras) if (m[claseId] != null) m[claseId]!];
+  final valores = [
+    for (final m in muestras)
+      if (m[claseId] != null) m[claseId]!,
+  ];
   return valores.isEmpty ? null : valores.reduce((a, b) => a + b) / valores.length;
 }
 

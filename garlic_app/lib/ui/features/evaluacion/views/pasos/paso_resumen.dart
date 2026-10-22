@@ -362,7 +362,8 @@ class _ResultadoState extends State<_Resultado> {
               controller: _motivo,
               maxLength: 500,
               decoration: InputDecoration(
-                labelText: actual == ResultadoEvaluacion.sinAcuerdo ? 'Motivo (ej. precio que pide)' : 'Motivo del rechazo',
+                labelText:
+                    actual == ResultadoEvaluacion.sinAcuerdo ? 'Motivo (ej. precio que pide)' : 'Motivo del rechazo',
                 suffixIcon: IconButton(
                   tooltip: 'Guardar motivo',
                   icon: const Icon(PhosphorIconsBold.floppyDisk),

@@ -45,6 +45,35 @@ class BandejaViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ------------------------------------------------------------------ comparar
+
+  /// Modo selección para comparar dos evaluaciones cerradas.
+  bool comparando = false;
+
+  /// Ids elegidos, en el orden en que se marcaron (A, B).
+  List<String> seleccion = const [];
+
+  void alternarComparar() {
+    comparando = !comparando;
+    seleccion = const [];
+    notifyListeners();
+  }
+
+  /// Marca o desmarca. Solo cerradas (devuelve false si no se puede); con dos marcadas, una tercera
+  /// reemplaza a la más antigua.
+  bool seleccionar(EvaluacionResumen e) {
+    if (e.estado != EstadoEvaluacion.cerrada) return false;
+    seleccion = alternar(seleccion, e.id);
+    notifyListeners();
+    return true;
+  }
+
+  @visibleForTesting
+  static List<String> alternar(List<String> seleccion, String id) =>
+      seleccion.contains(id)
+          ? seleccion.where((x) => x != id).toList()
+          : [...seleccion, id].skip(seleccion.length >= 2 ? 1 : 0).toList();
+
   @override
   void dispose() {
     for (final s in _subs) {

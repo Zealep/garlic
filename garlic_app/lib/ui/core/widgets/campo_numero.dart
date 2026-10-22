@@ -77,7 +77,13 @@ class _CampoNumeroState extends State<CampoNumero> {
     keyboardType: TextInputType.numberWithOptions(decimal: !widget.entero),
     inputFormatters: [
       FilteringTextInputFormatter.allow(
-        widget.entero ? RegExp(r'^\d{0,9}') : RegExp(r'^\d{0,9}([.,]\d{0,' '${widget.decimales}' r'})?'),
+        widget.entero
+            ? RegExp(r'^\d{0,9}')
+            : RegExp(
+              r'^\d{0,9}([.,]\d{0,'
+              '${widget.decimales}'
+              r'})?',
+            ),
       ),
     ],
     textAlign: TextAlign.end,
