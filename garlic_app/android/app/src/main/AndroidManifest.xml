@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- La APK release habla con el servidor (sin esto solo funcionaria en debug). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Punto GPS del lote (geolocator) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
-        android:label="garlic_app"
+        android:label="Guadalupe"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

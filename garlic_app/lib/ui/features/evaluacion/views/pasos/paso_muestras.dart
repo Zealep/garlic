@@ -10,16 +10,18 @@ import '../../../../core/widgets/campo_porcentaje.dart';
 import '../../../../core/widgets/componentes.dart';
 import '../../view_models/evaluacion_view_model.dart';
 import '../../../../core/widgets/galeria_fotos.dart';
+import 'secciones_muestra.dart';
 
-/// Paso 2: muestras con factor de calidad global (2.1) y factor tamaño / calibre (2.2).
+/// Paso 2: cada muestra con su calidad global (2.1), calibre (2.2), sensoriales y sanidad.
 class PasoMuestras extends StatelessWidget {
   const PasoMuestras({super.key, required this.vm});
 
   final EvaluacionViewModel vm;
 
   /// Si la muestra tiene fotos, confirma antes de quitarla (también se eliminan sus fotos).
-  Future<void> _quitarMuestra(BuildContext context, int numero) async {
-    final nFotos = vm.fotosDe(SeccionFoto.muestra, muestraNumero: numero).length;
+  Future<void> _quitarMuestra(BuildContext context, MuestraBorrador muestra) async {
+    final numero = muestra.numero;
+    final nFotos = vm.fotosDeMuestra(muestra).length;
     if (nFotos > 0) {
       final ok = await showDialog<bool>(
         context: context,
@@ -39,7 +41,7 @@ class PasoMuestras extends StatelessWidget {
       );
       if (ok != true) return;
     }
-    await vm.quitarMuestra(numero);
+    await vm.quitarMuestra(muestra);
   }
 
   @override
@@ -51,51 +53,63 @@ class PasoMuestras extends StatelessWidget {
       children: [
         _SelectorMuestras(vm: vm),
         const SizedBox(height: GEspacio.l),
-        if (m == null)
-          EstadoVacio(
-            titulo: 'Sin muestras',
-            mensaje: 'Agrega al menos una muestra representativa del lote.',
-            accion: FilledButton.icon(
-              onPressed: vm.agregarMuestra,
-              icon: const Icon(PhosphorIconsBold.plus),
-              label: const Text('Agregar muestra'),
-            ),
-          )
-        else ...[
-          _Calidad(vm: vm, muestra: m, key: ValueKey('cal-${m.numero}')),
-          const SizedBox(height: GEspacio.l),
-          _Calibres(vm: vm, muestra: m, key: ValueKey('calib-${m.numero}')),
-          const SizedBox(height: GEspacio.l),
-          GaleriaFotos(
-            key: ValueKey('fotos-${m.numero}'),
-            titulo: 'Fotos de la muestra ${m.numero}',
-            ayuda: 'Evidencia de la calidad y el calibre de esta muestra.',
-            fotos: vm.fotosDe(SeccionFoto.muestra, muestraNumero: m.numero),
-            editable: vm.editable,
-            onAgregar:
-                (bytes, mime) => vm.agregarFoto(bytes, mime, seccion: SeccionFoto.muestra, muestraNumero: m.numero),
-            onEliminar: vm.eliminarFoto,
+        // Evaluación cerrada: se puede cambiar de muestra, pero su contenido es solo lectura.
+        IgnorePointer(
+          ignoring: !vm.editable,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (m == null)
+                EstadoVacio(
+                  titulo: 'Sin muestras',
+                  mensaje: 'Agrega al menos una muestra representativa del lote.',
+                  accion: FilledButton.icon(
+                    onPressed: vm.agregarMuestra,
+                    icon: const Icon(PhosphorIconsBold.plus),
+                    label: const Text('Agregar muestra'),
+                  ),
+                )
+              else ...[
+                _Calidad(vm: vm, muestra: m, key: ValueKey('cal-${m.id}')),
+                const SizedBox(height: GEspacio.l),
+                _Calibres(vm: vm, muestra: m, key: ValueKey('calib-${m.id}')),
+                const SizedBox(height: GEspacio.l),
+                SeccionSensoriales(vm: vm, muestra: m, key: ValueKey('sens-${m.id}')),
+                const SizedBox(height: GEspacio.l),
+                SeccionSanidad(vm: vm, muestra: m, key: ValueKey('san-${m.id}')),
+                const SizedBox(height: GEspacio.l),
+                GaleriaFotos(
+                  key: ValueKey('fotos-${m.id}'),
+                  titulo: 'Fotos de la muestra ${m.numero}',
+                  ayuda: 'Evidencia de calidad, calibre, humedad, empaste o daños (ej. gotas dentro, parálisis).',
+                  fotos: vm.fotosDeMuestra(m),
+                  editable: vm.editable,
+                  onAgregar: (bytes, mime) => vm.agregarFoto(bytes, mime, muestra: m),
+                  onEliminar: vm.eliminarFoto,
+                ),
+                const SizedBox(height: GEspacio.l),
+                TextFormField(
+                  key: ValueKey('obs-${m.id}'),
+                  initialValue: m.observacion,
+                  decoration: InputDecoration(labelText: 'Observación de la muestra ${m.numero} (opcional)'),
+                  onChanged: vm.setObservacionMuestra,
+                ),
+                if (vm.editable && b.muestras.length > 1) ...[
+                  const SizedBox(height: GEspacio.s),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(foregroundColor: GColores.error),
+                      onPressed: () => _quitarMuestra(context, m),
+                      icon: const Icon(PhosphorIconsBold.trash),
+                      label: Text('Quitar muestra ${m.numero}'),
+                    ),
+                  ),
+                ],
+              ],
+            ],
           ),
-          const SizedBox(height: GEspacio.l),
-          TextFormField(
-            key: ValueKey('obs-${m.numero}'),
-            initialValue: m.observacion,
-            decoration: InputDecoration(labelText: 'Observación de la muestra ${m.numero} (opcional)'),
-            onChanged: vm.setObservacionMuestra,
-          ),
-          if (b.muestras.length > 1) ...[
-            const SizedBox(height: GEspacio.s),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                style: TextButton.styleFrom(foregroundColor: GColores.error),
-                onPressed: () => _quitarMuestra(context, m.numero),
-                icon: const Icon(PhosphorIconsBold.trash),
-                label: Text('Quitar muestra ${m.numero}'),
-              ),
-            ),
-          ],
-        ],
+        ),
       ],
     );
   }
@@ -117,6 +131,7 @@ class _SelectorMuestras extends StatelessWidget {
           for (final (i, m) in muestras.indexed) ...[
             _ChipMuestra(
               muestra: m,
+              completa: vm.problemasDeMuestra(m).isEmpty,
               seleccionada: i == vm.muestraIndice,
               primera: clases.isEmpty ? null : m.calidad[clases.first.id],
               onTap: () => vm.seleccionarMuestra(i),
@@ -136,16 +151,24 @@ class _SelectorMuestras extends StatelessWidget {
 }
 
 class _ChipMuestra extends StatelessWidget {
-  const _ChipMuestra({required this.muestra, required this.seleccionada, required this.onTap, this.primera});
+  const _ChipMuestra({
+    required this.muestra,
+    required this.completa,
+    required this.seleccionada,
+    required this.onTap,
+    this.primera,
+  });
 
   final MuestraBorrador muestra;
+
+  /// Lista para cerrar: calidad, calibres, cantidades de daños y sanidad respondidas.
+  final bool completa;
   final bool seleccionada;
   final double? primera;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final completa = muestra.calidad.isNotEmpty && (muestra.totalCalidad - 100).abs() < .01;
     return Semantics(
       selected: seleccionada,
       button: true,
@@ -167,15 +190,18 @@ class _ChipMuestra extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      'Muestra ${muestra.numero}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: seleccionada ? Colors.white : GColores.tinta,
+                    Expanded(
+                      child: Text(
+                        'Muestra ${muestra.numero}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: seleccionada ? Colors.white : GColores.tinta,
+                        ),
                       ),
                     ),
-                    const Spacer(),
                     if (completa)
                       Icon(
                         PhosphorIconsFill.checkCircle,

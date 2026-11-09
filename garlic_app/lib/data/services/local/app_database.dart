@@ -49,6 +49,9 @@ class EvaluacionesLocal extends Table {
 class EvidenciasLocal extends Table {
   TextColumn get id => text()();
   TextColumn get evaluacionId => text()();
+
+  /// Muestra a la que pertenece (id de la app; no cambia al renumerar). Null = evidencia general.
+  TextColumn get muestraId => text().nullable()();
   IntColumn get muestraNumero => integer().nullable()();
   TextColumn get factor => text().nullable()();
   BlobColumn get bytes => blob()();
@@ -118,7 +121,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _abrir());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -128,6 +131,18 @@ class AppDatabase extends _$AppDatabase {
         // v2: compra del lote (punto 3)
         await m.createTable(movimientosCompraLocal);
         await m.createTable(comprobantesLocal);
+      }
+      if (from < 3) {
+        // v3: sensoriales y sanidad por muestra; la muestra se identifica por id. Las evaluaciones de prueba
+        // (formato anterior) y sus fotos y fijaciones de precio se descartan: el servidor también las borró.
+        await m.addColumn(evidenciasLocal, evidenciasLocal.muestraId);
+        await customStatement('DELETE FROM evidencias_local');
+        await customStatement('DELETE FROM evaluaciones_local');
+        await customStatement("DELETE FROM movimientos_compra_local WHERE id LIKE 'fijacion:%'");
+        await customStatement(
+          "DELETE FROM outbox WHERE tipo IN ('evaluacionUpsert', 'evaluacionCerrar', 'evaluacionResultado', "
+          "'evidenciaSubir') OR payload LIKE '%fijacion-precio%'",
+        );
       }
     },
   );

@@ -9,7 +9,7 @@ import java.util.UUID;
 
 /**
  * Formulas del punto 3 (ver docs/modelo-datos/02-compra-lote.md). Funciones puras: la app replica las mismas.
- * Montos a 2 decimales; precios por kg y costos unitarios a 4 (HALF_UP).
+ * Montos a 2 decimales; precios por kg y costos unitarios a 4, salvo el C.U. puesto en packing (2) (HALF_UP).
  */
 public final class CalculoCompra {
 
@@ -53,9 +53,8 @@ public final class CalculoCompra {
 
     // ------------------------------------------------------------ carga (camion)
 
-    /** destare_kg = kg x destare% / 100; kg_neto = kg - destare_kg; total = kg_neto x precio. */
-    public static LineaCarga carga(BigDecimal kg, BigDecimal precioKg, BigDecimal destarePct) {
-        BigDecimal destareKg = kg.multiply(destarePct).divide(CIEN, ESCALA_MONTO, RoundingMode.HALF_UP);
+    /** destare en kg por carga; kg_neto = kg - destare_kg; total = kg_neto x precio. */
+    public static LineaCarga carga(BigDecimal kg, BigDecimal precioKg, BigDecimal destareKg) {
         BigDecimal kgNeto = kg.subtract(destareKg);
         BigDecimal importe = monto(kg.multiply(precioKg));
         BigDecimal descuento = monto(destareKg.multiply(precioKg));
@@ -88,7 +87,8 @@ public final class CalculoCompra {
         BigDecimal costoPacking = totalMp.add(gastosVinculados);
         return new Balance(kg, destare, kgNetos, totalMp, pagado, saldo, estadoPago(cargas.isEmpty(), totalMp, pagado),
                 gastosVinculados, costoPacking,
-                unitario(totalMp, kgNetos), unitario(gastosVinculados, kgNetos), unitario(costoPacking, kgNetos));
+                unitario(totalMp, kgNetos, ESCALA_PRECIO), unitario(gastosVinculados, kgNetos, ESCALA_PRECIO),
+                unitario(costoPacking, kgNetos, ESCALA_MONTO));
     }
 
     static EstadoPago estadoPago(boolean sinCargas, BigDecimal totalMp, BigDecimal pagado) {
@@ -108,7 +108,7 @@ public final class CalculoCompra {
     /**
      * @param saldo total MP - pagado (negativo = se adelanto de mas)
      * @param cuMp  costo unitario de la materia prima (S/ por kg neto)
-     * @param cuPacking costo unitario puesto en packing (MP + gastos vinculados, S/ por kg neto)
+     * @param cuPacking costo unitario puesto en packing (MP + gastos vinculados, S/ por kg neto; 2 decimales)
      */
     public record Balance(BigDecimal kgCargados, BigDecimal destareKg, BigDecimal kgNetos, BigDecimal totalMp,
             BigDecimal totalPagado, BigDecimal saldo, EstadoPago estadoPago, BigDecimal gastosVinculados,
@@ -117,8 +117,8 @@ public final class CalculoCompra {
 
     // ------------------------------------------------------------ util
 
-    private static BigDecimal unitario(BigDecimal total, BigDecimal kg) {
-        return kg.signum() == 0 ? null : total.divide(kg, ESCALA_PRECIO, RoundingMode.HALF_UP);
+    private static BigDecimal unitario(BigDecimal total, BigDecimal kg, int escala) {
+        return kg.signum() == 0 ? null : total.divide(kg, escala, RoundingMode.HALF_UP);
     }
 
     private static BigDecimal monto(BigDecimal v) {

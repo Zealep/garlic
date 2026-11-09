@@ -167,7 +167,7 @@ class EstadoVacio extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(22),
                 decoration: const BoxDecoration(color: GColores.superficieAlt, shape: BoxShape.circle),
-                child: const GarlicMark(size: 56),
+                child: const EmblemaMarca(size: 56),
               ),
               const SizedBox(height: GEspacio.l),
               Text(titulo, style: t.titleLarge, textAlign: TextAlign.center),
@@ -266,6 +266,56 @@ class SliverAnchoMaximo extends StatelessWidget {
   );
 }
 
+/// Grilla de tarjetas cuya altura sale del contenido (no un alto fijo): una columna en celular y
+/// varias en tablet/laptop, con las tarjetas de cada fila del mismo alto. Así una tarjeta cuyas
+/// pastillas bajan a otra línea (pantalla angosta o letra grande) crece en vez de desbordar.
+class SliverGrillaTarjetas extends StatelessWidget {
+  const SliverGrillaTarjetas({
+    super.key,
+    required this.itemCount,
+    required this.itemBuilder,
+    required this.maxAnchoTarjeta,
+    this.espacioVertical = GEspacio.m,
+    this.espacioHorizontal = GEspacio.m,
+  });
+
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+  final double maxAnchoTarjeta;
+  final double espacioVertical;
+  final double espacioHorizontal;
+
+  @override
+  Widget build(BuildContext context) => SliverLayoutBuilder(
+    builder: (context, c) {
+      // mismo criterio que SliverGridDelegateWithMaxCrossAxisExtent
+      final columnas = (c.crossAxisExtent / (maxAnchoTarjeta + espacioHorizontal)).ceil().clamp(1, 99);
+      final filas = (itemCount / columnas).ceil();
+      return SliverList.builder(
+        itemCount: filas,
+        itemBuilder: (context, fila) {
+          final inicio = fila * columnas;
+          final Widget contenido =
+              columnas == 1
+                  ? itemBuilder(context, inicio)
+                  : IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var i = inicio; i < inicio + columnas; i++) ...[
+                          if (i > inicio) SizedBox(width: espacioHorizontal),
+                          Expanded(child: i < itemCount ? itemBuilder(context, i) : const SizedBox.shrink()),
+                        ],
+                      ],
+                    ),
+                  );
+          return Padding(padding: EdgeInsets.only(top: fila == 0 ? 0 : espacioVertical), child: contenido);
+        },
+      );
+    },
+  );
+}
+
 /// Limita el ancho del contenido en pantallas grandes (flutter-build-responsive-layout).
 class AnchoMaximo extends StatelessWidget {
   const AnchoMaximo({super.key, required this.child, this.max = 1180});
@@ -281,3 +331,9 @@ class AnchoMaximo extends StatelessWidget {
     child: ConstrainedBox(constraints: BoxConstraints(maxWidth: max), child: child),
   );
 }
+
+/// Espacio inferior de una hoja: el teclado y la barra de navegación del celular (Android dibuja la app
+/// detrás de ella; sin esto los botones Guardar quedan tapados a la mitad). Con el teclado abierto la
+/// barra ya está incluida en el teclado (`padding` se vuelve 0).
+double margenInferiorHoja(BuildContext context) =>
+    MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;

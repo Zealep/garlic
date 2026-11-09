@@ -1,5 +1,7 @@
 package com.zealep.garlicbackend.lote;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -16,6 +18,9 @@ public interface LoteRepository extends JpaRepository<Lote, UUID>, JpaSpecificat
     @EntityGraph(attributePaths = {"campania", "variedad", "agricultor.persona", "proveedor.persona",
             "titularLiquidacion", "localidad", "tipoCompra"})
     Optional<Lote> findByIdAndEmpresaId(UUID id, UUID empresaId);
+
+    @EntityGraph(attributePaths = {"agricultor.persona"})
+    List<Lote> findByIdInAndEmpresaId(Collection<UUID> ids, UUID empresaId);
 
     @Override
     @EntityGraph(attributePaths = {"campania", "variedad", "agricultor.persona", "proveedor.persona",

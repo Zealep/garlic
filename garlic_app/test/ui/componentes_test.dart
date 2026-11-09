@@ -64,7 +64,7 @@ void main() {
             compra: CompraLote(
               loteId: 'l1',
               fijacion: FijacionPrecio(evaluacionId: 'e1', precioPactado: 2.8),
-              cargas: [Carga(id: 'c1', fecha: DateTime(2025, 10, 20), kg: 15000, precioKg: 2.8)],
+              cargas: [Carga(id: 'c1', fecha: DateTime(2025, 10, 20), kg: 15000, precioKg: 2.8, destareKg: 150)],
               pagos: [Pago(id: 'p1', fecha: DateTime(2025, 10, 21), condicionPagoId: 'cta', monto: 10000)],
             ),
             onTap: () => tocado = true,
@@ -91,5 +91,44 @@ void main() {
     await tester.pumpWidget(_app(FilledButton(onPressed: () {}, child: const Text('Guardar'))));
     final size = tester.getSize(find.byType(FilledButton));
     expect(size.height, greaterThanOrEqualTo(48));
+  });
+
+  group('SliverGrillaTarjetas', () {
+    Widget grilla(List<double> altos) => MaterialApp(
+      home: Scaffold(
+        body: CustomScrollView(
+          slivers: [
+            SliverGrillaTarjetas(
+              maxAnchoTarjeta: 520,
+              itemCount: altos.length,
+              itemBuilder: (_, i) => Container(key: ValueKey(i), height: altos[i], color: Colors.blue),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    testWidgets('en celular cada tarjeta toma el alto de su contenido (no desborda)', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(grilla([100, 180]));
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byKey(const ValueKey(0))), const Size(360, 100));
+      expect(tester.getSize(find.byKey(const ValueKey(1))).height, 180);
+    });
+
+    testWidgets('en laptop las tarjetas de una fila quedan del mismo alto', (tester) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(grilla([100, 180, 60]));
+      expect(tester.takeException(), isNull);
+      final a = tester.getRect(find.byKey(const ValueKey(0)));
+      final b = tester.getRect(find.byKey(const ValueKey(1)));
+      expect(a.top, b.top);
+      expect(a.height, b.height);
+      expect(a.height, 180);
+    });
   });
 }

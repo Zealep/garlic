@@ -17,6 +17,7 @@ import com.zealep.garlicbackend.compra.dto.GastoRequest;
 import com.zealep.garlicbackend.compra.dto.GastoResponse;
 import com.zealep.garlicbackend.compra.dto.PagoRequest;
 import com.zealep.garlicbackend.compra.dto.PagoResponse;
+import com.zealep.garlicbackend.compra.dto.PendientePago;
 import com.zealep.garlicbackend.compra.dto.ResumenCompra;
 import com.zealep.garlicbackend.evaluacion.EvaluacionService;
 import com.zealep.garlicbackend.evaluacion.dto.CalidadPorMuestra;
@@ -57,7 +58,6 @@ import org.springframework.util.StringUtils;
 public class CompraService {
 
     private static final Logger logger = LoggerFactory.getLogger(CompraService.class);
-    private static final BigDecimal DESTARE_POR_DEFECTO = BigDecimal.ONE;
 
     private final FijacionPrecioRepository fijacionRepository;
     private final CargaRepository cargaRepository;
@@ -123,6 +123,26 @@ public class CompraService {
                 pagos.stream().map(p -> toResponse(p, condiciones, beneficiarios)).toList(),
                 comprobanteService.listar(lote.getId()),
                 resumen(cargas, gastos, pagos));
+    }
+
+    /** Lotes activos con cargas y saldo por pagar (por pagar o parcial), del mayor saldo al menor. */
+    public List<PendientePago> pendientesDePago() {
+        UUID empresaId = tenantProvider.currentEmpresaId();
+        Map<UUID, List<Carga>> cargas = cargaRepository.findByEmpresaId(empresaId).stream()
+                .collect(Collectors.groupingBy(Carga::getLoteId));
+        Map<UUID, List<Pago>> pagos = pagoRepository.findByEmpresaId(empresaId).stream()
+                .collect(Collectors.groupingBy(Pago::getLoteId));
+        return loteService.referencias(cargas.keySet()).stream()
+                .filter(Lote::isActivo)
+                .map(lote -> {
+                    ResumenCompra r = resumen(cargas.get(lote.getId()), List.of(), pagos.getOrDefault(lote.getId(), List.of()));
+                    return new PendientePago(lote.getId(), lote.getCodigo(), lote.getZona(),
+                            lote.getAgricultor().getPersona().getNombres(), r.totalMp(), r.totalPagado(), r.saldo(),
+                            r.estadoPago());
+                })
+                .filter(p -> p.estadoPago() == EstadoPago.POR_PAGAR || p.estadoPago() == EstadoPago.PARCIAL)
+                .sorted(Comparator.comparing(PendientePago::saldo).reversed())
+                .toList();
     }
 
     static ResumenCompra resumen(List<Carga> cargas, List<GastoVinculado> gastos, List<Pago> pagos) {
@@ -226,7 +246,11 @@ public class CompraService {
         carga.setCantidadEmpaques(request.cantidadEmpaques() == null ? 0 : request.cantidadEmpaques());
         carga.setTipoEmpaqueId(empaque == null ? null : empaque.getId());
         carga.setPrecioKg(precio(request.precioKg()));
-        carga.setDestarePct((request.destarePct() == null ? DESTARE_POR_DEFECTO : request.destarePct()).setScale(2, RoundingMode.HALF_UP));
+        BigDecimal destare = (request.destareKg() == null ? BigDecimal.ZERO : request.destareKg()).setScale(2, RoundingMode.HALF_UP);
+        if (destare.compareTo(carga.getKg()) > 0) {
+            throw new BusinessException("El destare no puede ser mayor que los kg de la carga");
+        }
+        carga.setDestareKg(destare);
         carga.setObservacion(request.observacion());
         Carga guardada = cargaRepository.saveAndFlush(carga);
         Map<UUID, TipoEmpaque> empaques = empaque == null ? Map.of() : Map.of(empaque.getId(), empaque);
@@ -252,7 +276,7 @@ public class CompraService {
         CalculoCompra.LineaCarga l = c.calcular();
         TipoEmpaque empaque = c.getTipoEmpaqueId() == null ? null : empaques.get(c.getTipoEmpaqueId());
         return new CargaResponse(c.getId(), c.getLoteId(), c.getFecha(), c.getPlaca(), c.getKg(), c.getCantidadEmpaques(),
-                c.getTipoEmpaqueId(), empaque == null ? null : empaque.getNombre(), c.getPrecioKg(), c.getDestarePct(),
+                c.getTipoEmpaqueId(), empaque == null ? null : empaque.getNombre(), c.getPrecioKg(),
                 l.destareKg(), l.kgNeto(), l.importe(), l.descuentoDestare(), l.total(), c.getObservacion(), c.getUpdatedAt());
     }
 

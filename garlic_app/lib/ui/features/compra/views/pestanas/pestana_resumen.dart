@@ -153,7 +153,7 @@ class _DetalleCompra extends StatelessWidget {
                       if (c.calculo.destareKg > 0)
                         DataRow(
                           cells: [
-                            DataCell(Text('  Destare ${Formato.porcentaje(c.destarePct)}', style: t.bodySmall)),
+                            DataCell(Text('  Destare', style: t.bodySmall)),
                             celda('− ${Formato.kg(c.calculo.destareKg)}', destare),
                             celda(''),
                             celda(Formato.precioKg(c.precioKg), destare),

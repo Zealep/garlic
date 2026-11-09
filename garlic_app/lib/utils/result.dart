@@ -36,6 +36,12 @@ enum FailureKind {
   /// Recurso inexistente (404).
   noEncontrado,
 
+  /// La sesión expiró o fue cerrada (401): hay que volver a iniciar sesión. Lo pendiente espera, no se bloquea.
+  sinSesion,
+
+  /// El usuario no tiene permiso (403), p. ej. gestionar usuarios sin ser administrador.
+  sinPermiso,
+
   /// Cualquier otro error inesperado.
   desconocido,
 }
@@ -50,8 +56,8 @@ class AppFailure {
   final Map<String, String> fieldErrors;
   final int? statusCode;
 
-  /// Los errores de red se reintentan; los de negocio necesitan corrección del usuario.
-  bool get esReintentable => kind == FailureKind.sinConexion;
+  /// Los errores de red (y la sesión vencida) se reintentan; los de negocio necesitan corrección del usuario.
+  bool get esReintentable => kind == FailureKind.sinConexion || kind == FailureKind.sinSesion;
 
   @override
   String toString() => 'AppFailure($kind, $message)';

@@ -18,8 +18,10 @@ import '../../../core/widgets/evaluacion_tile.dart';
 import '../../../core/widgets/marca.dart';
 import '../../../core/widgets/resultado_evaluacion.dart';
 import '../../../core/widgets/seguimiento.dart';
+import '../../../core/widgets/menu_cuenta.dart';
 import '../../../core/widgets/selector_lote.dart';
 import '../../../core/widgets/sync_chip.dart';
+import '../../compra/views/widgets/balance_compra.dart';
 import '../view_models/inicio_view_model.dart';
 
 class InicioScreen extends StatelessWidget {
@@ -56,9 +58,12 @@ class InicioScreen extends StatelessWidget {
                               : Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  _Kpis(vm: viewModel, columnas: ancho.esCompacto ? 2 : 4),
-                                  const SizedBox(height: GEspacio.xxl),
+                                  // los cortes primero: es cuando hay que volver al campo
                                   _ProximosCortes(vm: viewModel),
+                                  const SizedBox(height: GEspacio.xxl),
+                                  _PendientesPago(vm: viewModel),
+                                  const SizedBox(height: GEspacio.xxl),
+                                  _Kpis(vm: viewModel, columnas: ancho.esCompacto ? 2 : 4),
                                   const SizedBox(height: GEspacio.xxl),
                                   _Recientes(vm: viewModel),
                                 ],
@@ -97,9 +102,10 @@ class _Encabezado extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    if (ancho.esCompacto) const GarlicWordmark(claro: true, compacto: true),
+                    if (ancho.esCompacto) const LogoMarca(claro: true, compacto: true),
                     const Spacer(),
                     const SyncChip(sobreOscuro: true),
+                    if (ancho.esCompacto) ...[const SizedBox(width: GEspacio.s), const MenuCuenta(sobreOscuro: true)],
                   ],
                 ),
                 SizedBox(height: ancho.esCompacto ? GEspacio.xxl : GEspacio.l),
@@ -215,14 +221,25 @@ class _Kpis extends StatelessWidget {
         onTap: () => context.go(Rutas.sync),
       ),
     ];
-    return GridView.count(
-      crossAxisCount: columnas,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: GEspacio.m,
-      crossAxisSpacing: GEspacio.m,
-      childAspectRatio: columnas == 2 ? 1.18 : 1.7,
-      children: tarjetas,
+    // Filas con la altura de su contenido (no una proporción fija): en celulares angostos o con letra
+    // grande las tarjetas con detalle ("Cerradas", "Por sincronizar") crecen en vez de desbordar.
+    return Column(
+      children: [
+        for (var i = 0; i < tarjetas.length; i += columnas) ...[
+          if (i > 0) const SizedBox(height: GEspacio.m),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var j = i; j < i + columnas; j++) ...[
+                  if (j > i) const SizedBox(width: GEspacio.m),
+                  Expanded(child: j < tarjetas.length ? tarjetas[j] : const SizedBox.shrink()),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -262,7 +279,7 @@ class _Recientes extends StatelessWidget {
   }
 }
 
-/// Vista de laptop: indicadores + gráfico de calidad + recientes lado a lado.
+/// Vista de laptop: cortes y pendientes de pago arriba, luego indicadores, gráfico de calidad y recientes.
 class _Tablero extends StatelessWidget {
   const _Tablero({required this.vm});
 
@@ -273,6 +290,16 @@ class _Tablero extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // los cortes primero: es cuando hay que volver al campo
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 5, child: _ProximosCortes(vm: vm)),
+            const SizedBox(width: GEspacio.xl),
+            Expanded(flex: 4, child: _PendientesPago(vm: vm)),
+          ],
+        ),
+        const SizedBox(height: GEspacio.xxl),
         _Kpis(vm: vm, columnas: 4),
         const SizedBox(height: GEspacio.xxl),
         Row(
@@ -280,13 +307,7 @@ class _Tablero extends StatelessWidget {
           children: [
             Expanded(flex: 5, child: _GraficoCalidad(vm: vm)),
             const SizedBox(width: GEspacio.xl),
-            Expanded(
-              flex: 4,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [_ProximosCortes(vm: vm), const SizedBox(height: GEspacio.xxl), _Recientes(vm: vm)],
-              ),
-            ),
+            Expanded(flex: 4, child: _Recientes(vm: vm)),
           ],
         ),
       ],
@@ -380,6 +401,7 @@ class _GraficoCalidad extends StatelessWidget {
 }
 
 /// Lotes cuyo corte está cerca (o pasó esta semana): es cuando se vuelve al campo a cerrar con el agricultor.
+/// Va primero y resaltado: es el dato que más mira el comprador.
 class _ProximosCortes extends StatelessWidget {
   const _ProximosCortes({required this.vm});
 
@@ -389,32 +411,132 @@ class _ProximosCortes extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final lotes = vm.proximosCortes;
+    final atrasados = vm.cortesAtrasados;
+    return Container(
+      decoration: BoxDecoration(
+        color: GColores.acentoSuave,
+        borderRadius: BorderRadius.circular(GRadio.tarjeta),
+        border: Border.all(color: GColores.acento, width: 1.5),
+      ),
+      padding: const EdgeInsets.all(GEspacio.m),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: GColores.acento, borderRadius: BorderRadius.circular(10)),
+                child: const Icon(PhosphorIconsBold.alarm, size: 20, color: Colors.white),
+              ),
+              const SizedBox(width: GEspacio.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Alertas de corte', style: t.titleLarge),
+                    Text(
+                      lotes.isEmpty
+                          ? 'Nada en los próximos 14 días'
+                          : '${lotes.length} lote${lotes.length == 1 ? '' : 's'} por cortar'
+                              '${atrasados > 0 ? ' · $atrasados atrasado${atrasados == 1 ? '' : 's'}' : ''}',
+                      style: t.bodySmall!.copyWith(
+                        color: atrasados > 0 ? GColores.error : GColores.tinta,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(onPressed: () => context.go(Rutas.lotes), child: const Text('Ver lotes')),
+            ],
+          ),
+          const SizedBox(height: GEspacio.m),
+          if (lotes.isEmpty)
+            const Card(
+              margin: EdgeInsets.zero,
+              child: EstadoVacio(
+                titulo: 'Sin cortes en los próximos 14 días',
+                mensaje: 'Registra la fecha de corte en cada lote para saber cuándo volver al campo.',
+              ),
+            )
+          else
+            Card(
+              margin: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  for (final (i, l) in lotes.indexed) ...[
+                    if (i > 0) const Divider(height: 1),
+                    _FilaCorte(lote: l, dias: vm.diasParaCorte(l)!, ultima: vm.ultimaEvaluacion(l.id)),
+                  ],
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Lotes con materia prima comprada y saldo por pagar al agricultor.
+class _PendientesPago extends StatelessWidget {
+  const _PendientesPago({required this.vm});
+
+  final InicioViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final pendientes = vm.pendientesDePago;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            const Icon(PhosphorIconsBold.scissors, size: 20, color: GColores.primario),
+            const Icon(PhosphorIconsBold.wallet, size: 20, color: GColores.primario),
             const SizedBox(width: GEspacio.s),
-            Expanded(child: Text('Próximos cortes', style: t.titleLarge)),
-            TextButton(onPressed: () => context.go(Rutas.lotes), child: const Text('Ver lotes')),
+            Expanded(child: Text('Pendientes de pago', style: t.titleLarge)),
+            if (pendientes.isNotEmpty)
+              Text(Formato.soles(vm.totalPendiente), style: GTipo.cifra(16, color: GColores.error)),
           ],
         ),
         const SizedBox(height: GEspacio.s),
-        if (lotes.isEmpty)
+        if (pendientes.isEmpty)
           const Card(
             child: EstadoVacio(
-              titulo: 'Sin cortes en los próximos 14 días',
-              mensaje: 'Registra la fecha de corte en cada lote para saber cuándo volver al campo.',
+              titulo: 'Sin saldos por pagar',
+              mensaje: 'Aquí aparecen los lotes con materia prima cargada que aún no se terminan de pagar.',
             ),
           )
         else
           Card(
             child: Column(
               children: [
-                for (final (i, l) in lotes.indexed) ...[
+                for (final (i, p) in pendientes.indexed) ...[
                   if (i > 0) const Divider(height: 1),
-                  _FilaCorte(lote: l, dias: vm.diasParaCorte(l)!, ultima: vm.ultimaEvaluacion(l.id)),
+                  ListTile(
+                    onTap: () => context.push(Rutas.compra(p.loteId)),
+                    title: Text(
+                      '${p.loteCodigo}${p.zona == null ? '' : ' · Zona ${p.zona}'}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      '${p.agricultor} · pagado ${Formato.soles(p.totalPagado)} de ${Formato.soles(p.totalMp)}',
+                      style: t.bodySmall,
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(Formato.soles(p.saldo), style: GTipo.cifra(15, color: GColores.error)),
+                        Text(
+                          p.estadoPago.etiqueta,
+                          style: t.labelSmall!.copyWith(color: colorEstadoPago(p.estadoPago)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -445,7 +567,12 @@ class _FilaCorte extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text('${lote.agricultor.nombres} · ${Formato.fechaCorta(lote.fechaCorte)}', style: t.bodySmall),
-            if (ultima != null) PastillaEstadoEvaluacion(estado: ultima!.estado, resultado: ultima!.resultado),
+            // en celulares angostos la pastilla más larga ("Cerrada · pendiente") se achica en vez de desbordar
+            if (ultima != null)
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: PastillaEstadoEvaluacion(estado: ultima!.estado, resultado: ultima!.resultado),
+              ),
           ],
         ),
       ),

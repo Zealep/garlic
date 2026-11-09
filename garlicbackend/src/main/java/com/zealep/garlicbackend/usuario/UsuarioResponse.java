@@ -11,6 +11,8 @@ public record UsuarioResponse(
         String email,
         RolUsuario rol,
         boolean activo,
+        boolean tieneClave,
+        Instant ultimoAcceso,
         Instant createdAt,
         Instant updatedAt) implements CatalogoResponse {
 }

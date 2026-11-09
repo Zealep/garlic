@@ -1,6 +1,12 @@
 /// Rutas de la app (go_router).
 abstract final class Rutas {
-  static const setup = '/configurar';
+  static const acceso = '/acceso';
+
+  /// Cambiar la propia contraseña (obligatorio si es temporal).
+  static const clave = '/cuenta/clave';
+
+  /// Gestión de usuarios (solo administrador).
+  static const usuarios = '/usuarios';
   static const inicio = '/inicio';
   static const lotes = '/lotes';
   static const loteNuevo = '/lotes/nuevo';

@@ -36,8 +36,9 @@ public class Carga extends TenantEntity {
     @Column(name = "precio_kg", nullable = false, precision = 10, scale = 4)
     private BigDecimal precioKg;
 
-    @Column(name = "destare_pct", nullable = false, precision = 5, scale = 2)
-    private BigDecimal destarePct;
+    /** Kg descontados por perdida del ajo en esta carga. */
+    @Column(name = "destare_kg", nullable = false, precision = 12, scale = 2)
+    private BigDecimal destareKg;
 
     @Column(name = "observacion")
     private String observacion;
@@ -51,7 +52,7 @@ public class Carga extends TenantEntity {
     }
 
     public CalculoCompra.LineaCarga calcular() {
-        return CalculoCompra.carga(kg, precioKg, destarePct);
+        return CalculoCompra.carga(kg, precioKg, destareKg);
     }
 
     public UUID getLoteId() {
@@ -106,12 +107,12 @@ public class Carga extends TenantEntity {
         this.precioKg = precioKg;
     }
 
-    public BigDecimal getDestarePct() {
-        return destarePct;
+    public BigDecimal getDestareKg() {
+        return destareKg;
     }
 
-    public void setDestarePct(BigDecimal destarePct) {
-        this.destarePct = destarePct;
+    public void setDestareKg(BigDecimal destareKg) {
+        this.destareKg = destareKg;
     }
 
     public String getObservacion() {

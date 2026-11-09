@@ -14,6 +14,7 @@ const noContiene = 'd-no-contiene';
 const cerosa = 'd-cerosa';
 const fusarium = 'e-fusarium';
 const raizRosada = 'e-raiz';
+const gotas = 'h-gotas';
 
 const formulario = FormularioEvaluacion(
   cultivoId: 'ajo',
@@ -25,10 +26,10 @@ const formulario = FormularioEvaluacion(
     CatalogoItem(id: cal4550, codigo: '45/50', nombre: '45/50', orden: 1),
     CatalogoItem(id: cal5060, codigo: '50/60', nombre: '50/60', orden: 3),
   ],
-  tiposHumedad: [],
+  tiposHumedad: [CatalogoItem(id: gotas, codigo: 'GOTAS', nombre: 'GOTAS DENTRO')],
   tiposEmpaste: [],
   tiposDano: [
-    CatalogoItem(id: cerosa, codigo: 'CEROSA', nombre: 'PARALISIS CEROSA'),
+    CatalogoItem(id: cerosa, codigo: 'CEROSA', nombre: 'PARALISIS CEROSA', pideCantidades: true),
     CatalogoItem(id: noContiene, codigo: 'NO_CONTIENE', nombre: 'NO CONTIENE', esExcluyente: true),
   ],
   enfermedades: [
@@ -37,19 +38,45 @@ const formulario = FormularioEvaluacion(
   ],
 );
 
-/// Lote modelo del Excel: PRIMERA 80/85/75 y calibre 45/50 13/10/20.
+Map<String, SanidadBorrador> _sanidad() => {
+  raizRosada: SanidadBorrador(presente: false),
+  fusarium: SanidadBorrador(presente: true, porcentaje: 5),
+};
+
+/// Lote modelo del Excel: PRIMERA 80/85/75; sensoriales y sanidad en cada muestra (la 2 con parálisis 10/20).
 EvaluacionBorrador loteModelo() => EvaluacionBorrador(
   id: 'ev-1',
   loteId: 'lote-1',
   evaluadorId: 'u-1',
   fecha: DateTime(2025, 10, 10),
   muestras: [
-    MuestraBorrador(numero: 1, calidad: {primera: 80, abiertos: 20}, calibres: {cal4550: 40, cal5060: 60}),
-    MuestraBorrador(numero: 2, calidad: {primera: 85, abiertos: 15}, calibres: {cal4550: 30, cal5060: 70}),
-    MuestraBorrador(numero: 3, calidad: {primera: 75, abiertos: 25}, calibres: {cal4550: 50, cal5060: 50}),
+    MuestraBorrador(
+      id: 'm-1',
+      numero: 1,
+      calidad: {primera: 80, abiertos: 20},
+      calibres: {cal4550: 40, cal5060: 60},
+      humedad: {gotas: true},
+      danos: {noContiene: DanoBorrador()},
+      sanidad: _sanidad(),
+    ),
+    MuestraBorrador(
+      id: 'm-2',
+      numero: 2,
+      calidad: {primera: 85, abiertos: 15},
+      calibres: {cal4550: 30, cal5060: 70},
+      humedad: {gotas: false},
+      danos: {cerosa: DanoBorrador(total: 20, afectados: 10)},
+      sanidad: _sanidad(),
+    ),
+    MuestraBorrador(
+      id: 'm-3',
+      numero: 3,
+      calidad: {primera: 75, abiertos: 25},
+      calibres: {cal4550: 50, cal5060: 50},
+      danos: {noContiene: DanoBorrador()},
+      sanidad: {raizRosada: SanidadBorrador(presente: false), fusarium: SanidadBorrador(presente: false)},
+    ),
   ],
-  danos: {noContiene},
-  sanidad: {raizRosada: SanidadBorrador(presente: false), fusarium: SanidadBorrador(presente: true, porcentaje: 5)},
 );
 
 void main() {
@@ -69,22 +96,97 @@ void main() {
   });
 
   group('Serialización (formato request del API)', () {
-    test('ida y vuelta conserva todo el contenido', () {
-      final original = loteModelo()..humedad['h-1'] = NivelHumedad.alta;
-      final json = original.toRequestJson();
+    test('ida y vuelta conserva todo el contenido de cada muestra', () {
+      final json = loteModelo().toRequestJson();
       final copia = EvaluacionBorrador.fromRequestJson(json, loteId: 'lote-1');
 
+      expect(copia.muestras.map((m) => m.id), ['m-1', 'm-2', 'm-3']);
       expect(copia.muestras.map((m) => m.calidad[primera]), [80, 85, 75]);
-      expect(copia.humedad['h-1'], NivelHumedad.alta);
-      expect(copia.danos, {noContiene});
-      expect(copia.sanidad[fusarium]!.porcentaje, 5);
+      expect(copia.muestras.first.humedad[gotas], isTrue);
+      expect(copia.muestras[1].humedad[gotas], isFalse);
+      expect(copia.muestras.first.danos.keys, [noContiene]);
+      expect(copia.muestras[1].danos[cerosa]!.porcentaje, 50);
+      expect(copia.muestras.first.sanidad[fusarium]!.porcentaje, 5);
       expect(json['fechaEvaluacion'], '2025-10-10');
+      expect(json.containsKey('sanidad'), isFalse); // ya no va por evaluación
+    });
+
+    test('lee la respuesta del API (ids de opción en "id")', () {
+      final ev = EvaluacionBorrador.fromResponseJson({
+        'id': 'ev',
+        'loteId': 'l',
+        'estado': 'CERRADA',
+        'muestras': [
+          {
+            'id': 'm-9',
+            'numero': 1,
+            'calidad': [
+              {'id': primera, 'porcentaje': 80},
+            ],
+            'calibres': [],
+            'humedad': [
+              {'id': gotas, 'presente': true},
+            ],
+            'empastes': [
+              {'id': 'emp'},
+            ],
+            'danos': [
+              {'id': cerosa, 'frutosTotal': 30, 'frutosAfectados': 3, 'porcentaje': 10},
+            ],
+            'sanidad': [
+              {'id': fusarium, 'presente': true, 'porcentaje': 7},
+            ],
+          },
+        ],
+      });
+      final m = ev.muestras.single;
+      expect(m.id, 'm-9');
+      expect(m.humedad, {gotas: true});
+      expect(m.empastes, {'emp'});
+      expect(m.danos[cerosa]!.porcentaje, 10);
+      expect(m.sanidad[fusarium]!.porcentaje, 7);
     });
 
     test('no envía % de una enfermedad marcada como NO', () {
-      final ev = loteModelo()..sanidad[raizRosada] = SanidadBorrador(presente: false, porcentaje: 7);
-      final sanidad = (ev.toRequestJson()['sanidad']! as List).cast<Map<String, Object?>>();
+      final ev = loteModelo()..muestras.first.sanidad[raizRosada] = SanidadBorrador(presente: false, porcentaje: 7);
+      final muestra = (ev.toRequestJson()['muestras']! as List).first as Map<String, Object?>;
+      final sanidad = (muestra['sanidad']! as List).cast<Map<String, Object?>>();
       expect(sanidad.firstWhere((s) => s['enfermedadId'] == raizRosada)['porcentaje'], isNull);
+    });
+  });
+
+  group('Muestras', () {
+    test('al quitar la muestra 1 se renumeran 1..n y conservan su id', () {
+      final ev = loteModelo()..quitarMuestra('m-1');
+      expect(ev.muestras.map((m) => m.numero), [1, 2]);
+      expect(ev.muestras.map((m) => m.id), ['m-2', 'm-3']);
+      expect(ev.nuevaMuestra().numero, 3);
+    });
+
+    test('% de parálisis = frutos con problema / total', () {
+      expect(DanoBorrador(total: 20, afectados: 10).porcentaje, 50);
+      expect(DanoBorrador(total: 3, afectados: 1).porcentaje, 33.33);
+      expect(DanoBorrador(total: 20).porcentaje, isNull);
+      // promedio sobre las muestras que la cuentan
+      expect(loteModelo().promediosDanos(), {cerosa: 50});
+    });
+
+    test('incidencia promedio por enfermedad (NO cuenta como 0%) y humedad SI por indicador', () {
+      final ev = loteModelo();
+      expect(ev.promediosSanidad()[fusarium], 3.33);
+      expect(ev.promediosSanidad()[raizRosada], 0);
+      expect(ev.muestrasConHumedad(), {gotas: 1});
+    });
+
+    test('copiar de la muestra anterior trae sensoriales y sanidad, sin las cantidades', () {
+      final ev = loteModelo();
+      final nueva = ev.nuevaMuestra()..copiarSensorialesYSanidad(ev.muestras[1]);
+      expect(nueva.humedad, {gotas: false});
+      expect(nueva.danos.keys, [cerosa]);
+      expect(nueva.danos[cerosa]!.total, isNull);
+      expect(nueva.sanidad[fusarium]!.porcentaje, 5);
+      nueva.sanidad[fusarium]!.porcentaje = 9; // copia independiente
+      expect(ev.muestras[1].sanidad[fusarium]!.porcentaje, 5);
     });
   });
 
@@ -98,21 +200,36 @@ void main() {
       ev.muestras.first.calidad[abiertos] = 10;
       final problemas = ReglasEvaluacion.validarContenido(ev, formulario);
       expect(problemas.single.paso, PasoEvaluacion.muestras);
+      expect(problemas.single.muestra, 1);
       expect(problemas.single.mensaje, contains('Muestra 1'));
     });
 
-    test('"No contiene" junto a otro daño es inválido', () {
-      final ev = loteModelo()..danos.add(cerosa);
+    test('"No contiene" junto a otro daño es inválido en la muestra', () {
+      final ev = loteModelo()..muestras.first.danos[cerosa] = DanoBorrador(total: 10, afectados: 1);
       expect(
-        ReglasEvaluacion.validarContenido(ev, formulario).map((p) => p.paso),
-        contains(PasoEvaluacion.sensoriales),
+        ReglasEvaluacion.validarContenido(ev, formulario).map((p) => p.mensaje),
+        contains('Muestra 1: "No contiene" no puede marcarse junto a otros daños'),
       );
     });
 
-    test('para cerrar hay que responder todas las enfermedades de campo', () {
-      final ev = loteModelo()..sanidad.remove(fusarium);
+    test('parálisis: para cerrar se piden las cantidades; con problema no supera el total', () {
+      final ev = loteModelo()..muestras[1].danos[cerosa] = DanoBorrador(total: 20);
+      expect(
+        ReglasEvaluacion.validarCierre(ev, formulario).map((p) => p.mensaje),
+        contains('Muestra 2: Paralisis cerosa: ingrese los frutos total y con problema'),
+      );
+      ev.muestras[1].danos[cerosa] = DanoBorrador(total: 10, afectados: 12);
+      expect(
+        ReglasEvaluacion.validarContenido(ev, formulario).single.mensaje,
+        contains('no pueden ser más que el total'),
+      );
+    });
+
+    test('para cerrar cada muestra responde todas las enfermedades de campo', () {
+      final ev = loteModelo()..muestras[2].sanidad.remove(fusarium);
       final problemas = ReglasEvaluacion.validarCierre(ev, formulario);
-      expect(problemas.single.paso, PasoEvaluacion.sanidad);
+      expect(problemas.single.mensaje, 'Muestra 3: Fusarium: responda SI o NO');
+      expect(problemas.single.muestra, 3);
     });
 
     test('sin evaluador no se puede guardar', () {
@@ -121,35 +238,26 @@ void main() {
     });
   });
 
-  group('Sección de cada foto (fotos dentro de cada paso del wizard)', () {
-    EvidenciaLocal foto({int? muestra, String? factor}) => EvidenciaLocal(
+  group('Sección de cada foto', () {
+    EvidenciaLocal foto({String? muestraId, int? muestra}) => EvidenciaLocal(
       id: 'f',
       evaluacionId: 'ev-1',
       bytes: Uint8List(0),
       mime: 'image/jpeg',
       creado: DateTime(2025),
+      muestraId: muestraId,
       muestraNumero: muestra,
-      factor: factor,
     );
 
-    test('con número de muestra pertenece a la muestra', () {
+    test('con muestra (por id o número) pertenece a la muestra; sin muestra es general', () {
+      expect(SeccionFoto.de(foto(muestraId: 'm-1')), SeccionFoto.muestra);
       expect(SeccionFoto.de(foto(muestra: 2)), SeccionFoto.muestra);
-      // fotos de muestra tomadas antes del cambio (factor CALIDAD)
-      expect(SeccionFoto.de(foto(muestra: 1, factor: 'CALIDAD')), SeccionFoto.muestra);
-    });
-
-    test('factor SENSORIALES pertenece a Sensoriales', () {
-      expect(SeccionFoto.de(foto(factor: SeccionFoto.sensoriales.factor)), SeccionFoto.sensoriales);
-    });
-
-    test('sin muestra ni factor es evidencia general', () {
       expect(SeccionFoto.de(foto()), SeccionFoto.general);
-      expect(SeccionFoto.general.factor, isNull);
     });
   });
 
-  test('el wizard ya no tiene un paso de fotos aparte', () {
-    expect(PasoEvaluacion.values.map((p) => p.titulo), ['Datos', 'Muestras', 'Sensoriales', 'Sanidad', 'Resumen']);
+  test('sensoriales y sanidad van dentro de cada muestra: el wizard tiene 3 pasos', () {
+    expect(PasoEvaluacion.values.map((p) => p.titulo), ['Datos', 'Muestras', 'Resumen']);
   });
 
   group('Calibres elegidos por muestra (deben sumar 100%)', () {

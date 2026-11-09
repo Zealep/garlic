@@ -26,7 +26,7 @@ const formulario = FormularioEvaluacion(
   tiposHumedad: [],
   tiposEmpaste: [],
   tiposDano: [
-    CatalogoItem(id: cerosa, codigo: 'CEROSA', nombre: 'PARALISIS CEROSA'),
+    CatalogoItem(id: cerosa, codigo: 'CEROSA', nombre: 'PARALISIS CEROSA', pideCantidades: true),
     CatalogoItem(id: noContiene, codigo: 'NO_CONTIENE', nombre: 'NO CONTIENE', esExcluyente: true),
   ],
   enfermedades: [CatalogoItem(id: fusarium, codigo: 'FUSARIUM', nombre: 'FUSARIUM', evaluarEnCampo: true)],
@@ -36,7 +36,7 @@ EvaluacionBorrador evaluacion(
   String id,
   List<double> primeras, {
   Map<String, double> calibres = const {},
-  Set<String> danos = const {},
+  Map<String, DanoBorrador> danos = const {},
   Map<String, SanidadBorrador> sanidad = const {},
 }) => EvaluacionBorrador(
   id: id,
@@ -45,10 +45,14 @@ EvaluacionBorrador evaluacion(
   estado: EstadoEvaluacion.cerrada,
   muestras: [
     for (final (i, p) in primeras.indexed)
-      MuestraBorrador(numero: i + 1, calidad: {primera: p, segunda: 100 - p}, calibres: {...calibres}),
+      MuestraBorrador(
+        numero: i + 1,
+        calidad: {primera: p, segunda: 100 - p},
+        calibres: {...calibres},
+        danos: {for (final e in danos.entries) e.key: e.value.copia()},
+        sanidad: {for (final e in sanidad.entries) e.key: e.value.copia()},
+      ),
   ],
-  danos: {...danos},
-  sanidad: {...sanidad},
 );
 
 void main() {
@@ -83,25 +87,41 @@ void main() {
     expect(c.valorKg.ganador, isNull);
   });
 
-  test('sanidad y daños: gana el menor; "NO CONTIENE" (excluyente) no cuenta como daño', () {
+  test('sanidad y daños por muestra: gana el menor; "NO CONTIENE" (excluyente) no cuenta como daño', () {
     final a = evaluacion(
       'a',
       [80],
-      danos: {cerosa},
+      danos: {cerosa: DanoBorrador(total: 20, afectados: 4)},
       sanidad: {fusarium: SanidadBorrador(presente: true, porcentaje: 5)},
     );
-    final b = evaluacion('b', [80], danos: {noContiene}, sanidad: {fusarium: SanidadBorrador(presente: false)});
+    final b = evaluacion(
+      'b',
+      [80],
+      danos: {noContiene: DanoBorrador()},
+      sanidad: {fusarium: SanidadBorrador(presente: false)},
+    );
     final c = ComparacionEvaluaciones.de(a, b, formulario);
     FilaComparacion fila(String id) => c.sanidadYDanos.firstWhere((f) => f.id == id);
 
     expect(fila('enfermedades').ganador, Ganador.b);
     expect(fila('incidencia').a, 5);
     expect(fila('incidencia').ganador, Ganador.b);
+    expect(fila('paralisis').a, 20);
+    expect(fila('paralisis').b, 0);
+    expect(fila('paralisis').ganador, Ganador.b);
     expect(fila('danos').b, 0);
     expect(fila('danos').ganador, Ganador.b);
     // primera empata (80 vs 80)
-    expect(c.ganadas(Ganador.b), 3);
+    expect(c.ganadas(Ganador.b), 4);
     expect(c.ganadas(Ganador.empate), 1);
+  });
+
+  test('incidencia máxima entre todas las muestras', () {
+    final a = evaluacion('a', [80, 80]);
+    a.muestras[1].sanidad[fusarium] = SanidadBorrador(presente: true, porcentaje: 12);
+    final c = ComparacionEvaluaciones.de(a, evaluacion('b', [80]), formulario);
+    expect(c.sanidadYDanos.firstWhere((f) => f.id == 'incidencia').a, 12);
+    expect(c.sanidadYDanos.firstWhere((f) => f.id == 'enfermedades').a, 1);
   });
 
   test('empate cuando la diferencia de % es de hasta medio punto', () {

@@ -49,7 +49,7 @@ abstract final class TemaGarlic {
       secondary: GColores.secundario,
       onSecondary: Colors.white,
       secondaryContainer: GColores.secundarioSuave,
-      onSecondaryContainer: Color(0xFF2E3D14),
+      onSecondaryContainer: Color(0xFF0F3D21),
       tertiary: GColores.acento,
       onTertiary: GColores.tinta,
       tertiaryContainer: GColores.acentoSuave,
@@ -178,7 +178,10 @@ abstract final class TemaGarlic {
         indicatorColor: GColores.primarioSuave,
         height: 68,
         labelTextStyle: WidgetStateProperty.resolveWith(
+          // 5 destinos en ~360 dp: sin espaciado extra para que "Evaluaciones" quepa en una línea
           (s) => textos.labelSmall!.copyWith(
+            fontSize: 11,
+            letterSpacing: 0,
             color: s.contains(WidgetState.selected) ? GColores.primario : GColores.tintaSuave,
           ),
         ),

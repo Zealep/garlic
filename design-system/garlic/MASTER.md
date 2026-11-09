@@ -1,33 +1,34 @@
-# Garlic – Design System (MASTER)
+# Guadalupe · Compra de ajo – Design System (MASTER)
 
 > Fuente de verdad visual. Las páginas pueden tener overrides en `pages/<pagina>.md`.
 > Base: `ui-ux-pro-max` (reglas UX, checklist) + dirección de marca elegida por el cliente: **Morado ajo + marfil**.
 > Implementación: `garlic_app/lib/ui/core/theme/`.
 
-## Concepto
-El producto nace del ajo: el **morado** de la cáscara (variedades Chino Morado / Napurí), el **marfil** del diente,
-el **verde** del tallo y el **ámbar** de la cosecha. Estética "campo premium": cálida, táctil, con carácter,
-lejos del verde agro genérico y de los degradados morado/rosa de IA.
+## Marca (2026-11-06)
+La app lleva la marca del cliente, **Agroexportadora Guadalupe** (logo, verde y naranja de su web
+agroguadalupe.com). Logos en `garlic_app/assets/marca/` (`logo-color.png`, `logo-blanco.png`, `emblema.png`):
+son **provisionales de baja resolución** (204×61 y 61 px); reemplazar por SVG o PNG ≥ 1024 px y regenerar
+`web/icons/*` y `web/favicon.png`. El patrón sutil de ajos del encabezado se mantiene como decoración del producto.
 
 ## Color (tokens)
+Los nombres de los tokens no cambiaron (`GColores.primario`, …); solo sus valores.
 | Token | Hex | Uso |
 |---|---|---|
-| `primary` | `#4A2560` | Encabezados, botón primario, selección, navegación activa |
-| `primaryDeep` | `#321640` | Fondos de encabezado, sombras de marca |
-| `primarySoft` | `#EFE6F3` | Fondos de selección / chips activos |
-| `onPrimary` | `#FFFFFF` | Texto sobre morado |
-| `secondary` | `#5F7A2E` | Verde tallo: OK, sincronizado, calidad PRIMERA |
-| `secondarySoft` | `#E8EFD9` | |
-| `accent` | `#E0A030` | Ámbar cosecha: CTA destacado, badges, highlight de gráficos |
-| `accentSoft` | `#FBEFD6` | |
-| `background` | `#FAF6EE` | Marfil (fondo de app) |
+| `primary` | `#10662F` | Verde Guadalupe: encabezados, botón primario, selección, navegación activa |
+| `primaryDeep` | `#0B4521` | Fondos de encabezado, sombras de marca |
+| `primarySoft` | `#E8F2EA` | Fondos de selección / chips activos |
+| `onPrimary` | `#FFFFFF` | Texto sobre verde (7:1) |
+| `secondary` | `#2E8B4E` | Verde hoja: OK, sincronizado, sin humedad |
+| `secondarySoft` | `#DDEFE2` | |
+| `accent` | `#EC9A2D` | Naranja cosecha: CTA destacado, badges, alertas de corte, gráficos |
+| `accentSoft` | `#FCEBD3` | |
+| `background` | `#F7F4EC` | Marfil (fondo de app) |
 | `surface` | `#FFFFFF` | Tarjetas |
-| `surfaceAlt` | `#F1EADB` | "Papel de cáscara": secciones, inputs |
-| `ink` | `#1E1A22` | Texto principal (contraste 15:1 sobre marfil) |
-| `inkMuted` | `#6B6270` | Texto secundario (≥ 4.5:1 sobre marfil) |
-| `outline` | `#E2D8C6` | Bordes |
-| `humedadBaja` / `Media` / `Alta` | `#3F8F5A` / `#B8740F` / `#C2412D` | Niveles de humedad (siempre con texto) |
-| `error` / `warning` / `info` | `#C2412D` / `#B8740F` / `#2F6FA3` | Estados |
+| `surfaceAlt` | `#EFEBDF` | Secciones, inputs |
+| `ink` | `#1D2620` | Texto principal |
+| `inkMuted` | `#55605A` | Texto secundario (≥ 4.5:1 sobre marfil) |
+| `outline` | `#E2E0D6` | Bordes |
+| `error` / `warning` / `info` | `#B42318` / `#B8740F` / `#2F6FA3` | Estados |
 
 Reglas: nunca usar el color solo para comunicar (siempre texto/ícono); texto sobre ámbar usa `ink`.
 

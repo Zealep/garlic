@@ -92,7 +92,7 @@ class BalanceCompraPanel extends StatelessWidget {
               _Fila('C.U. materia prima', b.cuMp == null ? '—' : '${Formato.precioKg(b.cuMp)} /kg'),
               _Fila(
                 'C.U. puesto en packing',
-                b.cuPacking == null ? '—' : '${Formato.precioKg(b.cuPacking)} /kg',
+                b.cuPacking == null ? '—' : '${Formato.soles(b.cuPacking)} /kg',
                 fuerte: true,
               ),
             ],

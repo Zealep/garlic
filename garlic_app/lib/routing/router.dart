@@ -7,8 +7,14 @@ import '../data/repositories/compra_repository.dart';
 import '../data/repositories/config_repository.dart';
 import '../data/repositories/evaluaciones_repository.dart';
 import '../data/repositories/lotes_repository.dart';
+import '../data/repositories/sesion_repository.dart';
 import '../data/repositories/sync_repository.dart';
+import '../data/repositories/usuarios_repository.dart';
 import '../ui/core/layout/shell_adaptativo.dart';
+import '../ui/features/acceso/view_models/acceso_view_model.dart';
+import '../ui/features/acceso/view_models/cambiar_clave_view_model.dart';
+import '../ui/features/acceso/views/acceso_screen.dart';
+import '../ui/features/acceso/views/cambiar_clave_screen.dart';
 import '../ui/features/catalogos/view_models/catalogos_view_model.dart';
 import '../ui/features/catalogos/views/catalogos_screen.dart';
 import '../ui/features/comparacion/view_models/comparacion_view_model.dart';
@@ -26,37 +32,60 @@ import '../ui/features/lotes/view_models/lotes_view_model.dart';
 import '../ui/features/lotes/views/lote_detalle_screen.dart';
 import '../ui/features/lotes/views/lote_form_screen.dart';
 import '../ui/features/lotes/views/lotes_screen.dart';
-import '../ui/features/setup/view_models/setup_view_model.dart';
-import '../ui/features/setup/views/setup_screen.dart';
 import '../ui/features/sync/views/sync_screen.dart';
+import '../ui/features/usuarios/view_models/usuarios_view_model.dart';
+import '../ui/features/usuarios/views/usuarios_screen.dart';
 import 'rutas.dart';
 
 final _raiz = GlobalKey<NavigatorState>();
 
 /// Navegación. Las pantallas de trabajo intenso (formulario de lote, wizard) se abren a pantalla
 /// completa sobre la navegación principal para concentrar al evaluador en la tarea.
-GoRouter crearRouter(ConfigRepository config) => GoRouter(
+///
+/// Acceso: sin sesión (o vencida) todo lleva a [Rutas.acceso]; con contraseña temporal, a [Rutas.clave].
+GoRouter crearRouter(ConfigRepository config, SesionRepository sesion) => GoRouter(
   navigatorKey: _raiz,
   initialLocation: Rutas.inicio,
-  refreshListenable: config,
-  redirect: (context, state) {
-    final enSetup = state.matchedLocation == Rutas.setup;
-    if (!config.configurado) return enSetup ? null : Rutas.setup;
-    return null;
-  },
+  refreshListenable: Listenable.merge([config, sesion]),
+  redirect: (context, state) => redireccionAcceso(
+    ubicacion: state.matchedLocation,
+    autenticado: sesion.autenticado && config.configurado,
+    debeCambiarClave: sesion.debeCambiarClave,
+  ),
   routes: [
     GoRoute(
-      path: Rutas.setup,
+      path: Rutas.acceso,
       builder:
           (context, _) => _ConViewModel(
             crear:
-                (c) => SetupViewModel(
+                (c) => AccesoViewModel(
+                  sesion: c.read<SesionRepository>(),
                   config: c.read<ConfigRepository>(),
                   catalogos: c.read<CatalogosRepository>(),
                   lotes: c.read<LotesRepository>(),
                   evaluaciones: c.read<EvaluacionesRepository>(),
+                  sync: c.read<SyncRepository>(),
                 ),
-            builder: (vm) => SetupScreen(viewModel: vm),
+            builder: (vm) => AccesoScreen(viewModel: vm),
+          ),
+    ),
+    GoRoute(
+      path: Rutas.clave,
+      parentNavigatorKey: _raiz,
+      builder:
+          (context, _) => _ConViewModel(
+            crear: (c) => CambiarClaveViewModel(sesion: c.read<SesionRepository>()),
+            builder: (vm) => CambiarClaveScreen(viewModel: vm),
+          ),
+    ),
+    GoRoute(
+      path: Rutas.usuarios,
+      parentNavigatorKey: _raiz,
+      builder:
+          (context, _) => _ConViewModel(
+            crear:
+                (c) => UsuariosViewModel(usuarios: c.read<UsuariosRepository>(), sesion: c.read<SesionRepository>()),
+            builder: (vm) => UsuariosScreen(viewModel: vm),
           ),
     ),
     StatefulShellRoute.indexedStack(
@@ -75,6 +104,7 @@ GoRouter crearRouter(ConfigRepository config) => GoRouter(
                           sync: c.read<SyncRepository>(),
                           catalogos: c.read<CatalogosRepository>(),
                           config: c.read<ConfigRepository>(),
+                          compra: c.read<CompraRepository>(),
                         ),
                     builder: (vm) => InicioScreen(viewModel: vm),
                   ),
@@ -222,6 +252,15 @@ GoRouter crearRouter(ConfigRepository config) => GoRouter(
     ),
   ],
 );
+
+/// Regla de navegación del acceso (pura, para testearla).
+String? redireccionAcceso({required String ubicacion, required bool autenticado, required bool debeCambiarClave}) {
+  final enAcceso = ubicacion == Rutas.acceso;
+  if (!autenticado) return enAcceso ? null : Rutas.acceso;
+  if (debeCambiarClave) return ubicacion == Rutas.clave ? null : Rutas.clave;
+  if (enAcceso) return Rutas.inicio;
+  return null;
+}
 
 Widget _wizard(String loteId, String? evaluacionId) => _ConViewModel(
   key: ValueKey('$loteId/$evaluacionId'),

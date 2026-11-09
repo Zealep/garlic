@@ -5,21 +5,34 @@ import 'package:flutter/material.dart';
 import '../theme/colores.dart';
 import '../theme/tema.dart';
 
-/// Sello de marca: cabeza de ajo con dientes y vetas moradas, dibujada en vector.
-class GarlicMark extends StatelessWidget {
-  const GarlicMark({super.key, this.size = 48, this.claro = false});
+/// Emblema de Agroexportadora Guadalupe (imagen). En fondos oscuros va sobre un círculo blanco.
+class EmblemaMarca extends StatelessWidget {
+  const EmblemaMarca({super.key, this.size = 48, this.claro = false});
 
   final double size;
 
-  /// Versión para fondos oscuros (morado).
+  /// Versión para fondos oscuros (verde).
   final bool claro;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: 'Garlic',
-    image: true,
-    child: CustomPaint(size: Size.square(size), painter: _AjoPainter(claro: claro)),
-  );
+  Widget build(BuildContext context) {
+    final imagen = Image.asset(
+      'assets/marca/emblema.png',
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.medium,
+      semanticLabel: 'Agroexportadora Guadalupe',
+    );
+    if (!claro) return imagen;
+    return Container(
+      width: size + 8,
+      height: size + 8,
+      padding: const EdgeInsets.all(4),
+      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+      child: imagen,
+    );
+  }
 }
 
 class _AjoPainter extends CustomPainter {
@@ -122,37 +135,27 @@ class _AjoPainter extends CustomPainter {
   bool shouldRepaint(covariant _AjoPainter old) => old.claro != claro || old.opacidad != opacidad;
 }
 
-/// Logotipo: sello + nombre.
-class GarlicWordmark extends StatelessWidget {
-  const GarlicWordmark({super.key, this.claro = false, this.compacto = false});
+/// Logotipo de Agroexportadora Guadalupe (imagen: color sobre claro, blanco sobre el fondo verde).
+class LogoMarca extends StatelessWidget {
+  const LogoMarca({super.key, this.claro = false, this.compacto = false, this.alto});
 
   final bool claro;
   final bool compacto;
 
+  /// Alto explícito (por defecto 30 compacto / 40).
+  final double? alto;
+
   @override
-  Widget build(BuildContext context) {
-    final color = claro ? Colors.white : GColores.primario;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GarlicMark(size: compacto ? 28 : 34, claro: claro),
-        const SizedBox(width: GEspacio.s),
-        Text(
-          'garlic',
-          style: TextStyle(
-            fontFamily: GTipo.titulos,
-            fontWeight: FontWeight.w800,
-            fontSize: compacto ? 22 : 26,
-            letterSpacing: -0.8,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Image.asset(
+    claro ? 'assets/marca/logo-blanco.png' : 'assets/marca/logo-color.png',
+    height: alto ?? (compacto ? 30 : 40),
+    fit: BoxFit.contain,
+    filterQuality: FilterQuality.medium,
+    semanticLabel: 'Agroexportadora Guadalupe',
+  );
 }
 
-/// Fondo de encabezado: morado profundo con patrón sutil de ajos.
+/// Fondo de encabezado: verde Guadalupe con patrón sutil de ajos.
 class FondoMarca extends StatelessWidget {
   const FondoMarca({super.key, required this.child, this.radioInferior = GRadio.panel});
 

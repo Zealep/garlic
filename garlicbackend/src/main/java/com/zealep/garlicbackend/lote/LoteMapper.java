@@ -24,7 +24,9 @@ public class LoteMapper {
                 lote.getProveedor() == null ? null : persona(lote.getProveedor().getId(), lote.getProveedor().getPersona()),
                 lote.getTitularLiquidacion() == null ? null
                         : persona(lote.getTitularLiquidacion().getId(), lote.getTitularLiquidacion()),
-                new CatalogoRef(lote.getLocalidad().getId(), null, lote.getLocalidad().getNombre()),
+                lote.getCuentaLiquidacion(),
+                lote.getLocalidad() == null ? null
+                        : new CatalogoRef(lote.getLocalidad().getId(), null, lote.getLocalidad().getNombre()),
                 lote.getZona(),
                 lote.getLatitud(),
                 lote.getLongitud(),

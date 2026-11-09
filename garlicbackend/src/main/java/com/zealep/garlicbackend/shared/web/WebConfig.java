@@ -41,6 +41,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(tenantInterceptor).addPathPatterns("/api/**");
+        // el login no lleva empresa: la toma del usuario que entra
+        registry.addInterceptor(tenantInterceptor).addPathPatterns("/api/**").excludePathPatterns("/api/v1/auth/**");
     }
 }

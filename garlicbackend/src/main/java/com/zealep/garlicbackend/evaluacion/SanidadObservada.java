@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * 2.2.4 / 2.2.5 Fila de evaluacion_sanidad: enfermedad SI/NO y % si esta presente.
+ * 2.2.4 / 2.2.5 Fila de muestra_sanidad: enfermedad SI/NO y % si esta presente.
  */
 @Embeddable
 public record SanidadObservada(

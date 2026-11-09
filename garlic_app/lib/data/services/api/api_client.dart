@@ -4,9 +4,11 @@ import 'package:dio/dio.dart';
 
 import '../../../utils/result.dart';
 
-/// Cliente HTTP del backend Garlic. Servicio sin estado de negocio: solo transporte.
+/// Cliente HTTP del backend. Servicio sin estado de negocio: solo transporte.
 ///
 /// - Traduce errores (ProblemDetail RFC 9457) a [AppFailure] sin lanzar excepciones.
+/// - Envía el access token de la sesión. Ante un 401 pide renovarlo **una vez** ([renovarSesion], que
+///   provee el repositorio de sesión) y reintenta; si no se puede, devuelve [FailureKind.sinSesion].
 class ApiClient {
   ApiClient({Dio? dio})
     : _dio =
@@ -20,6 +22,14 @@ class ApiClient {
           );
 
   final Dio _dio;
+
+  /// Access token vigente (null = sin sesión). Lo provee el repositorio de sesión.
+  String? Function() tokenActual = _sinToken;
+
+  /// Renueva la sesión con el refresh token; true si hay un access token nuevo.
+  Future<bool> Function()? renovarSesion;
+
+  static String? _sinToken() => null;
 
   String get baseUrl => _dio.options.baseUrl;
 
@@ -41,6 +51,10 @@ class ApiClient {
 
   Future<Result<Object?>> delete(String path) => _enviar(() => _dio.delete<Object?>(path, options: _opciones()));
 
+  /// POST sin token ni renovación (login, refresh, logout).
+  Future<Result<Object?>> postPublico(String path, {Object? body}) =>
+      _enviar(() => _dio.post<Object?>(path, data: body), renovar: false);
+
   /// Sube un archivo (multipart) con campos adicionales.
   Future<Result<Object?>> subirArchivo(
     String path, {
@@ -50,7 +64,8 @@ class ApiClient {
     Map<String, Object?> campos = const {},
   }) {
     final partes = mime.split('/');
-    final form = FormData.fromMap({
+    // el formulario se arma en cada intento: un FormData ya enviado no se puede reenviar
+    FormData form() => FormData.fromMap({
       ..._sinNulos(campos) ?? {},
       'archivo': MultipartFile.fromBytes(
         bytes,
@@ -58,18 +73,29 @@ class ApiClient {
         contentType: DioMediaType(partes[0], partes[1]),
       ),
     });
-    return _enviar(() => _dio.post<Object?>(path, data: form, options: _opciones()));
+    return _enviar(() => _dio.post<Object?>(path, data: form(), options: _opciones()));
   }
 
-  // El sistema es de una sola empresa: el servidor la conoce, no se envía.
-  Options _opciones() => Options();
+  // El sistema es de una sola empresa: el servidor la conoce, no se envía. Sí se envía el token.
+  Options _opciones() {
+    final token = tokenActual();
+    return Options(headers: {if (token != null) 'Authorization': 'Bearer $token'});
+  }
 
-  Future<Result<Object?>> _enviar(Future<Response<Object?>> Function() request) async {
+  Future<Result<Object?>> _enviar(Future<Response<Object?>> Function() request, {bool renovar = true}) async {
     try {
       final response = await request();
       return Result.ok(response.data);
     } on DioException catch (e) {
-      return Result.error(_traducir(e));
+      final fallo = _traducir(e);
+      final renovador = renovarSesion;
+      if (fallo.kind == FailureKind.sinSesion && renovar && renovador != null) {
+        if (await renovador()) return _enviar(request, renovar: false);
+        return const Result.error(
+          AppFailure(FailureKind.sinSesion, 'Tu sesión expiró. Inicia sesión para continuar.', statusCode: 401),
+        );
+      }
+      return Result.error(fallo);
     }
   }
 
@@ -93,6 +119,8 @@ class ApiClient {
     }
     final kind = switch (status) {
       400 || 422 => FailureKind.validacion,
+      401 => FailureKind.sinSesion,
+      403 => FailureKind.sinPermiso,
       404 => FailureKind.noEncontrado,
       409 => FailureKind.conflicto,
       >= 500 || 408 || 429 => FailureKind.sinConexion,

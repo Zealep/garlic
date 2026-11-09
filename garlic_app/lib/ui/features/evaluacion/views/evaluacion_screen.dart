@@ -14,8 +14,6 @@ import '../view_models/evaluacion_view_model.dart';
 import 'pasos/paso_general.dart';
 import 'pasos/paso_muestras.dart';
 import 'pasos/paso_resumen.dart';
-import 'pasos/paso_sanidad.dart';
-import 'pasos/paso_sensoriales.dart';
 
 /// Wizard de evaluación. Celular: pasos arriba y botones abajo.
 /// Tablet/laptop: pasos a la izquierda, formulario al centro y resumen en vivo a la derecha.
@@ -129,8 +127,6 @@ class _ContenidoPaso extends StatelessWidget {
     final paso = switch (vm.paso) {
       PasoEvaluacion.general => PasoGeneral(vm: vm),
       PasoEvaluacion.muestras => PasoMuestras(vm: vm),
-      PasoEvaluacion.sensoriales => PasoSensoriales(vm: vm),
-      PasoEvaluacion.sanidad => PasoSanidad(vm: vm),
       PasoEvaluacion.resumen => PasoResumen(vm: vm),
     };
     // Cambio de paso instantáneo: en formularios largos un fundido distrae y retrasa al evaluador.
@@ -149,7 +145,8 @@ class _ContenidoPaso extends StatelessWidget {
                   const Aviso(mensaje: 'Evaluación cerrada: solo lectura.', tipo: TipoAviso.exito),
                   const SizedBox(height: GEspacio.l),
                 ],
-                IgnorePointer(ignoring: !vm.editable && vm.paso != PasoEvaluacion.resumen, child: paso),
+                // En Muestras el bloqueo va dentro del paso: el selector de muestras sigue activo para revisarlas.
+                IgnorePointer(ignoring: !vm.editable && vm.paso == PasoEvaluacion.general, child: paso),
               ],
             ),
           ),

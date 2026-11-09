@@ -231,6 +231,8 @@ class PestanaPrecio extends StatelessWidget {
   }
 }
 
+/// Calidad y precio por muestra. Con hasta 3 muestras entra entera en el ancho del celular
+/// (fuente compacta y, si hace falta, se achica); con más se desliza a la derecha.
 class _TablaMuestras extends StatelessWidget {
   const _TablaMuestras({required this.vm, required this.porMuestra, required this.promedio});
 
@@ -238,52 +240,57 @@ class _TablaMuestras extends StatelessWidget {
   final List<double> porMuestra;
   final double promedio;
 
+  static const _maxSinDeslizar = 3;
+
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    const num = TextStyle(fontFeatures: GTipo.tabular, fontWeight: FontWeight.w600);
+    const num = TextStyle(fontFeatures: GTipo.tabular, fontWeight: FontWeight.w600, fontSize: 12);
     final clases = vm.clasesCalidad;
     final prom = num.copyWith(color: GColores.primario, fontWeight: FontWeight.w800);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        headingRowHeight: 40,
-        dataRowMinHeight: 40,
-        dataRowMaxHeight: 44,
-        columnSpacing: 22,
-        horizontalMargin: 0,
-        headingTextStyle: t.labelMedium!.copyWith(color: GColores.tintaSuave),
-        columns: [
-          const DataColumn(label: Text('')),
-          for (final n in vm.numerosMuestra) DataColumn(numeric: true, label: Text('M$n')),
-          const DataColumn(
-            numeric: true,
-            label: Text('PROM', style: TextStyle(color: GColores.primario, fontWeight: FontWeight.w800)),
-          ),
-        ],
-        rows: [
-          for (final c in clases)
-            DataRow(
-              cells: [
-                DataCell(Text('% ${c.etiqueta}', style: t.bodySmall)),
-                for (final m in vm.calidadMuestras) DataCell(Text(Formato.porcentaje(m[c.id]), style: num)),
-                DataCell(Text(Formato.porcentaje(_promedio(vm.calidadMuestras, c.id)), style: prom)),
-              ],
-            ),
+    final etiqueta = t.bodySmall!.copyWith(fontSize: 12);
+    final tabla = DataTable(
+      headingRowHeight: 32,
+      dataRowMinHeight: 34,
+      dataRowMaxHeight: 38,
+      columnSpacing: 12,
+      horizontalMargin: 0,
+      headingTextStyle: t.labelSmall!.copyWith(color: GColores.tintaSuave, fontSize: 12),
+      columns: [
+        const DataColumn(label: Text('')),
+        for (final n in vm.numerosMuestra) DataColumn(numeric: true, label: Text('M$n')),
+        const DataColumn(
+          numeric: true,
+          label: Text('PROM', style: TextStyle(color: GColores.primario, fontWeight: FontWeight.w800)),
+        ),
+      ],
+      rows: [
+        for (final c in clases)
           DataRow(
             cells: [
-              DataCell(Text('Precio /kg', style: t.titleSmall)),
-              for (final p in porMuestra) DataCell(Text(Formato.precioKg(p), style: num)),
-              DataCell(
-                Text(
-                  Formato.precioKg(promedio),
-                  style: num.copyWith(color: GColores.primario, fontWeight: FontWeight.w800),
-                ),
-              ),
+              DataCell(Text('% ${c.etiqueta}', style: etiqueta)),
+              for (final m in vm.calidadMuestras) DataCell(Text(Formato.porcentaje(m[c.id]), style: num)),
+              DataCell(Text(Formato.porcentaje(_promedio(vm.calidadMuestras, c.id)), style: prom)),
             ],
           ),
-        ],
-      ),
+        DataRow(
+          cells: [
+            DataCell(Text('Precio /kg', style: etiqueta.copyWith(fontWeight: FontWeight.w700))),
+            for (final p in porMuestra) DataCell(Text(Formato.precioKg(p), style: num)),
+            DataCell(Text(Formato.precioKg(promedio), style: prom)),
+          ],
+        ),
+      ],
+    );
+    if (vm.numerosMuestra.length > _maxSinDeslizar) {
+      return SingleChildScrollView(scrollDirection: Axis.horizontal, child: tabla);
+    }
+    return LayoutBuilder(
+      builder:
+          (context, c) => SizedBox(
+            width: c.maxWidth,
+            child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: tabla),
+          ),
     );
   }
 }

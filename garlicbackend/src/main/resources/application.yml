@@ -39,6 +39,12 @@ springdoc:
     path: /swagger-ui.html
 
 garlic:
+  acceso:
+    # Clave para firmar los tokens (>= 32 caracteres). Vacia: una al azar por arranque (solo tests).
+    jwt-secret: ${GARLIC_JWT_SECRET:}
+    duracion-acceso: 8h
+    # Sesion del celular: se renueva con cada uso; sin usar la app 30 dias hay que volver a entrar
+    duracion-sesion: 30d
   storage:
     # Carpeta de evidencias (almacenamiento local). En produccion: volumen persistente o S3.
     directorio: ${GARLIC_STORAGE_DIR:./data/evidencias}

@@ -3,7 +3,10 @@ package com.zealep.garlicbackend.shared.web;
 import com.zealep.garlicbackend.shared.exception.BusinessException;
 import com.zealep.garlicbackend.shared.exception.ConflictException;
 import com.zealep.garlicbackend.shared.exception.NotFoundException;
+import com.zealep.garlicbackend.shared.seguridad.DemasiadosIntentosException;
+import com.zealep.garlicbackend.shared.seguridad.NoAutorizadoException;
 import com.zealep.garlicbackend.shared.tenant.TenantRequiredException;
+import org.springframework.security.access.AccessDeniedException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +51,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     ProblemDetail handleBusiness(BusinessException ex) {
         return problem(HttpStatus.UNPROCESSABLE_CONTENT, "Regla de negocio", ex.getMessage());
+    }
+
+    @ExceptionHandler(NoAutorizadoException.class)
+    ProblemDetail handleNoAutorizado(NoAutorizadoException ex) {
+        return problem(HttpStatus.UNAUTHORIZED, "No autorizado", ex.getMessage());
+    }
+
+    @ExceptionHandler(DemasiadosIntentosException.class)
+    ProblemDetail handleDemasiadosIntentos(DemasiadosIntentosException ex) {
+        return problem(HttpStatus.TOO_MANY_REQUESTS, "Demasiados intentos", ex.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ProblemDetail handleAccesoDenegado(AccessDeniedException ex) {
+        return problem(HttpStatus.FORBIDDEN, "Sin permiso", ex.getMessage());
     }
 
     @ExceptionHandler(TenantRequiredException.class)

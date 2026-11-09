@@ -34,18 +34,19 @@ public class EvidenciaController {
     }
 
     @PostMapping(path = "/evaluaciones/{evaluacionId}/evidencias", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Subir foto (JPG/PNG/WEBP/HEIC, max 10MB); muestraNumero vacio = evidencia general; "
-            + "id opcional del cliente (200 si ya existe)")
+    @Operation(summary = "Subir foto (JPG/PNG/WEBP/HEIC, max 10MB); sin muestraId ni muestraNumero = evidencia general; "
+            + "muestraId identifica la muestra aunque se renumere; id opcional del cliente (200 si ya existe)")
     public ResponseEntity<EvidenciaResponse> subir(
             @PathVariable UUID evaluacionId,
             @RequestParam("archivo") MultipartFile archivo,
             @RequestParam(required = false) UUID id,
+            @RequestParam(required = false) UUID muestraId,
             @RequestParam(required = false) @Positive Short muestraNumero,
             @RequestParam(required = false) FactorEvidencia factor,
             @RequestParam(required = false) @Size(max = 250) String descripcion,
             @RequestParam(required = false) Instant fechaCaptura) {
         Creacion<EvidenciaResponse> resultado =
-                service.subir(id, evaluacionId, archivo, muestraNumero, factor, descripcion, fechaCaptura);
+                service.subir(id, evaluacionId, archivo, muestraId, muestraNumero, factor, descripcion, fechaCaptura);
         return resultado.respuesta(URI.create(resultado.valor().url()));
     }
 

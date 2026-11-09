@@ -1,5 +1,5 @@
 name: garlic_app
-description: "Garlic - Evaluacion de lotes de ajo en campo"
+description: "Guadalupe - Compra de ajo en campo"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -72,6 +72,10 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   uses-material-design: true
+
+  # Marca Guadalupe Agroexportadora (provisional: reemplazar por versiones de alta resolución)
+  assets:
+    - assets/marca/
 
   fonts:
     - family: Inter

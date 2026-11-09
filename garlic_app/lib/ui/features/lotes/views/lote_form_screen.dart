@@ -43,13 +43,13 @@ class _LoteFormScreenState extends State<LoteFormScreen> {
     }
   }
 
-  Future<void> _nuevoAgricultor() async {
+  Future<void> _nuevaPersona({required bool proveedor}) async {
     final datos = await showDialog<({String dni, String nombres})>(
       context: context,
-      builder: (_) => const _DialogoPersona(),
+      builder: (_) => _DialogoPersona(titulo: proveedor ? 'Registrar proveedor' : 'Registrar agricultor'),
     );
     if (datos == null) return;
-    final r = await vm.registrarAgricultor.execute(datos);
+    final r = await (proveedor ? vm.registrarProveedor : vm.registrarAgricultor).execute(datos);
     if (!mounted) return;
     if (r case Error(:final failure)) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
@@ -68,7 +68,7 @@ class _LoteFormScreenState extends State<LoteFormScreen> {
         ),
       ),
       body: ListenableBuilder(
-        listenable: Listenable.merge([vm, vm.guardar, vm.ubicar, vm.registrarAgricultor]),
+        listenable: Listenable.merge([vm, vm.guardar, vm.ubicar, vm.registrarAgricultor, vm.registrarProveedor]),
         builder:
             (context, _) => Form(
               key: _formKey,
@@ -187,29 +187,36 @@ class _LoteFormScreenState extends State<LoteFormScreen> {
             ),
           ),
           const SizedBox(width: GEspacio.s),
-          SizedBox(
-            height: 56,
-            child: IconButton.filledTonal(
-              tooltip: 'Registrar agricultor',
-              onPressed: vm.registrarAgricultor.running ? null : _nuevoAgricultor,
-              icon:
-                  vm.registrarAgricultor.running
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(PhosphorIconsBold.userPlus),
-            ),
+          _BotonRegistrar(
+            tooltip: 'Registrar agricultor',
+            ocupado: vm.registrarAgricultor.running,
+            onPressed: () => _nuevaPersona(proveedor: false),
           ),
         ],
       ),
       const SizedBox(height: GEspacio.l),
-      _Desplegable<PersonaItem>(
-        etiqueta: 'Proveedor (opcional)',
-        icono: PhosphorIconsRegular.truck,
-        opciones: vm.proveedores,
-        valor: vm.proveedorId,
-        id: (p) => p.id,
-        texto: (p) => p.nombreVisible,
-        requerido: false,
-        onChanged: (v) => vm.cambiar(() => vm.proveedorId = v),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _Desplegable<PersonaItem>(
+              etiqueta: 'Proveedor (opcional)',
+              icono: PhosphorIconsRegular.truck,
+              opciones: vm.proveedores,
+              valor: vm.proveedorId,
+              id: (p) => p.id,
+              texto: (p) => '${p.nombreVisible}${p.documento == null ? '' : ' · ${p.documento}'}',
+              requerido: false,
+              onChanged: (v) => vm.cambiar(() => vm.proveedorId = v),
+            ),
+          ),
+          const SizedBox(width: GEspacio.s),
+          _BotonRegistrar(
+            tooltip: 'Registrar proveedor',
+            ocupado: vm.registrarProveedor.running,
+            onPressed: () => _nuevaPersona(proveedor: true),
+          ),
+        ],
       ),
       const SizedBox(height: GEspacio.s),
       SwitchListTile(
@@ -249,17 +256,24 @@ class _LoteFormScreenState extends State<LoteFormScreen> {
           ],
         ),
       ],
-      const TituloGrupo('Ubicación', subtitulo: 'Localidad y punto GPS del campo', icono: PhosphorIconsBold.mapPin),
-      _Desplegable<CatalogoItem>(
-        etiqueta: 'Ciudad / CCPP',
-        icono: PhosphorIconsRegular.mapTrifold,
-        opciones: vm.localidades,
-        valor: vm.localidadId,
-        id: (c) => c.id,
-        texto: (c) => c.etiqueta,
-        onChanged: (v) => vm.cambiar(() => vm.localidadId = v),
+      const SizedBox(height: GEspacio.l),
+      TextFormField(
+        initialValue: vm.cuentaLiquidacion,
+        keyboardType: TextInputType.number,
+        maxLength: 30,
+        decoration: const InputDecoration(
+          labelText: 'N° de cuenta o CCI (opcional)',
+          helperText: 'De quien cobra la liquidación',
+          prefixIcon: Icon(PhosphorIconsRegular.bank),
+          counterText: '',
+        ),
+        onChanged: (v) => vm.cuentaLiquidacion = v,
       ),
-      const SizedBox(height: GEspacio.m),
+      const TituloGrupo(
+        'Ubicación',
+        subtitulo: 'Punto GPS del campo o, si no lo tienes, la ciudad / CCPP',
+        icono: PhosphorIconsBold.mapPin,
+      ),
       Card(
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -276,12 +290,29 @@ class _LoteFormScreenState extends State<LoteFormScreen> {
               vm.ubicar.failure == null
                   ? const Text('Usa el GPS del teléfono en el campo')
                   : Text(vm.ubicar.failure!.message),
-          trailing: TextButton(
-            onPressed: vm.ubicar.running ? null : () => vm.ubicar.execute(),
-            child: Text(vm.ubicar.running ? 'Ubicando…' : 'Usar mi ubicación'),
-          ),
+          trailing:
+              vm.conGps
+                  ? TextButton(onPressed: vm.quitarUbicacion, child: const Text('Quitar'))
+                  : TextButton(
+                    onPressed: vm.ubicar.running ? null : () => vm.ubicar.execute(),
+                    child: Text(vm.ubicar.running ? 'Ubicando…' : 'Usar mi ubicación'),
+                  ),
         ),
       ),
+      const SizedBox(height: GEspacio.m),
+      // con el punto GPS no hace falta la ciudad (puede no estar en el catálogo)
+      if (vm.conGps)
+        Text('Con el punto GPS no hace falta la ciudad / CCPP.', style: t.bodySmall)
+      else
+        _Desplegable<CatalogoItem>(
+          etiqueta: 'Ciudad / CCPP',
+          icono: PhosphorIconsRegular.mapTrifold,
+          opciones: vm.localidades,
+          valor: vm.localidadId,
+          id: (c) => c.id,
+          texto: (c) => c.etiqueta,
+          onChanged: (v) => vm.cambiar(() => vm.localidadId = v),
+        ),
       const TituloGrupo(
         'Fechas',
         subtitulo: 'Arrancado, corte y carga del lote',
@@ -352,8 +383,32 @@ class _Desplegable<T> extends StatelessWidget {
   );
 }
 
+/// Botón para registrar una persona (agricultor o proveedor) junto a su desplegable.
+class _BotonRegistrar extends StatelessWidget {
+  const _BotonRegistrar({required this.tooltip, required this.ocupado, required this.onPressed});
+
+  final String tooltip;
+  final bool ocupado;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 56,
+    child: IconButton.filledTonal(
+      tooltip: tooltip,
+      onPressed: ocupado ? null : onPressed,
+      icon:
+          ocupado
+              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(PhosphorIconsBold.userPlus),
+    ),
+  );
+}
+
 class _DialogoPersona extends StatefulWidget {
-  const _DialogoPersona();
+  const _DialogoPersona({required this.titulo});
+
+  final String titulo;
 
   @override
   State<_DialogoPersona> createState() => _DialogoPersonaState();
@@ -373,7 +428,7 @@ class _DialogoPersonaState extends State<_DialogoPersona> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Registrar agricultor'),
+    title: Text(widget.titulo),
     content: Form(
       key: _key,
       child: Column(

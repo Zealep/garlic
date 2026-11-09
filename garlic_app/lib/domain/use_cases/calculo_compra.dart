@@ -24,9 +24,9 @@ abstract final class CalculoCompra {
     );
   }
 
-  /// destare_kg = kg × destare% / 100; kg neto = kg − destare; total = kg neto × precio.
-  static LineaCarga carga(double kg, double precioKg, double destarePct) {
-    final destareKg = redondear(kg * destarePct / 100, 2);
+  /// Destare en kg por camión; kg neto = kg − destare; total = kg neto × precio.
+  static LineaCarga carga(double kg, double precioKg, double destare) {
+    final destareKg = redondear(destare, 2);
     final importe = redondear(kg * precioKg, 2);
     final descuento = redondear(destareKg * precioKg, 2);
     return LineaCarga(
@@ -47,7 +47,7 @@ abstract final class CalculoCompra {
     final pagado = redondear(suma(pagos), 2);
     final gastosVinculados = redondear(suma(gastos), 2);
     final costoPacking = redondear(totalMp + gastosVinculados, 2);
-    double? unitario(double total) => kgNetos == 0 ? null : redondear(total / kgNetos, 4);
+    double? unitario(double total, {int decimales = 4}) => kgNetos == 0 ? null : redondear(total / kgNetos, decimales);
     return BalanceCompra(
       kgCargados: redondear(suma(cargas.map((c) => c.kg)), 2),
       destareKg: redondear(suma(cargas.map((c) => c.destareKg)), 2),
@@ -60,7 +60,7 @@ abstract final class CalculoCompra {
       costoPacking: costoPacking,
       cuMp: unitario(totalMp),
       cuGastos: unitario(gastosVinculados),
-      cuPacking: unitario(costoPacking),
+      cuPacking: unitario(costoPacking, decimales: 2),
     );
   }
 

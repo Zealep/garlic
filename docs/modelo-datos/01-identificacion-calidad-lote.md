@@ -16,7 +16,7 @@
 | Auditoría | Todas las tablas tienen `created_at timestamptz`, `created_by uuid`, `updated_at timestamptz` y `updated_by uuid`. |
 | Porcentajes | Se guardan como `numeric(5,2)` de 0 a 100 (en el Excel, 0.80 se guarda como 80.00). |
 | Promedios (PROM) | **No se guardan**. Se calculan en vistas. |
-| Nivel de humedad | Tipo `ENUM nivel_enum ('BAJA','MEDIA','ALTA')`. La columna "stand by" queda para una versión futura. |
+| Humedad | SI/NO por indicador y muestra (`muestra_humedad.presente`; V7 quitó `nivel_enum`). La columna "stand by" queda para una versión futura. |
 
 ### Estructura común de los catálogos
 Todas las tablas de catálogo comparten estas columnas:
@@ -63,14 +63,14 @@ erDiagram
   muestra ||--o{ muestra_calibre : ""
   calibre ||--o{ muestra_calibre : ""
 
-  evaluacion_lote ||--o{ evaluacion_humedad : ""
-  tipo_humedad ||--o{ evaluacion_humedad : ""
-  evaluacion_lote ||--o{ evaluacion_empaste : ""
-  tipo_empaste ||--o{ evaluacion_empaste : ""
-  evaluacion_lote ||--o{ evaluacion_dano : ""
-  tipo_dano ||--o{ evaluacion_dano : ""
-  evaluacion_lote ||--o{ evaluacion_sanidad : ""
-  enfermedad ||--o{ evaluacion_sanidad : ""
+  muestra ||--o{ muestra_humedad : ""
+  tipo_humedad ||--o{ muestra_humedad : ""
+  muestra ||--o{ muestra_empaste : ""
+  tipo_empaste ||--o{ muestra_empaste : ""
+  muestra ||--o{ muestra_dano : ""
+  tipo_dano ||--o{ muestra_dano : ""
+  muestra ||--o{ muestra_sanidad : ""
+  enfermedad ||--o{ muestra_sanidad : ""
 
   evaluacion_lote ||--o{ evidencia : ""
   muestra ||--o{ evidencia : ""
@@ -222,21 +222,25 @@ erDiagram
 
 **muestra_calibre**: 2.2 Factor de tamaño. Tiene la misma estructura, pero con `calibre_id`. El evaluador elige los calibres presentes en cada muestra (pueden superponerse, ej. 50/60 y 50/55); **deben sumar 100% y son obligatorios para cerrar la evaluación**.
 
-**evaluacion_humedad**: 2.2.1 Humedad (se registra por evaluación).
+Desde V7 (2026-11-02) sensoriales y sanidad se registran **por muestra**. El id de la muestra lo asigna la app y
+`uq_muestra (evaluacion_id, numero)` es `DEFERRABLE` para renumerar 1..n al quitar una muestra.
+
+**muestra_humedad**: 2.2.1 Humedad.
 | Columna | Tipo | Nulo | Descripción |
 |---|---|---|---|
-| evaluacion_id | uuid | NO | PK, FK |
+| muestra_id | uuid | NO | PK, FK |
 | tipo_humedad_id | uuid | NO | PK, FK |
-| nivel | nivel_enum | NO | BAJA / MEDIA / ALTA |
+| presente | boolean | NO | SI / NO |
 
-**evaluacion_empaste**: 2.2.2 Empaste, selección múltiple. PK(`evaluacion_id`, `tipo_empaste_id`).
+**muestra_empaste**: 2.2.2 Empaste, selección múltiple. PK(`muestra_id`, `tipo_empaste_id`).
 
-**evaluacion_dano**: daños no visibles, selección múltiple. PK(`evaluacion_id`, `tipo_dano_id`).
+**muestra_dano**: daños no visibles, selección múltiple. PK(`muestra_id`, `tipo_dano_id`). Si `tipo_dano.pide_cantidades`
+(parálisis): `frutos_total` y `frutos_afectados` (≤ total) → % de daño = afectados / total × 100 (se calcula, no se guarda).
 
-**evaluacion_sanidad**: 2.2.4 Raíz rosada y 2.2.5 Fusarium (y cualquier enfermedad con `evaluar_en_campo`).
+**muestra_sanidad**: 2.2.4 Raíz rosada y 2.2.5 Fusarium (y cualquier enfermedad con `evaluar_en_campo`).
 | Columna | Tipo | Nulo | Descripción |
 |---|---|---|---|
-| evaluacion_id | uuid | NO | PK, FK |
+| muestra_id | uuid | NO | PK, FK |
 | enfermedad_id | uuid | NO | PK, FK |
 | presente | boolean | NO | SI/NO |
 | porcentaje | numeric(5,2) | SÍ | `CHECK (presente OR porcentaje IS NULL)`: solo se llena si la respuesta es SI |
@@ -262,8 +266,8 @@ erDiagram
 ## 4. Reglas de negocio
 1. En `muestra_calidad`, cada muestra suma 100% (ABIERTOS = 100 − PRIMERA).
 2. En `muestra_calibre`, para cerrar, cada muestra tiene al menos un calibre, ninguno en 0% y la suma es 100% (en borrador no se exige).
-3. `tipo_dano.es_excluyente`: si se marca, no se puede marcar ningún otro daño en la evaluación.
-4. En `evaluacion_sanidad`, el porcentaje solo se registra si `presente = true`.
+3. `tipo_dano.es_excluyente`: si se marca, no se puede marcar ningún otro daño en la muestra.
+4. En `muestra_sanidad`, el porcentaje solo se registra si `presente = true`.
 5. No puede haber dos lotes activos con la misma zona en la misma campaña.
 6. Solo se puede editar una evaluación mientras está en estado `BORRADOR`.
 
@@ -297,23 +301,24 @@ Las reglas 1, 3 y 6 se validan en la aplicación; más adelante se pueden llevar
 | FECHA EVALUACION | `evaluacion_lote.fecha_evaluacion` |
 | FECHA ARRANCADO / CORTE / CARGA | `lote.fecha_*` |
 | UBICACION (MAPS) | `lote.latitud`, `lote.longitud`, `lote.maps_url` |
-| CIUDAD / CCPP | `lote.localidad_id` |
+| CIUDAD / CCPP | `lote.localidad_id` (opcional si hay latitud/longitud) |
 | ZONA (validación) | `lote.zona` + índice único |
 | VARIEDAD | `lote.variedad_id` |
 | TIPO COMPRA | `lote.tipo_compra_id` |
 | AGRICULTOR / DNI | `lote.agricultor_id` → persona |
 | PROVEEDOR | `lote.proveedor_id` → persona |
 | DNI LC | `lote.titular_liquidacion_id` → persona |
+| N° cuenta o CCI | `lote.cuenta_liquidacion` |
 | 2.1 PRIMERA / ABIERTOS × N° muestra | `muestra_calidad` |
 | 2.2 Calibres × N° muestra | `muestra_calibre` |
 | PROM | vistas `v_*_prom` |
-| 2.2.1 Humedad (tipo + valor) | `evaluacion_humedad` |
+| 2.2.1 Humedad SI/NO × N° muestra | `muestra_humedad` |
 | OBS | `evaluacion_lote.observacion` |
 | Evidencias fotográficas (por muestra) | `evidencia` |
-| 2.2.2 Empaste (selección múltiple) | `evaluacion_empaste` |
-| Daños no visibles (selección múltiple) | `evaluacion_dano` |
-| 2.2.4 Raíz rosada SI/NO + % | `evaluacion_sanidad` |
-| 2.2.5 Fusarium SI/NO + % | `evaluacion_sanidad` |
+| 2.2.2 Empaste × N° muestra | `muestra_empaste` |
+| Daños no visibles × N° muestra (parálisis con frutos) | `muestra_dano` |
+| 2.2.4 Raíz rosada SI/NO + % × N° muestra | `muestra_sanidad` |
+| 2.2.5 Fusarium SI/NO + % × N° muestra | `muestra_sanidad` |
 
 ---
 

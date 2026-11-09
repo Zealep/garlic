@@ -75,6 +75,27 @@ class LoteIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void conGps_laCiudadEsOpcional_yGuardaLaCuentaDeLiquidacion() throws Exception {
+        String body = """
+                {"campaniaId":"%s","variedadId":"%s","agricultorId":"%s","zona":"GPS 1","tipoCompraId":"%s",
+                 "latitud":-16.345678,"longitud":-72.123456,"cuentaLiquidacion":" 002-19312345678901 "}"""
+                .formatted(campania, variedad, agricultor, tipoCompra);
+        String id = JsonPath.read(crear(body).andReturn().getResponse().getContentAsString(), "$.id");
+
+        mvc.perform(get(URL + "/" + id).header(TenantContext.HEADER, empresa))
+                .andExpect(jsonPath("$.localidad").doesNotExist())
+                .andExpect(jsonPath("$.latitud").value(-16.345678))
+                .andExpect(jsonPath("$.cuentaLiquidacion").value("002-19312345678901"));
+
+        // sin ciudad ni GPS -> 422
+        mvc.perform(json(post(URL), empresa, """
+                        {"campaniaId":"%s","variedadId":"%s","agricultorId":"%s","zona":"GPS 2","tipoCompraId":"%s"}"""
+                        .formatted(campania, variedad, agricultor, tipoCompra)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("coordenadas GPS")));
+    }
+
+    @Test
     void zonaRepetida_enLaMismaCampania_responde409_aunqueCambieEspaciosYMayusculas() throws Exception {
         crear(lote("LOTE 001", "B3 P52", campania, ""));
 

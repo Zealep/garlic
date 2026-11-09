@@ -4,9 +4,7 @@ import com.zealep.garlicbackend.lote.Lote;
 import com.zealep.garlicbackend.shared.domain.TenantEntity;
 import com.zealep.garlicbackend.usuario.Usuario;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -19,17 +17,14 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.hibernate.annotations.BatchSize;
 
 /**
  * Punto 2 del protocolo: evaluacion de calidad del lote (agregado raiz).
- * Calidad y calibre se registran por muestra; humedad, empaste, danos y sanidad por evaluacion.
+ * Todo se registra por muestra: calidad, calibre, sensoriales (humedad, empaste, danos) y sanidad.
  */
 @Entity
 @Table(name = "evaluacion_lote")
@@ -68,24 +63,6 @@ public class EvaluacionLote extends TenantEntity {
     @OrderBy("numero")
     @BatchSize(size = 50)
     private List<Muestra> muestras = new ArrayList<>();
-
-    @ElementCollection
-    @CollectionTable(name = "evaluacion_humedad", joinColumns = @JoinColumn(name = "evaluacion_id"))
-    private Set<HumedadObservada> humedad = new HashSet<>();
-
-    @ElementCollection
-    @CollectionTable(name = "evaluacion_empaste", joinColumns = @JoinColumn(name = "evaluacion_id"))
-    @Column(name = "tipo_empaste_id", nullable = false)
-    private Set<UUID> empastes = new HashSet<>();
-
-    @ElementCollection
-    @CollectionTable(name = "evaluacion_dano", joinColumns = @JoinColumn(name = "evaluacion_id"))
-    @Column(name = "tipo_dano_id", nullable = false)
-    private Set<UUID> danos = new HashSet<>();
-
-    @ElementCollection
-    @CollectionTable(name = "evaluacion_sanidad", joinColumns = @JoinColumn(name = "evaluacion_id"))
-    private Set<SanidadObservada> sanidad = new HashSet<>();
 
     protected EvaluacionLote() {
     }
@@ -131,13 +108,15 @@ public class EvaluacionLote extends TenantEntity {
         return muestras.stream().filter(m -> m.getNumero() == numero).findFirst();
     }
 
-    /** Devuelve la muestra con ese numero, creandola si no existe (se actualiza en sitio para conservar sus evidencias). */
-    public Muestra muestraONueva(short numero) {
-        return muestra(numero).orElseGet(() -> {
-            Muestra nueva = new Muestra(this, numero);
-            muestras.add(nueva);
-            return nueva;
-        });
+    public Optional<Muestra> muestra(UUID id) {
+        return muestras.stream().filter(m -> id.equals(m.getId())).findFirst();
+    }
+
+    /** Muestra nueva con el id de la app (o uno nuevo si no viene). */
+    public Muestra agregarMuestra(UUID id, short numero) {
+        Muestra nueva = new Muestra(this, id == null ? UUID.randomUUID() : id, numero);
+        muestras.add(nueva);
+        return nueva;
     }
 
     public void quitarMuestra(Muestra muestra) {
@@ -146,44 +125,6 @@ public class EvaluacionLote extends TenantEntity {
 
     public List<Muestra> getMuestras() {
         return List.copyOf(muestras);
-    }
-
-    // ---------------------------------------------------------------- factores por evaluacion
-
-    public void reemplazarHumedad(Collection<HumedadObservada> valores) {
-        humedad.clear();
-        humedad.addAll(valores);
-    }
-
-    public void reemplazarEmpastes(Collection<UUID> valores) {
-        empastes.clear();
-        empastes.addAll(valores);
-    }
-
-    public void reemplazarDanos(Collection<UUID> valores) {
-        danos.clear();
-        danos.addAll(valores);
-    }
-
-    public void reemplazarSanidad(Collection<SanidadObservada> valores) {
-        sanidad.clear();
-        sanidad.addAll(valores);
-    }
-
-    public Set<HumedadObservada> getHumedad() {
-        return Set.copyOf(humedad);
-    }
-
-    public Set<UUID> getEmpastes() {
-        return Set.copyOf(empastes);
-    }
-
-    public Set<UUID> getDanos() {
-        return Set.copyOf(danos);
-    }
-
-    public Set<SanidadObservada> getSanidad() {
-        return Set.copyOf(sanidad);
     }
 
     // ---------------------------------------------------------------- getters / setters

@@ -1,7 +1,6 @@
 package com.zealep.garlicbackend.evaluacion.dto;
 
 import com.zealep.garlicbackend.evaluacion.EstadoEvaluacion;
-import com.zealep.garlicbackend.evaluacion.NivelHumedad;
 import com.zealep.garlicbackend.evaluacion.ResultadoEvaluacion;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -22,10 +21,6 @@ public record EvaluacionResponse(
         Instant fechaResultado,
         List<Muestra> muestras,
         Promedios promedios,
-        List<Humedad> humedad,
-        List<Item> empastes,
-        List<Item> danos,
-        List<Sanidad> sanidad,
         Instant createdAt,
         Instant updatedAt) {
 
@@ -40,14 +35,20 @@ public record EvaluacionResponse(
     }
 
     public record Muestra(UUID id, short numero, String observacion,
-            List<ValorPorcentaje> calidad, List<ValorPorcentaje> calibres) {
+            List<ValorPorcentaje> calidad, List<ValorPorcentaje> calibres,
+            List<Humedad> humedad, List<Item> empastes, List<Dano> danos, List<Sanidad> sanidad) {
     }
 
     /** Columna PROM del protocolo: promedio de las muestras que registran cada clase / calibre. */
     public record Promedios(List<ValorPorcentaje> calidad, List<ValorPorcentaje> calibres) {
     }
 
-    public record Humedad(UUID id, String codigo, String nombre, NivelHumedad nivel) {
+    public record Humedad(UUID id, String codigo, String nombre, boolean presente) {
+    }
+
+    /** @param porcentaje frutos afectados / total x 100 (null sin cantidades) */
+    public record Dano(UUID id, String codigo, String nombre, Integer frutosTotal, Integer frutosAfectados,
+            BigDecimal porcentaje) {
     }
 
     public record Sanidad(UUID id, String codigo, String nombre, boolean presente, BigDecimal porcentaje) {

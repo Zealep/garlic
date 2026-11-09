@@ -98,13 +98,8 @@ class LotesScreen extends StatelessWidget {
                 else
                   SliverAnchoMaximo(
                     // Lista en celular, grilla que se adapta en tablet/laptop (flutter-build-responsive-layout)
-                    sliver: SliverGrid.builder(
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 520,
-                        mainAxisExtent: 186,
-                        mainAxisSpacing: GEspacio.m,
-                        crossAxisSpacing: GEspacio.m,
-                      ),
+                    sliver: SliverGrillaTarjetas(
+                      maxAnchoTarjeta: 520,
                       itemCount: lotes.length,
                       itemBuilder:
                           (context, i) => _LoteCard(
@@ -159,7 +154,7 @@ class _LoteCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      'Zona ${lote.zona} · ${lote.localidad.texto}',
+                      'Zona ${lote.zona} · ${lote.ubicacionTexto}',
                       style: t.bodySmall,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -186,7 +181,7 @@ class _LoteCard extends StatelessWidget {
                   if (diasCorte != null && lote.activo) PastillaCorte(dias: diasCorte!),
                 ],
               ),
-              const Spacer(),
+              const SizedBox(height: GEspacio.m),
               Row(
                 children: [
                   CircleAvatar(

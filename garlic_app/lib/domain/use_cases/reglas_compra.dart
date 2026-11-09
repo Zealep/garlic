@@ -26,7 +26,8 @@ abstract final class ReglasCompra {
   static String? carga(Carga c) {
     if (c.kg <= 0) return 'Ingrese los kg cargados';
     if (c.precioKg <= 0) return 'Ingrese el precio por kg';
-    if (c.destarePct < 0 || c.destarePct > 100) return 'El destare debe estar entre 0 y 100%';
+    if (c.destareKg < 0) return 'El destare no puede ser negativo';
+    if (c.destareKg > c.kg) return 'El destare no puede ser mayor que los kg del camión';
     if (c.cantidadEmpaques < 0) return 'La cantidad de empaques no puede ser negativa';
     return null;
   }

@@ -112,7 +112,9 @@ class ComparacionScreen extends StatelessWidget {
                       for (final fila in c.sanidadYDanos)
                         _FilaVista.de(
                           fila,
-                          fila.id == 'incidencia' ? Formato.porcentaje : (v) => v?.toInt().toString() ?? '—',
+                          const {'incidencia', 'paralisis'}.contains(fila.id)
+                              ? Formato.porcentaje
+                              : (v) => v?.toInt().toString() ?? '—',
                         ),
                     ],
                   ),
@@ -142,17 +144,27 @@ class ComparacionScreen extends StatelessWidget {
 
   static String _puntos(double d) => '${d > 0 ? '+' : ''}${Formato.porcentaje(d).replaceAll('%', '')} pp';
 
-  /// Humedad por tipo y empastes: se muestran, sin ganador (depende del uso del producto).
+  /// Humedad (muestras con SÍ) por tipo y empastes: se muestran, sin ganador (depende del uso del producto).
   static List<_FilaVista> _sensoriales(FormularioEvaluacion f, EvaluacionBorrador a, EvaluacionBorrador b) {
+    final humA = a.muestrasConHumedad(), humB = b.muestrasConHumedad();
     final tipos = [
       for (final t in f.tiposHumedad)
-        if (a.humedad.containsKey(t.id) || b.humedad.containsKey(t.id)) t,
+        if (humA.containsKey(t.id) || humB.containsKey(t.id)) t,
     ];
-    String empastes(EvaluacionBorrador e) =>
-        e.empastes.isEmpty ? 'Ninguno' : e.empastes.map((id) => f.buscar(id)?.etiqueta ?? '—').join(', ');
+    String humedad(EvaluacionBorrador e, Map<String, int> n, String id) =>
+        n.containsKey(id) ? 'SÍ en ${n[id]}/${e.muestras.length}' : '—';
+    String empastes(EvaluacionBorrador e) {
+      final ids = {for (final m in e.muestras) ...m.empastes};
+      return ids.isEmpty ? 'Ninguno' : ids.map((id) => f.buscar(id)?.etiqueta ?? '—').join(', ');
+    }
+
     return [
       for (final t in tipos)
-        _FilaVista(etiqueta: t.etiqueta, a: a.humedad[t.id]?.etiqueta ?? '—', b: b.humedad[t.id]?.etiqueta ?? '—'),
+        _FilaVista(
+          etiqueta: 'Humedad ${t.etiqueta.toLowerCase()}',
+          a: humedad(a, humA, t.id),
+          b: humedad(b, humB, t.id),
+        ),
       _FilaVista(etiqueta: 'Empaste', a: empastes(a), b: empastes(b)),
     ];
   }
@@ -588,11 +600,19 @@ class _Observaciones extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final e = evaluacion;
+    final presentes = {
+      for (final m in e.muestras)
+        for (final s in m.sanidad.entries)
+          if (s.value.presente) s.key,
+    };
+    final incidencia = e.promediosSanidad();
     final enfermedades = [
-      for (final s in e.sanidad.entries)
-        if (s.value.presente) '${formulario.buscar(s.key)?.etiqueta ?? '—'} ${Formato.porcentaje(s.value.porcentaje)}',
+      for (final id in presentes)
+        '${formulario.buscar(id)?.etiqueta ?? '—'} ${Formato.porcentaje(incidencia[id])} PROM',
     ];
-    final danos = [for (final id in e.danos) formulario.buscar(id)?.etiqueta ?? '—'];
+    final danos = [
+      for (final id in {for (final m in e.muestras) ...m.danos.keys}) formulario.buscar(id)?.etiqueta ?? '—',
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

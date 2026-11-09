@@ -22,3 +22,7 @@ Thumbs.db
 # ---- Despliegue ----
 deploy/web/
 deploy/web.*/
+
+# .env real de produccion preparado localmente (copiar al droplet como .env)
+deploy/.env.*
+!deploy/.env.example

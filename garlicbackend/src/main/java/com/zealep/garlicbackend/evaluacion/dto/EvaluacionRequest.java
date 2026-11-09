@@ -1,10 +1,10 @@
 package com.zealep.garlicbackend.evaluacion.dto;
 
-import com.zealep.garlicbackend.evaluacion.NivelHumedad;
 import com.zealep.garlicbackend.shared.validation.Porcentaje;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,38 +22,28 @@ public record EvaluacionRequest(
         @NotNull UUID evaluadorId,
         @NotNull LocalDate fechaEvaluacion,
         @Size(max = 4000) String observacion,
-        @Size(max = 20) List<@Valid @NotNull Muestra> muestras,
-        List<@Valid @NotNull Humedad> humedad,
-        List<@NotNull UUID> empastes,
-        List<@NotNull UUID> danos,
-        List<@Valid @NotNull Sanidad> sanidad) {
+        @Size(max = 20) List<@Valid @NotNull Muestra> muestras) {
 
     public List<Muestra> muestrasOVacio() {
         return muestras == null ? List.of() : muestras;
     }
 
-    public List<Humedad> humedadOVacio() {
-        return humedad == null ? List.of() : humedad;
-    }
-
-    public List<UUID> empastesOVacio() {
-        return empastes == null ? List.of() : empastes;
-    }
-
-    public List<UUID> danosOVacio() {
-        return danos == null ? List.of() : danos;
-    }
-
-    public List<Sanidad> sanidadOVacio() {
-        return sanidad == null ? List.of() : sanidad;
-    }
-
-    /** Muestra con sus % de calidad (2.1) y calibre (2.2). */
+    /**
+     * Muestra con sus % de calidad (2.1) y calibre (2.2), sensoriales (2.2.1 humedad, 2.2.2 empaste, danos)
+     * y sanidad (2.2.4 / 2.2.5).
+     *
+     * @param id opcional: UUID de la app. Identifica la muestra aunque se renumere; sin id se busca por numero.
+     */
     public record Muestra(
+            UUID id,
             @NotNull @Positive Short numero,
             @Size(max = 2000) String observacion,
             List<@Valid @NotNull Calidad> calidad,
-            List<@Valid @NotNull Calibre> calibres) {
+            List<@Valid @NotNull Calibre> calibres,
+            List<@Valid @NotNull Humedad> humedad,
+            List<@NotNull UUID> empastes,
+            List<@Valid @NotNull Dano> danos,
+            List<@Valid @NotNull Sanidad> sanidad) {
 
         public List<Calidad> calidadOVacio() {
             return calidad == null ? List.of() : calidad;
@@ -61,6 +51,22 @@ public record EvaluacionRequest(
 
         public List<Calibre> calibresOVacio() {
             return calibres == null ? List.of() : calibres;
+        }
+
+        public List<Humedad> humedadOVacio() {
+            return humedad == null ? List.of() : humedad;
+        }
+
+        public List<UUID> empastesOVacio() {
+            return empastes == null ? List.of() : empastes;
+        }
+
+        public List<Dano> danosOVacio() {
+            return danos == null ? List.of() : danos;
+        }
+
+        public List<Sanidad> sanidadOVacio() {
+            return sanidad == null ? List.of() : sanidad;
         }
     }
 
@@ -70,8 +76,12 @@ public record EvaluacionRequest(
     public record Calibre(@NotNull UUID calibreId, @NotNull @Porcentaje BigDecimal porcentaje) {
     }
 
-    /** 2.2.1 Indicador de humedad observado y su nivel. */
-    public record Humedad(@NotNull UUID tipoHumedadId, @NotNull NivelHumedad nivel) {
+    /** 2.2.1 Indicador de humedad SI/NO. */
+    public record Humedad(@NotNull UUID tipoHumedadId, @NotNull Boolean presente) {
+    }
+
+    /** Dano marcado; si el tipo pide cantidades (paralisis), frutos total y afectados. */
+    public record Dano(@NotNull UUID tipoDanoId, @Positive Integer frutosTotal, @PositiveOrZero Integer frutosAfectados) {
     }
 
     /** 2.2.4 / 2.2.5 SI/NO y, si es SI, el porcentaje. */

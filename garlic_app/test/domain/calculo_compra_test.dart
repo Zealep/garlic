@@ -15,7 +15,7 @@ const calidadExcel = [
 ];
 
 Carga camion(String id) =>
-    Carga(id: id, fecha: DateTime(2025, 10, 20), kg: 15000, precioKg: 2.8, cantidadEmpaques: 375);
+    Carga(id: id, fecha: DateTime(2025, 10, 20), kg: 15000, precioKg: 2.8, destareKg: 150, cantidadEmpaques: 375);
 
 void main() {
   group('Fijación de precio (ejemplo del Excel)', () {
@@ -50,7 +50,7 @@ void main() {
   });
 
   group('Cargas y balance (ejemplo del Excel)', () {
-    test('un camión descuenta el 1% de destare', () {
+    test('un camión descuenta el destare en kg', () {
       final l = camion('c1').calculo;
       expect(l.destareKg, 150);
       expect(l.kgNeto, 14850);
@@ -75,7 +75,7 @@ void main() {
       expect(b.gastosVinculados, 2800);
       expect(b.costoPacking, 85960);
       expect(b.cuMp, 2.8);
-      expect(b.cuPacking, 2.8943);
+      expect(b.cuPacking, 2.89); // C.U. puesto en packing a 2 decimales
       expect(b.saldo, 33160);
       expect(b.estadoPago, EstadoPago.parcial);
       expect(compra.cantidadEmpaques, 750);
@@ -91,7 +91,8 @@ void main() {
 
     test('reglas de carga, gasto y pago', () {
       expect(ReglasCompra.carga(camion('c')..kg = 0), 'Ingrese los kg cargados');
-      expect(ReglasCompra.carga(camion('c')..destarePct = 120), contains('destare'));
+      expect(ReglasCompra.carga(camion('c')..destareKg = 20000), contains('mayor que los kg'));
+      expect(ReglasCompra.carga(camion('c')..destareKg = -1), contains('negativo'));
       const otros = CatalogoItem(id: 't', codigo: 'OTROS', nombre: 'OTROS GASTOS', requiereDescripcion: true);
       final g = GastoVinculado(id: 'g', tipoGastoId: 't', fecha: DateTime(2025), monto: 70);
       expect(ReglasCompra.gasto(g, otros), contains('Describa'));

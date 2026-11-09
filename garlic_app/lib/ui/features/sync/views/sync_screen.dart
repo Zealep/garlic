@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -7,11 +6,11 @@ import '../../../../data/repositories/catalogos_repository.dart';
 import '../../../../data/repositories/config_repository.dart';
 import '../../../../data/repositories/sync_repository.dart';
 import '../../../../domain/models/sync.dart';
-import '../../../../routing/rutas.dart';
 import '../../../../utils/formato.dart';
 import '../../../core/theme/colores.dart';
 import '../../../core/theme/tema.dart';
 import '../../../core/widgets/componentes.dart';
+import '../../../core/widgets/menu_cuenta.dart';
 
 /// Centro de sincronización: cola pendiente, errores del servidor y ajustes del dispositivo.
 class SyncScreen extends StatelessWidget {
@@ -99,7 +98,7 @@ class SyncScreen extends StatelessWidget {
                         icono: PhosphorIconsRegular.buildings,
                       ),
                       DatoFila(
-                        etiqueta: 'Evaluador',
+                        etiqueta: 'Usuario',
                         valor: config?.evaluadorNombre ?? '—',
                         icono: PhosphorIconsRegular.userCircle,
                       ),
@@ -137,9 +136,9 @@ class SyncScreen extends StatelessWidget {
                           const SizedBox(width: GEspacio.m),
                           Expanded(
                             child: OutlinedButton.icon(
-                              onPressed: () => context.go(Rutas.setup),
-                              icon: const Icon(PhosphorIconsBold.gear),
-                              label: const Text('Reconfigurar'),
+                              onPressed: () => MenuCuenta.confirmarCierre(context),
+                              icon: const Icon(PhosphorIconsBold.signOut),
+                              label: const Text('Cerrar sesión'),
                             ),
                           ),
                         ],

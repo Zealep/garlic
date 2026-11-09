@@ -12,6 +12,7 @@ class CatalogoItem {
     this.diametroMinMm,
     this.diametroMaxMm,
     this.esExcluyente = false,
+    this.pideCantidades = false,
     this.evaluarEnCampo = false,
     this.nombreCientifico,
     this.pesoReferencialKg,
@@ -28,6 +29,7 @@ class CatalogoItem {
     diametroMinMm: (json['diametroMinMm'] as num?)?.toDouble(),
     diametroMaxMm: (json['diametroMaxMm'] as num?)?.toDouble(),
     esExcluyente: json['esExcluyente'] as bool? ?? false,
+    pideCantidades: json['pideCantidades'] as bool? ?? false,
     evaluarEnCampo: json['evaluarEnCampo'] as bool? ?? false,
     nombreCientifico: json['nombreCientifico'] as String?,
     pesoReferencialKg: (json['pesoReferencialKg'] as num?)?.toDouble(),
@@ -43,6 +45,9 @@ class CatalogoItem {
   final double? diametroMinMm;
   final double? diametroMaxMm;
   final bool esExcluyente;
+
+  /// Tipo de daño que pide frutos total y con problema (% de daño), p. ej. parálisis.
+  final bool pideCantidades;
   final bool evaluarEnCampo;
   final String? nombreCientifico;
 
@@ -64,6 +69,7 @@ class CatalogoItem {
     'diametroMinMm': diametroMinMm,
     'diametroMaxMm': diametroMaxMm,
     'esExcluyente': esExcluyente,
+    'pideCantidades': pideCantidades,
     'evaluarEnCampo': evaluarEnCampo,
     'nombreCientifico': nombreCientifico,
     'pesoReferencialKg': pesoReferencialKg,

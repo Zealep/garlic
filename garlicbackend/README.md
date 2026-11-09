@@ -40,6 +40,12 @@ Cada feature contiene su entity, request/response (records), mapper, repository,
 - **Una sola empresa**: el sistema es de la agroexportadora del cliente (`garlic.instalacion.empresa-ruc`).
   `TenantInterceptor` fija esa empresa en cada request y toda consulta filtra por `TenantProvider` (la columna
   `empresa_id` se conserva). Solo sin RUC configurado (tests de integración) se toma del header `X-Empresa-Id`.
+- **Acceso** (`acceso` + `shared/seguridad`): login con DNI + contraseña (`POST /api/v1/auth/login`), access token JWT
+  HS256 de 8 h (`garlic.acceso.jwt-secret`) y refresh token rotativo de 30 días (`/auth/refresh`, solo su hash en
+  `sesion_usuario`). Todo `/api/**` exige el token; solo el administrador (`rol = ADMIN`) gestiona `/api/v1/usuarios`.
+  `created_by`/`updated_by` = usuario del token. El primer administrador lo prepara `InicializadorAcceso`
+  (`garlic.acceso.admin-dni` / `admin-clave-inicial`). En dev: DNI `40000001`, clave temporal `garlic2026`.
+  En los ITs cada request lleva un usuario de prueba (ver `AbstractIntegrationTest`); `AccesoIT` prueba el login real.
 - **Referencias entre módulos**: se validan con `referenciaActiva(id)` del servicio dueño
   (422 si no existe en la empresa o está inactiva). No se accede al repositorio de otro módulo.
 - **Errores**: 400 validación · 404 no existe · 409 duplicado/estado · 422 regla de negocio o referencia inválida.
@@ -53,7 +59,7 @@ Cada feature contiene su entity, request/response (records), mapper, repository,
   para S3 basta otra implementación. Los archivos se borran solo si la transacción confirma.
 - **Compra**: cargas, gastos y pagos se guardan con `PUT /lotes/{loteId}/{recurso}/{id}` (upsert idempotente con el
   UUID del cliente: 201 crea, 200 actualiza). Las fórmulas están en `CalculoCompra` y en `docs/modelo-datos/02-compra-lote.md`.
-- **Esquema**: solo por migraciones Flyway nuevas (`V6__...`); Hibernate valida (`ddl-auto=validate`).
+- **Esquema**: solo por migraciones Flyway nuevas (`V9__...`); Hibernate valida (`ddl-auto=validate`).
 
 ### Agregar un catálogo nuevo
 1. Migración con la tabla (estructura común: `empresa_id, cultivo_id, codigo, nombre, orden, activo` + auditoría).

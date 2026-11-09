@@ -8,6 +8,7 @@ import '../../../../../domain/models/foto.dart';
 import '../../../../../domain/models/sync.dart';
 import '../../../../core/theme/colores.dart';
 import '../../../../core/theme/tema.dart';
+import '../../../../core/widgets/componentes.dart';
 import '../../../../core/widgets/galeria_fotos.dart';
 import '../../view_models/compra_view_model.dart';
 
@@ -18,9 +19,7 @@ Future<void> abrirFormularioCompra(BuildContext context, Widget formulario) => s
   useSafeArea: true,
   showDragHandle: true,
   constraints: const BoxConstraints(maxWidth: 640),
-  builder:
-      (context) =>
-          Padding(padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom), child: formulario),
+  builder: (context) => Padding(padding: EdgeInsets.only(bottom: margenInferiorHoja(context)), child: formulario),
 );
 
 /// Estructura común: título, campos, error, fotos y botones Guardar / Eliminar.

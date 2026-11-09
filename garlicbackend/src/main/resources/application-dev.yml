@@ -10,6 +10,11 @@ logging:
     org.hibernate.SQL: DEBUG
 
 garlic:
+  acceso:
+    jwt-secret: dev-solo-local-no-usar-en-produccion-0123456789
+    # usuario demo del seed (Evaluador Demo): entra con DNI 40000001 y esta clave (se pide cambiarla)
+    admin-dni: "40000001"
+    admin-clave-inicial: garlic2026
   instalacion:
     # empresa demo del seed (db/seed/R__seed_demo.sql)
     empresa-ruc: "00000000000"

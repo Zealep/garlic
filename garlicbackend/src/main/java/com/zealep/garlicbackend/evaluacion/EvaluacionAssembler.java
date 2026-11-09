@@ -27,9 +27,7 @@ public class EvaluacionAssembler {
     public EvaluacionResponse toResponse(EvaluacionLote ev, Resueltos cat) {
         List<Muestra> muestras = ev.getMuestras();
         List<EvaluacionResponse.Muestra> muestrasRes = muestras.stream()
-                .map(m -> new EvaluacionResponse.Muestra(m.getId(), m.getNumero(), m.getObservacion(),
-                        valores(m.getCalidad(), PorcentajeCalidad::claseCalidadId, PorcentajeCalidad::porcentaje, cat.clasesCalidad()),
-                        valores(m.getCalibres(), PorcentajeCalibre::calibreId, PorcentajeCalibre::porcentaje, cat.calibres())))
+                .map(m -> toMuestra(m, cat))
                 .toList();
 
         EvaluacionResponse.Promedios promedios = new EvaluacionResponse.Promedios(
@@ -51,20 +49,31 @@ public class EvaluacionAssembler {
                 ev.getFechaResultado(),
                 muestrasRes,
                 promedios,
-                ordenados(ev.getHumedad(), HumedadObservada::tipoHumedadId, cat.tiposHumedad()).stream()
+                ev.getCreatedAt(),
+                ev.getUpdatedAt());
+    }
+
+    private static EvaluacionResponse.Muestra toMuestra(Muestra m, Resueltos cat) {
+        return new EvaluacionResponse.Muestra(m.getId(), m.getNumero(), m.getObservacion(),
+                valores(m.getCalidad(), PorcentajeCalidad::claseCalidadId, PorcentajeCalidad::porcentaje, cat.clasesCalidad()),
+                valores(m.getCalibres(), PorcentajeCalibre::calibreId, PorcentajeCalibre::porcentaje, cat.calibres()),
+                ordenados(m.getHumedad(), HumedadObservada::tipoHumedadId, cat.tiposHumedad()).stream()
                         .map(h -> {
                             CatalogoCultivoEntity c = cat.tiposHumedad().get(h.tipoHumedadId());
-                            return new EvaluacionResponse.Humedad(h.tipoHumedadId(), codigo(c), nombre(c), h.nivel());
+                            return new EvaluacionResponse.Humedad(h.tipoHumedadId(), codigo(c), nombre(c), h.presente());
                         }).toList(),
-                items(ev.getEmpastes(), cat.tiposEmpaste()),
-                items(ev.getDanos(), cat.tiposDano()),
-                ordenados(ev.getSanidad(), SanidadObservada::enfermedadId, cat.enfermedades()).stream()
+                items(m.getEmpastes(), cat.tiposEmpaste()),
+                ordenados(m.getDanos(), DanoObservado::tipoDanoId, cat.tiposDano()).stream()
+                        .map(d -> {
+                            CatalogoCultivoEntity c = cat.tiposDano().get(d.tipoDanoId());
+                            return new EvaluacionResponse.Dano(d.tipoDanoId(), codigo(c), nombre(c),
+                                    d.frutosTotal(), d.frutosAfectados(), d.porcentaje());
+                        }).toList(),
+                ordenados(m.getSanidad(), SanidadObservada::enfermedadId, cat.enfermedades()).stream()
                         .map(s -> {
                             CatalogoCultivoEntity c = cat.enfermedades().get(s.enfermedadId());
                             return new EvaluacionResponse.Sanidad(s.enfermedadId(), codigo(c), nombre(c), s.presente(), s.porcentaje());
-                        }).toList(),
-                ev.getCreatedAt(),
-                ev.getUpdatedAt());
+                        }).toList());
     }
 
     public EvaluacionResumen toResumen(EvaluacionLote ev) {

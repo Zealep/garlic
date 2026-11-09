@@ -6,7 +6,6 @@ import com.zealep.garlicbackend.catalogo.enfermedad.EnfermedadResponse;
 import com.zealep.garlicbackend.catalogo.tipodano.TipoDanoResponse;
 import com.zealep.garlicbackend.catalogo.tipoempaste.TipoEmpasteResponse;
 import com.zealep.garlicbackend.catalogo.tipohumedad.TipoHumedadResponse;
-import com.zealep.garlicbackend.evaluacion.NivelHumedad;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +20,6 @@ public record FormularioEvaluacion(
         List<ClaseCalidadResponse> clasesCalidad,
         List<CalibreResponse> calibres,
         List<TipoHumedadResponse> tiposHumedad,
-        List<NivelHumedad> nivelesHumedad,
         List<TipoEmpasteResponse> tiposEmpaste,
         List<TipoDanoResponse> tiposDano,
         List<EnfermedadResponse> enfermedades) {

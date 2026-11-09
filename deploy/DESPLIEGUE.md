@@ -1,10 +1,14 @@
-# Despliegue del servidor de pruebas (instalación dedicada al cliente)
+# Despliegue (instalación dedicada a Agroexportadora Guadalupe)
 
-Objetivo: que el cliente valide el MVP desde su celular y su laptop en un entorno controlado,
-con HTTPS y acceso restringido. El sistema es **solo para su empresa**.
+Sirve para los dos servidores:
+- **Pruebas** (actual): `147.182.182.133.sslip.io`, con datos de prueba.
+- **Producción** (droplet nuevo, aún por comprar): `compras.agroguadalupe.com` (o el subdominio que elijan),
+  base limpia. Ver **[Producción Guadalupe](#producción-guadalupe-droplet-nuevo)** al final.
+
+Cada persona entra con **su DNI y su contraseña** (login propio de la app). El sistema es **solo para su empresa**.
 
 ```
-Internet ──HTTPS──► Caddy (certificado automático + usuario/clave)
+Internet ──HTTPS──► Caddy (certificado automático)
                      ├── /            app web (PWA, se instala en el celular)
                      └── /api, /instalacion ──► backend Spring Boot (perfil prod) ──► PostgreSQL
 ```
@@ -18,7 +22,7 @@ Todo corre con Docker Compose en un solo servidor. La base de datos no se expone
 | Región | **NYC1/NYC3** o **SFO3** (las más cercanas a Perú entre las de DO) |
 | Sistema | **Ubuntu 24.04 LTS** |
 | Extras | **Backups semanales del droplet** (+20 %, ~US$2.4/mes) |
-| Dominio | Para empezar **no hace falta** (se usa `IP.sslip.io`); luego un dominio propio (~US$10/año) |
+| Dominio | Pruebas: `IP.sslip.io`. Producción: **subdominio de agroguadalupe.com** (registro DNS tipo A) |
 
 Por qué un droplet: es simple, barato, con precio fijo y suficiente para 1 empresa con pocos usuarios.
 El mismo `docker-compose.yml` sirve luego en cualquier otro proveedor (Hetzner, AWS Lightsail, etc.).
@@ -61,18 +65,17 @@ cp .env.example .env
 
 ## 4. Configurar `.env`
 ```bash
-# clave de la base
-openssl rand -base64 24
-# hash de la clave de acceso que le darás al cliente
-docker run --rm caddy:2-alpine caddy hash-password --plaintext 'LaClaveQueLeDas'
+openssl rand -base64 24     # DB_PASSWORD
+openssl rand -base64 48     # JWT_SECRET
 nano .env
 ```
-- `DOMINIO`: la IP con guiones + `.sslip.io` (ej. `164-90-12-34.sslip.io`) o tu dominio
-  (antes crea un registro **A** del dominio a la IP).
-- `EMPRESA_RUC` / `EMPRESA_RAZON_SOCIAL`: la empresa de tu amigo (el sistema trabaja solo con ella).
-- `ADMIN_NOMBRE` / `ADMIN_EMAIL`: primer usuario (sale como evaluador en la app).
-- `DB_PASSWORD`: la clave generada.
-- `ACCESO_USUARIO` / `ACCESO_HASH`: usuario y hash de la clave de acceso. **En el `.env` cada `$` del hash va doble (`$$`).**
+- `DOMINIO`: el subdominio (antes crea el registro **A** hacia la IP del droplet) o, para pruebas,
+  la IP + `.sslip.io` (ej. `164-90-12-34.sslip.io`).
+- `EMPRESA_RUC` / `EMPRESA_RAZON_SOCIAL`: Agroexportadora Guadalupe (el sistema trabaja solo con ella).
+- `ADMIN_NOMBRE` / `ADMIN_DNI` / `ADMIN_CLAVE_INICIAL`: el **administrador**. Entra con su DNI y esa clave
+  temporal; en el primer ingreso la app le pide crear su propia contraseña. `ADMIN_EMAIL` es opcional.
+- `JWT_SECRET`: firma de las sesiones (si se cambia, todos vuelven a iniciar sesión).
+- `DB_PASSWORD`: la clave de la base.
 
 ## 5. Levantar
 ```bash
@@ -82,7 +85,8 @@ docker compose up -d --build        # la primera vez tarda unos minutos (compila
 docker compose logs -f backend      # esperar "Started GarlicbackendApplication"
 ```
 Al arrancar, Flyway crea las tablas, la empresa, sus catálogos base (variedades, calidades, calibres,
-empaques, gastos, condiciones de pago…) y el primer usuario. **No carga datos demo.**
+empaques, gastos, condiciones de pago…) y el administrador; el backend le asigna la clave temporal
+(`ADMIN_CLAVE_INICIAL`, solo si aún no tiene una). **No carga datos demo.**
 
 ## 6. Publicar la app web (desde tu PC con Windows)
 En la raíz del repo:
@@ -95,9 +99,11 @@ Compila la app (`flutter build web --release --no-web-resources-cdn`) y la copia
 Repite este paso cada vez que cambie la app.
 
 ## 7. Probar
-1. Abre `https://164-90-12-34.sslip.io` → pide usuario y clave (los de `ACCESO_*`).
-2. La configuración inicial es automática: detecta el servidor y la empresa; solo eliges el evaluador.
-3. Verifica: `https://.../actuator/health` responde `{"status":"UP"}`.
+1. Abre `https://DOMINIO` → **Iniciar sesión** con `ADMIN_DNI` y `ADMIN_CLAVE_INICIAL`.
+2. La app pide crear la contraseña personal del administrador.
+3. Menú de cuenta (avatar) → **Usuarios** → **Nuevo usuario** para cada evaluador (nombres, DNI y una
+   contraseña temporal que la app sugiere). Entrégale su DNI y la temporal: al entrar la cambia.
+4. Verifica: `https://.../actuator/health` responde `{"status":"UP"}`.
 
 ## 8. Instalar en el celular (fase de pruebas: PWA, sin tienda)
 - **Android (Chrome)**: abrir la URL → iniciar sesión → menú ⋮ → **Instalar aplicación** /
@@ -111,7 +117,7 @@ Repite este paso cada vez que cambie la app.
 Más adelante (cuando se valide): **APK de Android** con
 `flutter build apk --release --dart-define=API_URL=https://su-dominio`, que se instala directo
 (compartiendo el archivo) o por **Google Play – prueba interna** (cuenta de desarrollador US$25 pago único).
-Antes de la APK conviene tener **login propio (JWT)**, que reemplaza el usuario/clave compartido.
+El login ya existe; antes de la APK falta su `applicationId` y la firma de release.
 
 ## 9. Actualizar a una versión nueva
 ```bash
@@ -138,14 +144,42 @@ Además de los backups del droplet, descarga de vez en cuando `/opt/garlic/backu
 | Ver estado | `docker compose ps` |
 | Logs | `docker compose logs -f backend` / `caddy` |
 | Reiniciar | `docker compose restart backend` |
-| Cambiar la clave de acceso | nuevo hash en `.env` → `docker compose up -d caddy` |
+| Olvido de contraseña | el administrador asigna una temporal desde **Usuarios** |
+| Administrador sin acceso | `docker compose exec db psql -U garlic -c "UPDATE usuario SET clave_hash = NULL WHERE dni = 'DNI'"` y reiniciar el backend (vuelve a tomar `ADMIN_CLAVE_INICIAL`) |
 | Empezar de cero (borra TODO) | `docker compose down -v` |
 
 Monitoreo gratuito: [UptimeRobot](https://uptimerobot.com) apuntando a `https://DOMINIO/actuator/health`.
 
-## Seguridad en esta fase (importante)
-- Acceso por **usuario y clave compartidos** (Caddy) + **HTTPS**. Suficiente para una prueba controlada;
-  **no** distingue personas: todos los cambios figuran sin autor.
+## Seguridad
+- **Login por persona** (DNI + contraseña, guardada como hash BCrypt) + **HTTPS**. Cada registro guarda quién
+  lo creó/modificó (`created_by` / `updated_by`).
+- Sesión: token de acceso de 8 h + sesión de **30 días** que se renueva con el uso (el evaluador trabaja sin
+  señal en campo). Cerrar sesión, cambiar la contraseña, restablecerla o desactivar al usuario la invalidan.
+- 5 intentos fallidos seguidos bloquean ese DNI 15 minutos.
+- Sin roles de negocio todavía: todos pueden registrar todo; solo el **administrador** gestiona usuarios.
 - El sistema es de **una sola empresa** (`EMPRESA_RUC`): el servidor la fija en cada consulta; la app no la envía.
 - Swagger/OpenAPI está desactivado en producción. Postgres no tiene puertos públicos.
-- Pendiente antes de uso real: **login con usuarios (JWT)** y roles.
+
+## Producción Guadalupe (droplet nuevo)
+Base **limpia**: solo la empresa, sus catálogos base, la campaña y el administrador (sin lotes ni compras de prueba).
+1. **Droplet**: como en los pasos 0–2, nombre `guadalupe-produccion`. Para el uso real conviene **4 GB RAM / 2 vCPU**
+   con backups activados.
+2. **DNS**: quien administra el dominio `agroguadalupe.com` crea un registro **A**
+   `compras` → IP del droplet nuevo (TTL 300). Comprobar con `nslookup compras.agroguadalupe.com`
+   antes de levantar (Caddy necesita que el dominio ya apunte para emitir el certificado).
+3. Pasos 3–6 con el `.env` de producción. Ya está preparado en la PC de desarrollo como `deploy/.env.produccion`
+   (no se sube al repo): RUC 20614219824, AGROEXPORTADORA GUADALUPE S.A.C., administrador Cristian Flores
+   (DNI 72790829) con su clave temporal, y `JWT_SECRET`/`DB_PASSWORD` **nuevos** generados al azar.
+   Copiarlo al droplet: `scp deploy/.env.produccion root@IP_NUEVA:/opt/garlic/deploy/.env`
+   y revisar `DOMINIO` si eligen otro subdominio.
+4. Publicar la app con `publicar-web.ps1 -Servidor root@IP_NUEVA`.
+5. Primer ingreso del administrador, alta de evaluadores (paso 7) y configurar respaldos (paso 10).
+6. En los celulares: instalar la PWA desde el dominio nuevo (la de pruebas queda aparte, con sus datos).
+
+## Servidor de pruebas: pasar al login
+El servidor actual conserva sus datos. Al actualizarlo (paso 9):
+1. En `.env`: quitar `ACCESO_USUARIO`/`ACCESO_HASH` y agregar `ADMIN_DNI`, `ADMIN_CLAVE_INICIAL` y `JWT_SECRET`.
+2. El administrador ya existía sin DNI: asignárselo una vez
+   `docker compose exec db psql -U garlic -c "UPDATE usuario SET dni = 'DNI' WHERE rol = 'ADMIN' AND dni IS NULL"`
+   (antes de `docker compose up -d --build backend`, o reiniciar el backend después).
+3. `docker compose up -d --build` (recrea Caddy sin usuario/clave compartidos) y publicar la app.

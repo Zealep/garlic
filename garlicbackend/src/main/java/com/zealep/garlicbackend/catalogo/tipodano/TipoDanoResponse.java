@@ -12,6 +12,7 @@ public record TipoDanoResponse(
         Short orden,
         boolean activo,
         Boolean esExcluyente,
+        Boolean pideCantidades,
         Instant createdAt,
         Instant updatedAt) implements CatalogoResponse {
 }

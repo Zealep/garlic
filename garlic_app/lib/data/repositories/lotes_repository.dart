@@ -90,7 +90,7 @@ class LotesRepository {
     final campania = _catalogos.buscar(_catalogos.campanias, n.campaniaId);
     final variedad = _catalogos.buscar(_catalogos.variedades, n.variedadId);
     final tipoCompra = _catalogos.buscar(_catalogos.tiposCompra, n.tipoCompraId);
-    final localidad = _catalogos.buscar(_catalogos.localidades, n.localidadId);
+    final localidad = n.localidadId == null ? null : _catalogos.buscar(_catalogos.localidades, n.localidadId!);
     final agricultor = _catalogos.agricultores.where((a) => a.id == n.agricultorId).firstOrNull;
     final proveedor = _catalogos.proveedores.where((a) => a.id == n.proveedorId).firstOrNull;
     final req = n.toRequestJson();
@@ -118,7 +118,7 @@ class LotesRepository {
                 'tipoDocumento': 'DNI',
                 'numeroDocumento': n.titular!.numeroDocumento,
               },
-      'localidad': {'id': n.localidadId, 'codigo': null, 'nombre': localidad?.nombre},
+      'localidad': n.localidadId == null ? null : {'id': n.localidadId, 'codigo': null, 'nombre': localidad?.nombre},
       'tipoCompra': {'id': n.tipoCompraId, 'codigo': tipoCompra?.codigo, 'nombre': tipoCompra?.nombre},
       'createdAt': DateTime.now().toIso8601String(),
     };

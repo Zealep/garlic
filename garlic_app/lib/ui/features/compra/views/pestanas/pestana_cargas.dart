@@ -7,7 +7,6 @@ import '../../../../../utils/formato.dart';
 import '../../../../core/theme/colores.dart';
 import '../../../../core/theme/tema.dart';
 import '../../../../core/widgets/campo_numero.dart';
-import '../../../../core/widgets/campo_porcentaje.dart';
 import '../../../../core/widgets/campos.dart';
 import '../../../../core/widgets/componentes.dart';
 import '../../view_models/compra_view_model.dart';
@@ -153,10 +152,7 @@ class _TarjetaCarga extends StatelessWidget {
                     color: GColores.tinta,
                     fondo: GColores.superficieAlt,
                   ),
-                  Pastilla(
-                    texto: 'Destare ${Formato.porcentaje(carga.destarePct)} (${Formato.kg(l.destareKg)})',
-                    color: GColores.advertencia,
-                  ),
+                  Pastilla(texto: 'Destare ${Formato.kg(l.destareKg)}', color: GColores.advertencia),
                   if (fotos > 0)
                     Pastilla(texto: '$fotos foto${fotos == 1 ? '' : 's'}', icono: PhosphorIconsBold.camera),
                 ],
@@ -311,11 +307,12 @@ class _FormularioCargaState extends State<FormularioCarga> {
             ),
             const SizedBox(width: GEspacio.m),
             Expanded(
-              child: CampoPorcentaje(
+              child: CampoNumero(
                 etiqueta: 'Destare',
-                valor: c.destarePct,
+                valor: c.destareKg,
+                sufijo: ' kg',
                 habilitado: editable,
-                onChanged: (v) => setState(() => c.destarePct = v ?? 0),
+                onChanged: (v) => setState(() => c.destareKg = v ?? 0),
               ),
             ),
           ],

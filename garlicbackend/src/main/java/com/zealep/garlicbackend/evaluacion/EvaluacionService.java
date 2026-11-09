@@ -16,6 +16,8 @@ import com.zealep.garlicbackend.shared.exception.NotFoundException;
 import com.zealep.garlicbackend.shared.tenant.TenantProvider;
 import com.zealep.garlicbackend.shared.web.Creacion;
 import com.zealep.garlicbackend.shared.web.PageResponse;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import org.springframework.data.domain.PageRequest;
@@ -26,10 +28,11 @@ import com.zealep.garlicbackend.usuario.UsuarioService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -54,6 +57,9 @@ public class EvaluacionService {
     private final UsuarioService usuarioService;
     private final EvidenciaService evidenciaService;
     private final TenantProvider tenantProvider;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public EvaluacionService(EvaluacionLoteRepository repository, EvaluacionAssembler assembler,
             CatalogosEvaluacion catalogos, LoteService loteService, UsuarioService usuarioService,
@@ -159,7 +165,8 @@ public class EvaluacionService {
             return assembler.toResponse(actual, catalogos.deEvaluacion(actual));
         }
         EvaluacionLote ev = buscarEditable(id);
-        ReglasEvaluacion.validarCierre(ev, catalogos.enfermedadesObligatorias(ev.getLote().getCultivoId()));
+        ReglasEvaluacion.validarCierre(ev, catalogos.enfermedadesObligatorias(ev.getLote().getCultivoId()),
+                catalogos.deEvaluacion(ev).tiposDano());
         ev.cerrar();
         logger.info("Evaluacion {} cerrada", id);
         return assembler.toResponse(repository.saveAndFlush(ev), catalogos.deEvaluacion(ev));
@@ -198,14 +205,26 @@ public class EvaluacionService {
         ev.setFechaEvaluacion(request.fechaEvaluacion());
         ev.setObservacion(request.observacion());
 
-        // Muestras: se actualizan en sitio por numero para conservar sus evidencias.
-        Set<Short> numeros = request.muestrasOVacio().stream().map(EvaluacionRequest.Muestra::numero).collect(Collectors.toSet());
-        List<Muestra> quitadas = ev.getMuestras().stream().filter(m -> !numeros.contains(m.getNumero())).toList();
+        // Muestras: se identifican por id (asignado por la app) o, si no viene, por numero, y se actualizan en sitio
+        // para conservar sus evidencias aunque se renumeren (la unicidad del numero se valida al confirmar).
+        Map<EvaluacionRequest.Muestra, Muestra> existentes = new HashMap<>();
+        for (EvaluacionRequest.Muestra m : request.muestrasOVacio()) {
+            (m.id() != null ? ev.muestra(m.id()) : ev.muestra(m.numero())).ifPresent(e -> existentes.put(m, e));
+        }
+        List<Muestra> quitadas = ev.getMuestras().stream().filter(m -> !existentes.containsValue(m)).toList();
         evidenciaService.eliminarDeMuestras(quitadas.stream().map(Muestra::getId).filter(Objects::nonNull).toList());
         quitadas.forEach(ev::quitarMuestra);
 
         for (EvaluacionRequest.Muestra m : request.muestrasOVacio()) {
-            Muestra muestra = ev.muestraONueva(m.numero());
+            Muestra muestra = existentes.get(m);
+            if (muestra == null) {
+                muestra = ev.agregarMuestra(m.id(), m.numero());
+                if (!ev.isNew()) {
+                    entityManager.persist(muestra);
+                }
+            } else {
+                muestra.setNumero(m.numero());
+            }
             muestra.setObservacion(m.observacion());
             muestra.reemplazarCalidad(m.calidadOVacio().stream()
                     .map(c -> new PorcentajeCalidad(c.claseCalidadId(), escala(c.porcentaje())))
@@ -213,16 +232,19 @@ public class EvaluacionService {
             muestra.reemplazarCalibres(m.calibresOVacio().stream()
                     .map(c -> new PorcentajeCalibre(c.calibreId(), escala(c.porcentaje())))
                     .toList());
+            muestra.reemplazarHumedad(m.humedadOVacio().stream()
+                    .map(h -> new HumedadObservada(h.tipoHumedadId(), h.presente()))
+                    .toList());
+            muestra.reemplazarEmpastes(new LinkedHashSet<>(m.empastesOVacio()));
+            muestra.reemplazarDanos(m.danosOVacio().stream()
+                    .map(d -> cat.tiposDano().get(d.tipoDanoId()).isPideCantidades()
+                            ? new DanoObservado(d.tipoDanoId(), d.frutosTotal(), d.frutosAfectados())
+                            : new DanoObservado(d.tipoDanoId(), null, null))
+                    .toList());
+            muestra.reemplazarSanidad(m.sanidadOVacio().stream()
+                    .map(x -> new SanidadObservada(x.enfermedadId(), x.presente(), x.porcentaje() == null ? null : escala(x.porcentaje())))
+                    .toList());
         }
-
-        ev.reemplazarHumedad(request.humedadOVacio().stream()
-                .map(h -> new HumedadObservada(h.tipoHumedadId(), h.nivel()))
-                .toList());
-        ev.reemplazarEmpastes(new LinkedHashSet<>(request.empastesOVacio()));
-        ev.reemplazarDanos(new LinkedHashSet<>(request.danosOVacio()));
-        ev.reemplazarSanidad(request.sanidadOVacio().stream()
-                .map(s -> new SanidadObservada(s.enfermedadId(), s.presente(), s.porcentaje() == null ? null : escala(s.porcentaje())))
-                .toList());
         return cat;
     }
 

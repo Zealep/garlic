@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../domain/models/lote.dart';
 import '../theme/colores.dart';
 import '../theme/tema.dart';
+import 'componentes.dart';
 
 /// Hoja para elegir el lote a evaluar.
 Future<Lote?> seleccionarLote(BuildContext context, List<Lote> lotes) => showModalBottomSheet<Lote>(
@@ -12,7 +13,9 @@ Future<Lote?> seleccionarLote(BuildContext context, List<Lote> lotes) => showMod
   showDragHandle: true,
   backgroundColor: GColores.fondo,
   constraints: const BoxConstraints(maxWidth: 640),
-  builder: (context) => _SelectorLote(lotes: lotes),
+  builder:
+      (context) =>
+          Padding(padding: EdgeInsets.only(bottom: margenInferiorHoja(context)), child: _SelectorLote(lotes: lotes)),
 );
 
 class _SelectorLote extends StatefulWidget {

@@ -10,12 +10,14 @@ import com.zealep.garlicbackend.compra.dto.GastoRequest;
 import com.zealep.garlicbackend.compra.dto.GastoResponse;
 import com.zealep.garlicbackend.compra.dto.PagoRequest;
 import com.zealep.garlicbackend.compra.dto.PagoResponse;
+import com.zealep.garlicbackend.compra.dto.PendientePago;
 import com.zealep.garlicbackend.shared.web.Creacion;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
@@ -54,6 +56,12 @@ public class CompraController {
     @Operation(summary = "Fijacion de precio, cargas, gastos, pagos, comprobantes y balance del lote")
     public CompraLoteResponse obtener(@PathVariable UUID loteId) {
         return service.obtener(loteId);
+    }
+
+    @GetMapping("/compras/pendientes")
+    @Operation(summary = "Lotes activos con saldo por pagar al agricultor (por pagar o parcial), del mayor saldo al menor")
+    public List<PendientePago> pendientesDePago() {
+        return service.pendientesDePago();
     }
 
     @PutMapping("/lotes/{loteId}/fijacion-precio")

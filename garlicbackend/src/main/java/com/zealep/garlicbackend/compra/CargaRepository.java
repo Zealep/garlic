@@ -10,4 +10,6 @@ public interface CargaRepository extends JpaRepository<Carga, UUID> {
     Optional<Carga> findByIdAndEmpresaId(UUID id, UUID empresaId);
 
     List<Carga> findByLoteIdAndEmpresaIdOrderByCreatedAt(UUID loteId, UUID empresaId);
+
+    List<Carga> findByEmpresaId(UUID empresaId);
 }

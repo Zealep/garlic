@@ -25,14 +25,14 @@ class GarlicApp extends StatefulWidget {
 }
 
 class _GarlicAppState extends State<GarlicApp> {
-  late final GoRouter _router = crearRouter(widget.dependencias.config);
+  late final GoRouter _router = crearRouter(widget.dependencias.config, widget.dependencias.sesion);
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: widget.dependencias.providers,
       child: MaterialApp.router(
-        title: 'Garlic',
+        title: 'Guadalupe · Compra de ajo',
         debugShowCheckedModeBanner: false,
         theme: TemaGarlic.claro(),
         routerConfig: _router,

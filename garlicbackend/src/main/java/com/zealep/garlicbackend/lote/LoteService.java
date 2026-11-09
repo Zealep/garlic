@@ -18,6 +18,7 @@ import com.zealep.garlicbackend.tercero.proveedor.ProveedorService;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -122,6 +123,11 @@ public class LoteService {
         return buscar(id);
     }
 
+    /** Para otros modulos: lotes de la empresa por id (activos o anulados). */
+    public List<Lote> referencias(Collection<UUID> ids) {
+        return ids.isEmpty() ? List.of() : repository.findByIdInAndEmpresaId(ids, tenantProvider.currentEmpresaId());
+    }
+
     /** Para otros modulos (ej. evaluacion): lote existente y activo de la empresa. */
     public Lote referenciaActiva(UUID id) {
         return repository.findByIdAndEmpresaId(id, tenantProvider.currentEmpresaId())
@@ -145,7 +151,11 @@ public class LoteService {
         lote.setProveedor(request.proveedorId() == null ? null : proveedorService.referenciaActiva(request.proveedorId()));
         lote.setTitularLiquidacion(request.titularLiquidacion() == null ? null
                 : personaService.obtenerOCrear(request.titularLiquidacion()));
-        lote.setLocalidad(localidadService.referenciaActiva(request.localidadId()));
+        if (request.localidadId() == null && (request.latitud() == null || request.longitud() == null)) {
+            throw new BusinessException("Indique la ciudad / CCPP o registre las coordenadas GPS del campo");
+        }
+        lote.setCuentaLiquidacion(StringUtils.hasText(request.cuentaLiquidacion()) ? request.cuentaLiquidacion().trim() : null);
+        lote.setLocalidad(request.localidadId() == null ? null : localidadService.referenciaActiva(request.localidadId()));
         lote.setZona(request.zona());
         lote.setLatitud(request.latitud());
         lote.setLongitud(request.longitud());

@@ -75,7 +75,7 @@ class Carga {
     required this.fecha,
     required this.kg,
     required this.precioKg,
-    this.destarePct = 1,
+    this.destareKg = 0,
     this.cantidadEmpaques = 0,
     this.tipoEmpaqueId,
     this.placa,
@@ -93,7 +93,7 @@ class Carga {
     fecha: Formato.parseFecha(json['fecha']) ?? DateTime.now(),
     kg: _num(json['kg']) ?? 0,
     precioKg: _num(json['precioKg']) ?? 0,
-    destarePct: _num(json['destarePct']) ?? 1,
+    destareKg: _destareKg(json),
     cantidadEmpaques: (json['cantidadEmpaques'] as num?)?.toInt() ?? 0,
     tipoEmpaqueId: json['tipoEmpaqueId'] as String?,
     placa: json['placa'] as String?,
@@ -106,7 +106,9 @@ class Carga {
   DateTime fecha;
   double kg;
   double precioKg;
-  double destarePct;
+
+  /// Kg descontados por pérdida del ajo en este camión.
+  double destareKg;
   int cantidadEmpaques;
   String? tipoEmpaqueId;
   String? placa;
@@ -114,7 +116,15 @@ class Carga {
   final SyncState syncState;
   final String? syncError;
 
-  LineaCarga get calculo => CalculoCompra.carga(kg, precioKg, destarePct);
+  LineaCarga get calculo => CalculoCompra.carga(kg, precioKg, destareKg);
+
+  /// Las cargas guardadas antes del cambio traen el destare en %: se convierte a kg.
+  static double _destareKg(Map<String, Object?> json) {
+    final kg = _num(json['destareKg']);
+    if (kg != null) return kg;
+    final pct = _num(json['destarePct']);
+    return pct == null ? 0 : CalculoCompra.redondear((_num(json['kg']) ?? 0) * pct / 100, 2);
+  }
 
   Map<String, Object?> toJson() => {'id': id, ...toRequestJson()};
 
@@ -125,7 +135,7 @@ class Carga {
     'cantidadEmpaques': cantidadEmpaques,
     'tipoEmpaqueId': tipoEmpaqueId,
     'precioKg': precioKg,
-    'destarePct': destarePct,
+    'destareKg': destareKg,
     'observacion': _texto(observacion),
   };
 }
@@ -277,4 +287,38 @@ class CompraLote {
 
   /// Número visible de la carga ("Carga 2"), según el orden por fecha.
   int numeroCarga(String cargaId) => cargas.indexWhere((c) => c.id == cargaId) + 1;
+}
+
+/// Lote con materia prima comprada y saldo por pagar al agricultor (sección "Pendientes de pago" de Inicio).
+class PendientePago {
+  const PendientePago({
+    required this.loteId,
+    required this.loteCodigo,
+    required this.agricultor,
+    required this.totalMp,
+    required this.totalPagado,
+    required this.saldo,
+    required this.estadoPago,
+    this.zona,
+  });
+
+  factory PendientePago.fromJson(Map<String, Object?> json) => PendientePago(
+    loteId: json['loteId']! as String,
+    loteCodigo: (json['loteCodigo'] ?? '') as String,
+    zona: json['zona'] as String?,
+    agricultor: (json['agricultor'] ?? '') as String,
+    totalMp: _num(json['totalMp']) ?? 0,
+    totalPagado: _num(json['totalPagado']) ?? 0,
+    saldo: _num(json['saldo']) ?? 0,
+    estadoPago: json['estadoPago'] == 'PARCIAL' ? EstadoPago.parcial : EstadoPago.porPagar,
+  );
+
+  final String loteId;
+  final String loteCodigo;
+  final String? zona;
+  final String agricultor;
+  final double totalMp;
+  final double totalPagado;
+  final double saldo;
+  final EstadoPago estadoPago;
 }

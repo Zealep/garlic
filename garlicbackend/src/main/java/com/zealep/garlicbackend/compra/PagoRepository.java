@@ -10,4 +10,6 @@ public interface PagoRepository extends JpaRepository<Pago, UUID> {
     Optional<Pago> findByIdAndEmpresaId(UUID id, UUID empresaId);
 
     List<Pago> findByLoteIdAndEmpresaIdOrderByCreatedAt(UUID loteId, UUID empresaId);
+
+    List<Pago> findByEmpresaId(UUID empresaId);
 }

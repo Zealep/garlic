@@ -24,6 +24,7 @@ class CompraRepository {
 
   static const _uuid = Uuid();
   static const _clavePrecios = 'compra.ultimosPreciosBase';
+  static const _clavePendientes = 'compra.pendientesDePago';
 
   final AppDatabase _db;
   final ApiClient _api;
@@ -61,6 +62,13 @@ class CompraRepository {
         pagos.sort((a, b) => a.fecha.compareTo(b.fecha));
         return CompraLote(loteId: loteId, fijacion: fijacion, cargas: cargas, gastos: gastos, pagos: pagos);
       });
+
+  /// Lotes con saldo por pagar (del servidor). Sin conexión devuelve la última lista descargada.
+  Future<List<PendientePago>> pendientesDePago() async {
+    final r = await _api.get('/api/v1/compras/pendientes');
+    if (r case Ok(:final value)) await _kv.escribir(_clavePendientes, value);
+    return [for (final p in KvStore.lista(await _kv.leer(_clavePendientes))) PendientePago.fromJson(p)];
+  }
 
   /// Trae la compra del servidor sin pisar los registros con cambios locales por enviar.
   Future<Result<void>> refrescar(String loteId) async {

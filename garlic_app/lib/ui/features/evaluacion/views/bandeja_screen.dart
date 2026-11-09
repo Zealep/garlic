@@ -117,13 +117,9 @@ class BandejaScreen extends StatelessWidget {
                   )
                 else
                   SliverAnchoMaximo(
-                    sliver: SliverGrid.builder(
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 560,
-                        mainAxisExtent: 112,
-                        mainAxisSpacing: GEspacio.s,
-                        crossAxisSpacing: GEspacio.m,
-                      ),
+                    sliver: SliverGrillaTarjetas(
+                      maxAnchoTarjeta: 560,
+                      espacioVertical: GEspacio.s,
                       itemCount: lista.length,
                       itemBuilder: (context, i) {
                         final e = lista[i];

@@ -58,8 +58,8 @@ public class Lote extends TenantEntity {
     @JoinColumn(name = "titular_liquidacion_id")
     private Persona titularLiquidacion;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "localidad_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "localidad_id")
     private Localidad localidad;
 
     @Column(name = "zona", nullable = false, length = 50)
@@ -78,6 +78,10 @@ public class Lote extends TenantEntity {
 
     @Column(name = "maps_url")
     private String mapsUrl;
+
+    /** Numero de cuenta o CCI de quien cobra la liquidacion. */
+    @Column(name = "cuenta_liquidacion", length = 30)
+    private String cuentaLiquidacion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tipo_compra_id", nullable = false)
@@ -196,6 +200,14 @@ public class Lote extends TenantEntity {
 
     public void setLongitud(BigDecimal longitud) {
         this.longitud = longitud;
+    }
+
+    public String getCuentaLiquidacion() {
+        return cuentaLiquidacion;
+    }
+
+    public void setCuentaLiquidacion(String cuentaLiquidacion) {
+        this.cuentaLiquidacion = cuentaLiquidacion;
     }
 
     public String getMapsUrl() {

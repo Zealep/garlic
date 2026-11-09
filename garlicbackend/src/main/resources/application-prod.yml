@@ -8,7 +8,8 @@ spring:
       empresa_razon_social: ${GARLIC_EMPRESA_RAZON_SOCIAL}
       campania: ${GARLIC_CAMPANIA:2026}
       admin_nombre: ${GARLIC_ADMIN_NOMBRE}
-      admin_email: ${GARLIC_ADMIN_EMAIL}
+      admin_dni: ${GARLIC_ADMIN_DNI}
+      admin_email: ${GARLIC_ADMIN_EMAIL:}
 
 springdoc:
   api-docs:
@@ -17,6 +18,12 @@ springdoc:
     enabled: false
 
 garlic:
+  acceso:
+    # obligatoria: sin ella el backend no arranca (openssl rand -base64 48)
+    jwt-secret: ${GARLIC_JWT_SECRET}
+    admin-dni: ${GARLIC_ADMIN_DNI}
+    # clave temporal del primer ingreso del administrador (solo se usa si aun no tiene clave)
+    admin-clave-inicial: ${GARLIC_ADMIN_CLAVE_INICIAL:}
   instalacion:
     # La empresa que usa el sistema
     empresa-ruc: ${GARLIC_EMPRESA_RUC}

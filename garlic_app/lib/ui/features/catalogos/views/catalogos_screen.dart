@@ -125,7 +125,7 @@ class _Detalle extends StatelessWidget {
     constraints: const BoxConstraints(maxWidth: 560),
     builder:
         (context) => Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+          padding: EdgeInsets.only(bottom: margenInferiorHoja(context)),
           child: _Formulario(vm: vm, item: item),
         ),
   );

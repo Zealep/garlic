@@ -8,6 +8,7 @@ import '../../../data/repositories/sync_repository.dart';
 import '../theme/colores.dart';
 import '../theme/tema.dart';
 import '../widgets/marca.dart';
+import '../widgets/menu_cuenta.dart';
 import '../widgets/sync_chip.dart';
 import 'breakpoints.dart';
 
@@ -43,17 +44,21 @@ class ShellAdaptativo extends StatelessWidget {
         if (ancho.esCompacto) {
           return Scaffold(
             body: navigationShell,
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: navigationShell.currentIndex,
-              onDestinationSelected: _ir,
-              destinations: [
-                for (final (i, d) in _destinos.indexed)
-                  NavigationDestination(
-                    icon: i == 3 ? _IconoSync(icono: d.icono) : Icon(d.icono),
-                    selectedIcon: Icon(d.iconoActivo, color: GColores.primario),
-                    label: d.etiqueta,
-                  ),
-              ],
+            // con letra grande del sistema las etiquetas se partían en dos líneas: se limita solo aquí
+            bottomNavigationBar: MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.0,
+              child: NavigationBar(
+                selectedIndex: navigationShell.currentIndex,
+                onDestinationSelected: _ir,
+                destinations: [
+                  for (final (i, d) in _destinos.indexed)
+                    NavigationDestination(
+                      icon: i == 3 ? _IconoSync(icono: d.icono) : Icon(d.icono),
+                      selectedIcon: Icon(d.iconoActivo, color: GColores.primario),
+                      label: d.etiqueta,
+                    ),
+                ],
+              ),
             ),
           );
         }
@@ -89,7 +94,7 @@ class _Lateral extends StatelessWidget {
       onDestinationSelected: onSelect,
       leading: Padding(
         padding: const EdgeInsets.fromLTRB(8, 20, 8, 28),
-        child: extendido ? const GarlicWordmark() : const GarlicMark(size: 36),
+        child: extendido ? const LogoMarca() : const EmblemaMarca(size: 36),
       ),
       trailing: Expanded(
         child: Align(
@@ -106,12 +111,38 @@ class _Lateral extends StatelessWidget {
                         children: [
                           const SyncChip(),
                           const SizedBox(height: GEspacio.m),
-                          Text(config.empresaNombre, style: Theme.of(context).textTheme.labelMedium, maxLines: 2),
-                          Text(config.evaluadorNombre, style: Theme.of(context).textTheme.bodySmall),
+                          Row(
+                            children: [
+                              const MenuCuenta(),
+                              const SizedBox(width: GEspacio.s),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      config.evaluadorNombre,
+                                      style: Theme.of(context).textTheme.labelMedium,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      config.empresaNombre,
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     )
-                    : const SyncChip(compacto: true),
+                    : const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [SyncChip(compacto: true), SizedBox(height: GEspacio.m), MenuCuenta()],
+                    ),
           ),
         ),
       ),

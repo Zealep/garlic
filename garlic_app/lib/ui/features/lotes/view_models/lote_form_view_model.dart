@@ -17,6 +17,7 @@ class LoteFormViewModel extends ChangeNotifier {
     guardar = Command(_guardar);
     ubicar = Command(_ubicar);
     registrarAgricultor = Command1(_registrarAgricultor);
+    registrarProveedor = Command1(_registrarProveedor);
     campaniaId = catalogos.campanias.lastOrNull?.id;
     localidadId = catalogos.localidades.length == 1 ? catalogos.localidades.first.id : null;
     catalogos.addListener(notifyListeners);
@@ -28,6 +29,7 @@ class LoteFormViewModel extends ChangeNotifier {
   late final Command<Lote> guardar;
   late final Command<void> ubicar;
   late final Command1<PersonaItem, ({String dni, String nombres})> registrarAgricultor;
+  late final Command1<PersonaItem, ({String dni, String nombres})> registrarProveedor;
 
   String? campaniaId;
   String zona = '';
@@ -39,6 +41,7 @@ class LoteFormViewModel extends ChangeNotifier {
   bool titularDistinto = false;
   String titularDni = '';
   String titularNombres = '';
+  String cuentaLiquidacion = '';
   double? latitud;
   double? longitud;
   DateTime? fechaArrancado;
@@ -51,6 +54,9 @@ class LoteFormViewModel extends ChangeNotifier {
   List<CatalogoItem> get localidades => _catalogos.localidades;
   List<PersonaItem> get agricultores => _catalogos.agricultores;
   List<PersonaItem> get proveedores => _catalogos.proveedores;
+
+  /// Con el punto GPS la ciudad / CCPP es opcional (no siempre está en el catálogo).
+  bool get conGps => latitud != null && longitud != null;
 
   /// Error por campo devuelto por el guardado (p. ej. zona repetida).
   String? errorCampo(String campo) => guardar.failure?.fieldErrors[campo];
@@ -71,7 +77,8 @@ class LoteFormViewModel extends ChangeNotifier {
           titularDistinto
               ? TitularLiquidacion(numeroDocumento: titularDni.trim(), nombres: titularNombres.trim())
               : null,
-      localidadId: localidadId!,
+      localidadId: conGps ? null : localidadId,
+      cuentaLiquidacion: cuentaLiquidacion,
       zona: zona.trim(),
       latitud: latitud,
       longitud: longitud,
@@ -110,12 +117,28 @@ class LoteFormViewModel extends ChangeNotifier {
     return r;
   }
 
+  Future<Result<PersonaItem>> _registrarProveedor(({String dni, String nombres}) datos) async {
+    final r = await _catalogos.registrarPersona(rol: 'proveedor', dni: datos.dni, nombres: datos.nombres);
+    if (r case Ok(:final value)) {
+      proveedorId = value.id;
+      notifyListeners();
+    }
+    return r;
+  }
+
+  void quitarUbicacion() {
+    latitud = null;
+    longitud = null;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _catalogos.removeListener(notifyListeners);
     guardar.dispose();
     ubicar.dispose();
     registrarAgricultor.dispose();
+    registrarProveedor.dispose();
     super.dispose();
   }
 }

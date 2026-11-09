@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../../data/repositories/catalogos_repository.dart';
+import '../../../../data/repositories/compra_repository.dart';
 import '../../../../data/repositories/config_repository.dart';
 import '../../../../data/repositories/evaluaciones_repository.dart';
 import '../../../../data/repositories/lotes_repository.dart';
 import '../../../../data/repositories/sync_repository.dart';
+import '../../../../domain/models/compra.dart';
 import '../../../../domain/models/evaluacion.dart';
 import '../../../../domain/models/lote.dart';
 import '../../../../domain/use_cases/seguimiento_lotes.dart';
@@ -20,7 +22,9 @@ class InicioViewModel extends ChangeNotifier {
     required SyncRepository sync,
     required CatalogosRepository catalogos,
     required ConfigRepository config,
+    required CompraRepository compra,
   }) : _sync = sync,
+       _compra = compra,
        _catalogos = catalogos,
        _lotes = lotes,
        _evaluaciones = evaluaciones,
@@ -44,11 +48,17 @@ class InicioViewModel extends ChangeNotifier {
   final LotesRepository _lotes;
   final EvaluacionesRepository _evaluaciones;
   final ConfigRepository _config;
+  final CompraRepository _compra;
   late final List<StreamSubscription<Object?>> _subs;
   late final Command<void> refrescar;
 
   List<Lote> _listaLotes = const [];
   List<EvaluacionResumen> _listaEvaluaciones = const [];
+
+  /// Lotes con saldo por pagar al agricultor (del mayor saldo al menor).
+  List<PendientePago> pendientesDePago = const [];
+
+  double get totalPendiente => pendientesDePago.fold(0, (a, p) => a + p.saldo);
 
   String get evaluador => _config.config?.evaluadorNombre.split(' ').first ?? '';
   String get empresa => _config.config?.empresaNombre ?? '';
@@ -57,6 +67,9 @@ class InicioViewModel extends ChangeNotifier {
   int get borradores => _listaEvaluaciones.where((e) => e.estado == EstadoEvaluacion.borrador).length;
   int get cerradas => _listaEvaluaciones.where((e) => e.estado == EstadoEvaluacion.cerrada).length;
   List<EvaluacionResumen> get recientes => _listaEvaluaciones.take(6).toList();
+
+  /// Cortes ya pasados (esta semana): son los más urgentes.
+  int get cortesAtrasados => proximosCortes.where((l) => (diasParaCorte(l) ?? 0) < 0).length;
 
   /// Lotes con corte cercano (o atrasado esta semana): cuándo volver al campo a cerrar con el agricultor.
   List<Lote> get proximosCortes => SeguimientoLotes.proximosCortes(_listaLotes, DateTime.now()).take(6).toList();
@@ -86,6 +99,8 @@ class InicioViewModel extends ChangeNotifier {
     if (cultivo != null) await _catalogos.descargar(cultivo);
     final r = await _lotes.refrescar();
     await _evaluaciones.refrescar();
+    pendientesDePago = await _compra.pendientesDePago();
+    notifyListeners();
     return r;
   }
 

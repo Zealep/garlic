@@ -52,12 +52,12 @@ class CalculoCompraTest {
     class Balance {
 
         private final List<CalculoCompra.LineaCarga> cargas = List.of(
-                CalculoCompra.carga(bd("15000"), bd("2.8"), bd("1")),
-                CalculoCompra.carga(bd("15000"), bd("2.8"), bd("1")));
+                CalculoCompra.carga(bd("15000"), bd("2.8"), bd("150")),
+                CalculoCompra.carga(bd("15000"), bd("2.8"), bd("150")));
         private final List<BigDecimal> gastos = List.of(bd("1800"), bd("30"), bd("900"), bd("70"));
 
         @Test
-        void carga_descuentaElDestare() {
+        void carga_descuentaElDestareEnKg() {
             var l = cargas.getFirst();
             assertThat(l.destareKg()).isEqualByComparingTo("150");
             assertThat(l.kgNeto()).isEqualByComparingTo("14850");
@@ -78,7 +78,8 @@ class CalculoCompraTest {
             assertThat(b.costoPacking()).isEqualByComparingTo("85960");     // TOTAL S/ - PACKING
             assertThat(b.cuMp()).isEqualByComparingTo("2.8000");
             assertThat(b.cuGastos()).isEqualByComparingTo("0.0943");
-            assertThat(b.cuPacking()).isEqualByComparingTo("2.8943");
+            assertThat(b.cuPacking()).isEqualByComparingTo("2.89");          // redondeado a 2 decimales
+            assertThat(b.cuPacking().scale()).isEqualTo(2);
             assertThat(b.saldo()).isEqualByComparingTo("83160");
             assertThat(b.estadoPago()).isEqualTo(EstadoPago.POR_PAGAR);
         }

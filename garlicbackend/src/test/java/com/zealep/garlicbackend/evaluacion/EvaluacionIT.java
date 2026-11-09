@@ -67,14 +67,14 @@ class EvaluacionIT extends AbstractIntegrationTest {
         gotasDentro = catalogo("tipos-humedad", "GOTAS_DENTRO", 1, "");
         rosaBeige = catalogo("tipos-humedad", "ROSA_BEIGE", 2, "");
         empasteBueno = catalogo("tipos-empaste", "BUENO", 1, "");
-        cerosa = catalogo("tipos-dano", "PARALISIS_CEROSA", 1, "");
+        cerosa = catalogo("tipos-dano", "PARALISIS_CEROSA", 1, ",\"pideCantidades\":true");
         noContiene = catalogo("tipos-dano", "NO_CONTIENE", 3, ",\"esExcluyente\":true");
         raizRosada = catalogo("enfermedades", "RAIZ_ROSADA", 1, ",\"evaluarEnCampo\":true");
         fusarium = catalogo("enfermedades", "FUSARIUM", 2, ",\"evaluarEnCampo\":true");
         catalogo("enfermedades", "OXIDO", 3, "");
 
         evaluador = crearId("/api/v1/usuarios", """
-                {"nombres":"Evaluador Uno","email":"eval-%s@demo.pe","rol":"EVALUADOR"}""".formatted(UUID.randomUUID()));
+                {"nombres":"Evaluador Uno","dni":"%s","rol":"EVALUADOR"}""".formatted(dniAlAzar()));
         lote = crearLote("B3 P52");
     }
 
@@ -85,7 +85,8 @@ class EvaluacionIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.clasesCalidad", hasSize(2)))
                 .andExpect(jsonPath("$.clasesCalidad[0].codigo").value("PRIMERA"))
                 .andExpect(jsonPath("$.calibres", hasSize(2)))
-                .andExpect(jsonPath("$.nivelesHumedad", hasSize(3)))
+                .andExpect(jsonPath("$.nivelesHumedad").doesNotExist())
+                .andExpect(jsonPath("$.tiposDano[0].pideCantidades").value(true))
                 .andExpect(jsonPath("$.tiposDano[1].esExcluyente").value(true))
                 // solo las enfermedades a evaluar en campo (no OXIDO)
                 .andExpect(jsonPath("$.enfermedades", hasSize(2)));
@@ -108,13 +109,21 @@ class EvaluacionIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.promedios.calidad[1].porcentaje").value(20.00))
                 .andExpect(jsonPath("$.promedios.calibres[0].codigo").value("45/50"))
                 .andExpect(jsonPath("$.promedios.calibres[0].porcentaje").value(40.00))
-                .andExpect(jsonPath("$.humedad", hasSize(2)))
-                .andExpect(jsonPath("$.humedad[0].nivel").value("ALTA"))
-                .andExpect(jsonPath("$.humedad[1].nivel").value("MEDIA"))
-                .andExpect(jsonPath("$.empastes[0].codigo").value("BUENO"))
-                .andExpect(jsonPath("$.danos[0].codigo").value("NO_CONTIENE"))
-                .andExpect(jsonPath("$.sanidad[1].codigo").value("FUSARIUM"))
-                .andExpect(jsonPath("$.sanidad[1].porcentaje").value(5.00));
+                // sensoriales y sanidad por muestra
+                .andExpect(jsonPath("$.humedad").doesNotExist())
+                .andExpect(jsonPath("$.muestras[0].humedad", hasSize(2)))
+                .andExpect(jsonPath("$.muestras[0].humedad[0].codigo").value("GOTAS_DENTRO"))
+                .andExpect(jsonPath("$.muestras[0].humedad[0].presente").value(true))
+                .andExpect(jsonPath("$.muestras[0].humedad[1].presente").value(false))
+                .andExpect(jsonPath("$.muestras[0].empastes[0].codigo").value("BUENO"))
+                .andExpect(jsonPath("$.muestras[0].danos[0].codigo").value("NO_CONTIENE"))
+                .andExpect(jsonPath("$.muestras[0].danos[0].porcentaje").doesNotExist())
+                .andExpect(jsonPath("$.muestras[1].danos[0].codigo").value("PARALISIS_CEROSA"))
+                .andExpect(jsonPath("$.muestras[1].danos[0].frutosTotal").value(20))
+                .andExpect(jsonPath("$.muestras[1].danos[0].frutosAfectados").value(10))
+                .andExpect(jsonPath("$.muestras[1].danos[0].porcentaje").value(50.00))
+                .andExpect(jsonPath("$.muestras[0].sanidad[1].codigo").value("FUSARIUM"))
+                .andExpect(jsonPath("$.muestras[0].sanidad[1].porcentaje").value(5.00));
 
         // la vista de la base (reportes) da el mismo PROM que el API
         BigDecimal promPrimera = jdbc.sql("""
@@ -138,20 +147,53 @@ class EvaluacionIT extends AbstractIntegrationTest {
         List<Map<String, Object>> muestras = muestras(cambio);
         muestras.remove(2);                                   // se quita la muestra 3
         muestras.get(0).put("calidad", calidad("90", "10"));  // se corrige la muestra 1
-        cambio.put("danos", List.of(cerosa));
-        cambio.put("humedad", List.of());
+        muestras.get(0).put("danos", List.of(dano(cerosa, 30, 3)));
+        muestras.get(0).put("humedad", List.of());
 
         mvc.perform(json(put("/api/v1/evaluaciones/" + id), empresa, JSON.writeValueAsString(cambio)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.muestras", hasSize(2)))
                 .andExpect(jsonPath("$.muestras[0].id").value(idMuestra1))
                 .andExpect(jsonPath("$.promedios.calidad[0].porcentaje").value(87.50))
-                .andExpect(jsonPath("$.humedad", hasSize(0)))
-                .andExpect(jsonPath("$.danos[0].codigo").value("PARALISIS_CEROSA"));
+                .andExpect(jsonPath("$.muestras[0].humedad", hasSize(0)))
+                .andExpect(jsonPath("$.muestras[0].danos[0].codigo").value("PARALISIS_CEROSA"))
+                .andExpect(jsonPath("$.muestras[0].danos[0].porcentaje").value(10.00));
 
         long filasMuestra = jdbc.sql("SELECT count(*) FROM muestra WHERE evaluacion_id = :id")
                 .param("id", UUID.fromString(id)).query(Long.class).single();
         assertThat(filasMuestra).isEqualTo(2);
+    }
+
+    @Test
+    void quitarMuestra1_renumera_yLasFotosSiguenEnSuMuestra() throws Exception {
+        Map<String, Object> body = evaluacionModelo();
+        List<String> ids = List.of(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        for (int i = 0; i < 3; i++) {
+            muestras(body).get(i).put("id", ids.get(i));
+        }
+        String id = JsonPath.read(crearEvaluacion(body).andReturn().getResponse().getContentAsString(), "$.id");
+        mvc.perform(multipart("/api/v1/evaluaciones/" + id + "/evidencias")
+                        .file(new MockMultipartFile("archivo", "foto", "image/png", FOTO))
+                        .param("muestraId", ids.get(1)).header(TenantContext.HEADER, empresa))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.muestraId").value(ids.get(1)))
+                .andExpect(jsonPath("$.muestraNumero").value(2));
+
+        // la app quita la muestra 1 y renumera: la antigua 2 pasa a ser la 1 y la 3 la 2
+        muestras(body).remove(0);
+        muestras(body).get(0).put("numero", 1);
+        muestras(body).get(1).put("numero", 2);
+        mvc.perform(json(put("/api/v1/evaluaciones/" + id), empresa, JSON.writeValueAsString(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.muestras", hasSize(2)))
+                .andExpect(jsonPath("$.muestras[0].id").value(ids.get(1)))
+                .andExpect(jsonPath("$.muestras[0].numero").value(1))
+                .andExpect(jsonPath("$.muestras[0].calidad[0].porcentaje").value(85.00))
+                .andExpect(jsonPath("$.muestras[1].id").value(ids.get(2)));
+        mvc.perform(get("/api/v1/evaluaciones/" + id + "/evidencias").header(TenantContext.HEADER, empresa))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].muestraId").value(ids.get(1)))
+                .andExpect(jsonPath("$[0].muestraNumero").value(1));
     }
 
     @Test
@@ -283,12 +325,16 @@ class EvaluacionIT extends AbstractIntegrationTest {
         crearEvaluacionEsperando(mala, 422, "la calidad debe sumar 100%");
 
         Map<String, Object> excluyente = evaluacionModelo();
-        excluyente.put("danos", List.of(noContiene, cerosa));
+        muestras(excluyente).get(0).put("danos", List.of(dano(noContiene, null, null), dano(cerosa, 20, 2)));
         crearEvaluacionEsperando(excluyente, 422, "no puede marcarse junto a otros danos");
 
         Map<String, Object> otraEmpresa = evaluacionModelo();
-        otraEmpresa.put("empastes", List.of(UUID.randomUUID()));
+        muestras(otraEmpresa).get(2).put("empastes", List.of(UUID.randomUUID()));
         crearEvaluacionEsperando(otraEmpresa, 422, "Tipo de empaste no existe o esta inactivo");
+
+        Map<String, Object> frutos = evaluacionModelo();
+        muestras(frutos).get(0).put("danos", List.of(dano(cerosa, 10, 11)));
+        crearEvaluacionEsperando(frutos, 422, "no pueden ser mas que el total");
     }
 
     @Test
@@ -304,12 +350,20 @@ class EvaluacionIT extends AbstractIntegrationTest {
     @Test
     void cerrar_exigeEvaluacionCompleta_yLuegoNoSePuedeModificar() throws Exception {
         Map<String, Object> incompleta = evaluacionModelo();
-        incompleta.put("sanidad", List.of(sanidad(raizRosada, false, null)));
+        muestras(incompleta).get(2).put("sanidad", List.of(sanidad(raizRosada, false, null)));
         String id = JsonPath.read(crearEvaluacion(incompleta).andReturn().getResponse().getContentAsString(), "$.id");
 
         mvc.perform(post("/api/v1/evaluaciones/" + id + "/cerrar").header(TenantContext.HEADER, empresa))
                 .andExpect(status().isUnprocessableContent())
-                .andExpect(jsonPath("$.detail").value(containsString("responda SI/NO")));
+                .andExpect(jsonPath("$.detail").value(containsString("muestra 3 debe responder SI/NO")));
+
+        Map<String, Object> sinCantidades = evaluacionModelo();
+        muestras(sinCantidades).get(1).put("danos", List.of(dano(cerosa, null, null)));
+        mvc.perform(json(put("/api/v1/evaluaciones/" + id), empresa, JSON.writeValueAsString(sinCantidades)))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/v1/evaluaciones/" + id + "/cerrar").header(TenantContext.HEADER, empresa))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.detail").value(containsString("muestra 2 debe registrar los frutos total y con problema")));
 
         mvc.perform(json(put("/api/v1/evaluaciones/" + id), empresa, JSON.writeValueAsString(evaluacionModelo())))
                 .andExpect(status().isOk());
@@ -382,7 +436,7 @@ class EvaluacionIT extends AbstractIntegrationTest {
 
     // ---------------------------------------------------------------- datos
 
-    /** Lote modelo del Excel: 3 muestras, humedad, empaste, danos y sanidad. */
+    /** Lote modelo del Excel: 3 muestras con calidad, calibre, humedad, empaste, danos y sanidad (la 2 con paralisis). */
     private Map<String, Object> evaluacionModelo() {
         Map<String, Object> ev = new LinkedHashMap<>();
         ev.put("evaluadorId", evaluador);
@@ -392,12 +446,7 @@ class EvaluacionIT extends AbstractIntegrationTest {
                 muestra(1, "80", "20", "40", "60"),
                 muestra(2, "85", "15", "30", "70"),
                 muestra(3, "75", "25", "50", "50"))));
-        ev.put("humedad", List.of(
-                Map.of("tipoHumedadId", gotasDentro, "nivel", "ALTA"),
-                Map.of("tipoHumedadId", rosaBeige, "nivel", "MEDIA")));
-        ev.put("empastes", List.of(empasteBueno));
-        ev.put("danos", List.of(noContiene));
-        ev.put("sanidad", List.of(sanidad(raizRosada, false, null), sanidad(fusarium, true, "5")));
+        muestras(ev).get(1).put("danos", List.of(dano(cerosa, 20, 10)));
         return ev;
     }
 
@@ -408,6 +457,12 @@ class EvaluacionIT extends AbstractIntegrationTest {
         m.put("calibres", List.of(
                 Map.of("calibreId", cal4550, "porcentaje", new BigDecimal(c4550)),
                 Map.of("calibreId", cal5055, "porcentaje", new BigDecimal(c5055))));
+        m.put("humedad", List.of(
+                Map.of("tipoHumedadId", gotasDentro, "presente", true),
+                Map.of("tipoHumedadId", rosaBeige, "presente", false)));
+        m.put("empastes", List.of(empasteBueno));
+        m.put("danos", List.of(dano(noContiene, null, null)));
+        m.put("sanidad", List.of(sanidad(raizRosada, false, null), sanidad(fusarium, true, "5")));
         return m;
     }
 
@@ -415,6 +470,14 @@ class EvaluacionIT extends AbstractIntegrationTest {
         return List.of(
                 Map.of("claseCalidadId", primera, "porcentaje", new BigDecimal(primeraPct)),
                 Map.of("claseCalidadId", abiertos, "porcentaje", new BigDecimal(abiertosPct)));
+    }
+
+    private static Map<String, Object> dano(String tipoDanoId, Integer total, Integer afectados) {
+        Map<String, Object> d = new LinkedHashMap<>();
+        d.put("tipoDanoId", tipoDanoId);
+        d.put("frutosTotal", total);
+        d.put("frutosAfectados", afectados);
+        return d;
     }
 
     private static Map<String, Object> sanidad(String enfermedadId, boolean presente, String pct) {

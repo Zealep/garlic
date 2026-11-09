@@ -69,14 +69,16 @@ class EvaluacionViewModel extends ChangeNotifier {
   List<ProblemaEvaluacion> get problemasCierre =>
       listo ? ReglasEvaluacion.validarCierre(borrador!, formulario!) : const [];
 
+  /// Problemas para cerrar de una muestra (para marcar su chip y su sección).
+  List<ProblemaEvaluacion> problemasDeMuestra(MuestraBorrador m) =>
+      problemasCierre.where((x) => x.muestra == m.numero).toList();
+
   bool pasoCompleto(PasoEvaluacion p) {
     if (!listo) return false;
     final b = borrador!;
     return switch (p) {
       PasoEvaluacion.general => b.evaluadorId != null,
       PasoEvaluacion.muestras => b.muestras.isNotEmpty && problemasCierre.where((x) => x.paso == p).isEmpty,
-      PasoEvaluacion.sensoriales => b.humedad.isNotEmpty || b.empastes.isNotEmpty || b.danos.isNotEmpty,
-      PasoEvaluacion.sanidad => problemasCierre.where((x) => x.paso == p).isEmpty,
       PasoEvaluacion.resumen => b.estado == EstadoEvaluacion.cerrada,
     };
   }
@@ -117,6 +119,13 @@ class EvaluacionViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Lleva al paso del problema y, si es de una muestra, la selecciona.
+  void irAProblema(ProblemaEvaluacion p) {
+    final i = p.muestra == null ? -1 : borrador!.muestras.indexWhere((m) => m.numero == p.muestra);
+    if (i >= 0) muestraIndice = i;
+    irA(p.paso);
+  }
+
   void siguiente() {
     if (paso.index < PasoEvaluacion.values.length - 1) irA(PasoEvaluacion.values[paso.index + 1]);
   }
@@ -146,17 +155,26 @@ class EvaluacionViewModel extends ChangeNotifier {
     muestraIndice = borrador!.muestras.length - 1;
   });
 
-  /// Quita la muestra y sus fotos del equipo (en el servidor se eliminan al sincronizar la evaluación).
-  Future<void> quitarMuestra(int numero) async {
-    final fotosMuestra = fotosDe(SeccionFoto.muestra, muestraNumero: numero);
+  /// Quita la muestra y sus fotos del equipo (en el servidor se eliminan al sincronizar la evaluación) y
+  /// renumera las demás 1..n de izquierda a derecha. Las fotos van por id de muestra: no cambian de muestra.
+  Future<void> quitarMuestra(MuestraBorrador muestra) async {
+    final fotosMuestra = fotosDeMuestra(muestra);
     _editar(() {
-      borrador!.muestras.removeWhere((m) => m.numero == numero);
+      borrador!.quitarMuestra(muestra.id);
       muestraIndice = 0;
     });
     for (final f in fotosMuestra) {
       await _evaluaciones.eliminarEvidencia(f.id);
     }
   }
+
+  /// Muestra anterior a la actual (para copiar sus sensoriales y sanidad).
+  MuestraBorrador? get muestraAnterior {
+    final i = borrador?.muestras.indexOf(muestraActual!) ?? -1;
+    return i > 0 ? borrador!.muestras[i - 1] : null;
+  }
+
+  void copiarDeAnterior() => _editar(() => muestraActual!.copiarSensorialesYSanidad(muestraAnterior!));
 
   /// Calidad: con exactamente dos clases (PRIMERA / ABIERTOS) la otra se completa sola al 100%,
   /// igual que la fórmula ABIERTOS = 1 - PRIMERA del protocolo.
@@ -191,65 +209,82 @@ class EvaluacionViewModel extends ChangeNotifier {
 
   void setObservacionMuestra(String v) => _editar(() => muestraActual!.observacion = v);
 
-  // ------------------------------------------------------------------ sensoriales
+  // ------------------------------------------------------------------ sensoriales (de la muestra actual)
 
-  void setHumedad(String tipoId, NivelHumedad? nivel) => _editar(() {
-    if (nivel == null) {
-      borrador!.humedad.remove(tipoId);
+  /// Humedad SI/NO por indicador; null la deja sin responder.
+  void setHumedad(String tipoId, bool? presente) => _editar(() {
+    final humedad = muestraActual!.humedad;
+    if (presente == null) {
+      humedad.remove(tipoId);
     } else {
-      borrador!.humedad[tipoId] = nivel;
+      humedad[tipoId] = presente;
     }
   });
 
   void alternarEmpaste(String id) => _editar(() {
-    if (!borrador!.empastes.remove(id)) borrador!.empastes.add(id);
+    final empastes = muestraActual!.empastes;
+    if (!empastes.remove(id)) empastes.add(id);
   });
 
   /// "No contiene" (excluyente) desmarca los demás daños y viceversa.
   void alternarDano(CatalogoItem dano) => _editar(() {
-    final danos = borrador!.danos;
-    if (danos.remove(dano.id)) return;
+    final danos = muestraActual!.danos;
+    if (danos.remove(dano.id) != null) return;
     final excluyentes = formulario!.tiposDano.where((d) => d.esExcluyente).map((d) => d.id).toSet();
     if (dano.esExcluyente) {
       danos.clear();
     } else {
-      danos.removeAll(excluyentes);
+      danos.removeWhere((id, _) => excluyentes.contains(id));
     }
-    danos.add(dano.id);
+    danos[dano.id] = DanoBorrador();
   });
 
-  // ------------------------------------------------------------------ sanidad
+  /// Frutos contados de un daño que pide cantidades (parálisis): el % se calcula solo.
+  void setFrutosDano(
+    String danoId, {
+    int? total,
+    int? afectados,
+    bool limpiarTotal = false,
+    bool limpiarAfectados = false,
+  }) => _editar(() {
+    final d = muestraActual!.danos[danoId];
+    if (d == null) return;
+    if (total != null || limpiarTotal) d.total = total;
+    if (afectados != null || limpiarAfectados) d.afectados = afectados;
+  });
+
+  // ------------------------------------------------------------------ sanidad (de la muestra actual)
 
   void setPresente(String enfermedadId, bool presente) => _editar(() {
-    final actual = borrador!.sanidad[enfermedadId];
-    borrador!.sanidad[enfermedadId] = SanidadBorrador(
-      presente: presente,
-      porcentaje: presente ? actual?.porcentaje : null,
-    );
+    final sanidad = muestraActual!.sanidad;
+    final actual = sanidad[enfermedadId];
+    sanidad[enfermedadId] = SanidadBorrador(presente: presente, porcentaje: presente ? actual?.porcentaje : null);
   });
 
   void setPorcentajeEnfermedad(String enfermedadId, double? v) => _editar(() {
-    final s = borrador!.sanidad[enfermedadId];
+    final s = muestraActual!.sanidad[enfermedadId];
     if (s != null && s.presente) s.porcentaje = v?.clamp(0, 100).toDouble();
   });
 
   // ------------------------------------------------------------------ fotos
 
-  /// Fotos de una sección del wizard (de una muestra en particular si se indica el número).
-  List<EvidenciaLocal> fotosDe(SeccionFoto seccion, {int? muestraNumero}) =>
-      fotos
-          .where((f) => SeccionFoto.de(f) == seccion)
-          .where((f) => seccion != SeccionFoto.muestra || f.muestraNumero == muestraNumero)
-          .toList();
+  /// Fotos generales del lote (paso Datos).
+  List<EvidenciaLocal> get fotosGenerales => fotos.where((f) => SeccionFoto.de(f) == SeccionFoto.general).toList();
 
-  Future<void> agregarFoto(Uint8List bytes, String mime, {required SeccionFoto seccion, int? muestraNumero}) async {
-    await guardarAhora(); // la muestra debe existir en el servidor antes de subir su foto
+  /// Fotos de una muestra: por su id (las anteriores al cambio, por número).
+  List<EvidenciaLocal> fotosDeMuestra(MuestraBorrador m) =>
+      fotos.where((f) => f.muestraId != null ? f.muestraId == m.id : f.muestraNumero == m.numero).toList();
+
+  /// Guarda la evaluación antes de encolar la foto: la muestra debe llegar al servidor antes que su foto.
+  Future<void> agregarFoto(Uint8List bytes, String mime, {MuestraBorrador? muestra}) async {
+    _sucio = _sucio || muestra != null;
+    await guardarAhora();
     await _evaluaciones.agregarEvidencia(
       evaluacionId: borrador!.id,
       bytes: bytes,
       mime: mime,
-      muestraNumero: seccion == SeccionFoto.muestra ? muestraNumero : null,
-      factor: seccion.factor,
+      muestraId: muestra?.id,
+      muestraNumero: muestra?.numero,
     );
   }
 
@@ -282,6 +317,9 @@ class EvaluacionViewModel extends ChangeNotifier {
     final pendientes = problemasCierre;
     if (pendientes.isNotEmpty) {
       paso = pendientes.first.paso;
+      final n = pendientes.first.muestra;
+      final i = n == null ? -1 : borrador!.muestras.indexWhere((m) => m.numero == n);
+      if (i >= 0) muestraIndice = i;
       notifyListeners();
       return Result.error(AppFailure(FailureKind.validacion, pendientes.first.toString()));
     }

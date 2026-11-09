@@ -20,6 +20,8 @@ import java.util.UUID;
  *                           Al actualizar, vacio conserva el codigo actual.
  * @param titularLiquidacion DNI LC: datos de quien figura en la liquidacion de compra.
  *                           Si el documento ya existe se reutiliza la persona.
+ * @param cuentaLiquidacion  numero de cuenta o CCI de quien cobra la liquidacion (opcional).
+ * @param localidadId        ciudad / CCPP; opcional si se registran las coordenadas GPS.
  */
 public record LoteRequest(
         UUID id,
@@ -29,7 +31,8 @@ public record LoteRequest(
         @NotNull UUID agricultorId,
         UUID proveedorId,
         @Valid PersonaRequest titularLiquidacion,
-        @NotNull UUID localidadId,
+        @Size(max = 30) String cuentaLiquidacion,
+        UUID localidadId,
         @NotBlank @Size(max = 50) String zona,
         @DecimalMin("-90") @DecimalMax("90") @Digits(integer = 3, fraction = 6) BigDecimal latitud,
         @DecimalMin("-180") @DecimalMax("180") @Digits(integer = 3, fraction = 6) BigDecimal longitud,

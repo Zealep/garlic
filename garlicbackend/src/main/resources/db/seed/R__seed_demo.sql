@@ -68,10 +68,10 @@ BEGIN
         (v_emp, v_cul, 'MANDARINA', 'MANDARINA', 4)
     ON CONFLICT DO NOTHING;
 
-    INSERT INTO tipo_dano (empresa_id, cultivo_id, codigo, nombre, es_excluyente, orden) VALUES
-        (v_emp, v_cul, 'PARALISIS_CEROSA', 'PARALISIS CEROSA (Caramelo)',     false, 1),
-        (v_emp, v_cul, 'PARALISIS_ACUOSA', 'PARALISIS ACUOSA (Dano Diente)',  false, 2),
-        (v_emp, v_cul, 'NO_CONTIENE',      'NO CONTIENE',                     true,  3)
+    INSERT INTO tipo_dano (empresa_id, cultivo_id, codigo, nombre, es_excluyente, pide_cantidades, orden) VALUES
+        (v_emp, v_cul, 'PARALISIS_CEROSA', 'PARALISIS CEROSA (Caramelo)',     false, true,  1),
+        (v_emp, v_cul, 'PARALISIS_ACUOSA', 'PARALISIS ACUOSA (Dano Diente)',  false, true,  2),
+        (v_emp, v_cul, 'NO_CONTIENE',      'NO CONTIENE',                     true,  false, 3)
     ON CONFLICT DO NOTHING;
 
     -- Punto 3: compra del lote

@@ -11,5 +11,6 @@ public record TipoDanoRequest(
         @NotBlank @Size(max = 30) String codigo,
         @NotBlank @Size(max = 120) String nombre,
         @PositiveOrZero Short orden,
-        Boolean esExcluyente) {
+        Boolean esExcluyente,
+        Boolean pideCantidades) {
 }

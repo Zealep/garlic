@@ -1,7 +1,5 @@
 package com.zealep.garlicbackend.compra.dto;
 
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -14,7 +12,7 @@ import java.util.UUID;
 /**
  * Una carga (camion) de materia prima.
  *
- * @param destarePct % de kg a descontar por perdida del ajo; null = 1%
+ * @param destareKg kg a descontar por perdida del ajo (no mas que los kg); null = 0
  */
 public record CargaRequest(
         @NotNull LocalDate fecha,
@@ -23,6 +21,6 @@ public record CargaRequest(
         @PositiveOrZero Integer cantidadEmpaques,
         UUID tipoEmpaqueId,
         @NotNull @Positive @Digits(integer = 6, fraction = 4) BigDecimal precioKg,
-        @DecimalMin("0.0") @DecimalMax("100.0") @Digits(integer = 3, fraction = 2) BigDecimal destarePct,
+        @PositiveOrZero @Digits(integer = 10, fraction = 2) BigDecimal destareKg,
         @Size(max = 4000) String observacion) {
 }

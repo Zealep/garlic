@@ -134,7 +134,7 @@ class _Cabecera extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const GarlicMark(size: 64, claro: true),
+                      const EmblemaMarca(size: 64, claro: true),
                     ],
                   ),
                 ),
@@ -200,7 +200,12 @@ class _Ficha extends StatelessWidget {
                         : '${lote.titularLiquidacion!.numeroDocumento ?? ''} · ${lote.titularLiquidacion!.nombres}',
                 icono: PhosphorIconsRegular.receipt,
               ),
-              DatoFila(etiqueta: 'Localidad', valor: lote.localidad.texto, icono: PhosphorIconsRegular.mapTrifold),
+              DatoFila(
+                etiqueta: 'Cuenta / CCI',
+                valor: lote.cuentaLiquidacion ?? '—',
+                icono: PhosphorIconsRegular.bank,
+              ),
+              DatoFila(etiqueta: 'Localidad', valor: lote.ubicacionTexto, icono: PhosphorIconsRegular.mapTrifold),
               DatoFila(
                 etiqueta: 'Ubicación',
                 valor:

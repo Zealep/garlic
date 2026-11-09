@@ -16,7 +16,6 @@ public record CargaResponse(
         UUID tipoEmpaqueId,
         String tipoEmpaque,
         BigDecimal precioKg,
-        BigDecimal destarePct,
         BigDecimal destareKg,
         BigDecimal kgNeto,
         BigDecimal importe,

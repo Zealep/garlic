@@ -16,6 +16,7 @@ public record LoteResponse(
         PersonaRef agricultor,
         PersonaRef proveedor,
         PersonaRef titularLiquidacion,
+        String cuentaLiquidacion,
         CatalogoRef localidad,
         String zona,
         BigDecimal latitud,

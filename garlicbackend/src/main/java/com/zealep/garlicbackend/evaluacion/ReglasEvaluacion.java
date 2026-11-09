@@ -25,6 +25,8 @@ final class ReglasEvaluacion {
     /** Reglas que se validan en cada guardado (incluido el borrador). */
     static void validarContenido(EvaluacionRequest request, Map<UUID, TipoDano> tiposDano) {
         sinRepetidos(request.muestrasOVacio(), EvaluacionRequest.Muestra::numero, "numero de muestra");
+        sinRepetidos(request.muestrasOVacio().stream().filter(m -> m.id() != null).toList(),
+                EvaluacionRequest.Muestra::id, "id de muestra");
 
         for (EvaluacionRequest.Muestra m : request.muestrasOVacio()) {
             String muestra = "Muestra " + m.numero() + ": ";
@@ -39,28 +41,34 @@ final class ReglasEvaluacion {
                 }
             }
             // calibres: la suma de 100% se exige al cerrar (el borrador se guarda mientras se escribe)
-        }
 
-        sinRepetidos(request.humedadOVacio(), EvaluacionRequest.Humedad::tipoHumedadId, "tipo de humedad");
-        sinRepetidos(request.sanidadOVacio(), EvaluacionRequest.Sanidad::enfermedadId, "enfermedad");
+            sinRepetidos(m.humedadOVacio(), EvaluacionRequest.Humedad::tipoHumedadId, muestra + "tipo de humedad");
+            sinRepetidos(m.danosOVacio(), EvaluacionRequest.Dano::tipoDanoId, muestra + "dano");
+            sinRepetidos(m.sanidadOVacio(), EvaluacionRequest.Sanidad::enfermedadId, muestra + "enfermedad");
 
-        for (EvaluacionRequest.Sanidad s : request.sanidadOVacio()) {
-            if (!s.presente() && s.porcentaje() != null) {
-                throw new BusinessException("El porcentaje de una enfermedad solo se registra si esta presente");
+            for (EvaluacionRequest.Sanidad s : m.sanidadOVacio()) {
+                if (!s.presente() && s.porcentaje() != null) {
+                    throw new BusinessException(muestra + "el porcentaje de una enfermedad solo se registra si esta presente");
+                }
             }
-        }
 
-        Set<UUID> danos = new HashSet<>(request.danosOVacio());
-        boolean excluyenteMarcado = danos.stream().map(tiposDano::get).anyMatch(TipoDano::isEsExcluyente);
-        if (excluyenteMarcado && danos.size() > 1) {
-            String excluyente = danos.stream().map(tiposDano::get).filter(TipoDano::isEsExcluyente)
-                    .map(TipoDano::getNombre).findFirst().orElse("");
-            throw new BusinessException("'" + excluyente + "' no puede marcarse junto a otros danos");
+            List<TipoDano> danos = m.danosOVacio().stream().map(d -> tiposDano.get(d.tipoDanoId())).toList();
+            danos.stream().filter(TipoDano::isEsExcluyente).findFirst().ifPresent(excluyente -> {
+                if (danos.size() > 1) {
+                    throw new BusinessException(muestra + "'" + excluyente.getNombre() + "' no puede marcarse junto a otros danos");
+                }
+            });
+            for (EvaluacionRequest.Dano d : m.danosOVacio()) {
+                if (d.frutosTotal() != null && d.frutosAfectados() != null && d.frutosAfectados() > d.frutosTotal()) {
+                    throw new BusinessException(muestra + tiposDano.get(d.tipoDanoId()).getNombre()
+                            + ": los frutos con problema no pueden ser mas que el total");
+                }
+            }
         }
     }
 
     /** Reglas adicionales para cerrar la evaluacion (debe estar completa). */
-    static void validarCierre(EvaluacionLote ev, Collection<UUID> enfermedadesObligatorias) {
+    static void validarCierre(EvaluacionLote ev, Collection<UUID> enfermedadesObligatorias, Map<UUID, TipoDano> tiposDano) {
         List<Muestra> muestras = ev.getMuestras();
         if (muestras.isEmpty()) {
             throw new BusinessException("Para cerrar la evaluacion registre al menos una muestra");
@@ -83,11 +91,18 @@ final class ReglasEvaluacion {
                 throw new BusinessException(muestra + "debe tener calibres que sumen 100% (suma "
                         + sumaCalibres.stripTrailingZeros().toPlainString() + "%)");
             }
-        }
-        Set<UUID> respondidas = new HashSet<>();
-        ev.getSanidad().forEach(s -> respondidas.add(s.enfermedadId()));
-        if (!respondidas.containsAll(enfermedadesObligatorias)) {
-            throw new BusinessException("Para cerrar, responda SI/NO en todas las enfermedades a evaluar en campo");
+            for (DanoObservado d : m.getDanos()) {
+                TipoDano tipo = tiposDano.get(d.tipoDanoId());
+                if (tipo != null && tipo.isPideCantidades() && (d.frutosTotal() == null || d.frutosAfectados() == null)) {
+                    throw new BusinessException(muestra + "debe registrar los frutos total y con problema de "
+                            + tipo.getNombre());
+                }
+            }
+            Set<UUID> respondidas = new HashSet<>();
+            m.getSanidad().forEach(s -> respondidas.add(s.enfermedadId()));
+            if (!respondidas.containsAll(enfermedadesObligatorias)) {
+                throw new BusinessException(muestra + "debe responder SI/NO en todas las enfermedades a evaluar en campo");
+            }
         }
     }
 

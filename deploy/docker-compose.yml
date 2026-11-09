@@ -1,4 +1,4 @@
-# Servidor de pruebas / produccion del cliente: Postgres + backend + Caddy (HTTPS y app web).
+# Instalacion de Agroexportadora Guadalupe (pruebas o produccion): Postgres + backend + Caddy (HTTPS y app web).
 # Uso (en el servidor, dentro de /opt/garlic/deploy):  docker compose up -d --build
 name: garlic
 
@@ -36,7 +36,10 @@ services:
       GARLIC_EMPRESA_RAZON_SOCIAL: ${EMPRESA_RAZON_SOCIAL:?Defina EMPRESA_RAZON_SOCIAL en .env}
       GARLIC_CAMPANIA: ${CAMPANIA:-2026}
       GARLIC_ADMIN_NOMBRE: ${ADMIN_NOMBRE:?Defina ADMIN_NOMBRE en .env}
-      GARLIC_ADMIN_EMAIL: ${ADMIN_EMAIL:?Defina ADMIN_EMAIL en .env}
+      GARLIC_ADMIN_DNI: ${ADMIN_DNI:?Defina ADMIN_DNI en .env (con el entra el administrador)}
+      GARLIC_ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      GARLIC_ADMIN_CLAVE_INICIAL: ${ADMIN_CLAVE_INICIAL:-}
+      GARLIC_JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET en .env (openssl rand -base64 48)}
       TZ: America/Lima
     volumes:
       - evidencias:/data/evidencias
@@ -51,8 +54,6 @@ services:
       - "443:443"
     environment:
       DOMINIO: ${DOMINIO:?Defina DOMINIO en .env}
-      ACCESO_USUARIO: ${ACCESO_USUARIO:?Defina ACCESO_USUARIO en .env}
-      ACCESO_HASH: ${ACCESO_HASH:?Defina ACCESO_HASH en .env (caddy hash-password)}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./web:/srv:ro

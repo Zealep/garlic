@@ -168,9 +168,13 @@ class DefinicionCatalogo {
     _simple(
       'tipos-dano',
       'Daños no visibles',
-      'Selección múltiple; "excluyente" no se combina con otros (No contiene).',
+      'Selección múltiple por muestra; "excluyente" no se combina con otros (No contiene). '
+          '"Pide cantidades" registra frutos total y con problema (% de daño).',
       GrupoCatalogo.calidad,
-      const [CampoCatalogo('esExcluyente', 'Excluyente', TipoCampo.booleano)],
+      const [
+        CampoCatalogo('esExcluyente', 'Excluyente', TipoCampo.booleano),
+        CampoCatalogo('pideCantidades', 'Pide cantidades', TipoCampo.booleano),
+      ],
     ),
     _simple(
       'enfermedades',

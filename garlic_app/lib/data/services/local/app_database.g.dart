@@ -1189,6 +1189,15 @@ class $EvidenciasLocalTable extends EvidenciasLocal with TableInfo<$EvidenciasLo
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _muestraIdMeta = const VerificationMeta('muestraId');
+  @override
+  late final GeneratedColumn<String> muestraId = GeneratedColumn<String>(
+    'muestra_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _muestraNumeroMeta = const VerificationMeta('muestraNumero');
   @override
   late final GeneratedColumn<int> muestraNumero = GeneratedColumn<int>(
@@ -1244,7 +1253,17 @@ class $EvidenciasLocalTable extends EvidenciasLocal with TableInfo<$EvidenciasLo
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, evaluacionId, muestraNumero, factor, bytes, mime, syncState, creado];
+  List<GeneratedColumn> get $columns => [
+    id,
+    evaluacionId,
+    muestraId,
+    muestraNumero,
+    factor,
+    bytes,
+    mime,
+    syncState,
+    creado,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1263,6 +1282,9 @@ class $EvidenciasLocalTable extends EvidenciasLocal with TableInfo<$EvidenciasLo
       context.handle(_evaluacionIdMeta, evaluacionId.isAcceptableOrUnknown(data['evaluacion_id']!, _evaluacionIdMeta));
     } else if (isInserting) {
       context.missing(_evaluacionIdMeta);
+    }
+    if (data.containsKey('muestra_id')) {
+      context.handle(_muestraIdMeta, muestraId.isAcceptableOrUnknown(data['muestra_id']!, _muestraIdMeta));
     }
     if (data.containsKey('muestra_numero')) {
       context.handle(
@@ -1304,6 +1326,7 @@ class $EvidenciasLocalTable extends EvidenciasLocal with TableInfo<$EvidenciasLo
     return EvidenciasLocalData(
       id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       evaluacionId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}evaluacion_id'])!,
+      muestraId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}muestra_id']),
       muestraNumero: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}muestra_numero']),
       factor: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}factor']),
       bytes: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}bytes'])!,
@@ -1322,6 +1345,9 @@ class $EvidenciasLocalTable extends EvidenciasLocal with TableInfo<$EvidenciasLo
 class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLocalData> {
   final String id;
   final String evaluacionId;
+
+  /// Muestra a la que pertenece (id de la app; no cambia al renumerar). Null = evidencia general.
+  final String? muestraId;
   final int? muestraNumero;
   final String? factor;
   final Uint8List bytes;
@@ -1331,6 +1357,7 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
   const EvidenciasLocalData({
     required this.id,
     required this.evaluacionId,
+    this.muestraId,
     this.muestraNumero,
     this.factor,
     required this.bytes,
@@ -1343,6 +1370,9 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['evaluacion_id'] = Variable<String>(evaluacionId);
+    if (!nullToAbsent || muestraId != null) {
+      map['muestra_id'] = Variable<String>(muestraId);
+    }
     if (!nullToAbsent || muestraNumero != null) {
       map['muestra_numero'] = Variable<int>(muestraNumero);
     }
@@ -1360,6 +1390,7 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
     return EvidenciasLocalCompanion(
       id: Value(id),
       evaluacionId: Value(evaluacionId),
+      muestraId: muestraId == null && nullToAbsent ? const Value.absent() : Value(muestraId),
       muestraNumero: muestraNumero == null && nullToAbsent ? const Value.absent() : Value(muestraNumero),
       factor: factor == null && nullToAbsent ? const Value.absent() : Value(factor),
       bytes: Value(bytes),
@@ -1374,6 +1405,7 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
     return EvidenciasLocalData(
       id: serializer.fromJson<String>(json['id']),
       evaluacionId: serializer.fromJson<String>(json['evaluacionId']),
+      muestraId: serializer.fromJson<String?>(json['muestraId']),
       muestraNumero: serializer.fromJson<int?>(json['muestraNumero']),
       factor: serializer.fromJson<String?>(json['factor']),
       bytes: serializer.fromJson<Uint8List>(json['bytes']),
@@ -1388,6 +1420,7 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'evaluacionId': serializer.toJson<String>(evaluacionId),
+      'muestraId': serializer.toJson<String?>(muestraId),
       'muestraNumero': serializer.toJson<int?>(muestraNumero),
       'factor': serializer.toJson<String?>(factor),
       'bytes': serializer.toJson<Uint8List>(bytes),
@@ -1400,6 +1433,7 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
   EvidenciasLocalData copyWith({
     String? id,
     String? evaluacionId,
+    Value<String?> muestraId = const Value.absent(),
     Value<int?> muestraNumero = const Value.absent(),
     Value<String?> factor = const Value.absent(),
     Uint8List? bytes,
@@ -1409,6 +1443,7 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
   }) => EvidenciasLocalData(
     id: id ?? this.id,
     evaluacionId: evaluacionId ?? this.evaluacionId,
+    muestraId: muestraId.present ? muestraId.value : this.muestraId,
     muestraNumero: muestraNumero.present ? muestraNumero.value : this.muestraNumero,
     factor: factor.present ? factor.value : this.factor,
     bytes: bytes ?? this.bytes,
@@ -1420,6 +1455,7 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
     return EvidenciasLocalData(
       id: data.id.present ? data.id.value : this.id,
       evaluacionId: data.evaluacionId.present ? data.evaluacionId.value : this.evaluacionId,
+      muestraId: data.muestraId.present ? data.muestraId.value : this.muestraId,
       muestraNumero: data.muestraNumero.present ? data.muestraNumero.value : this.muestraNumero,
       factor: data.factor.present ? data.factor.value : this.factor,
       bytes: data.bytes.present ? data.bytes.value : this.bytes,
@@ -1434,6 +1470,7 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
     return (StringBuffer('EvidenciasLocalData(')
           ..write('id: $id, ')
           ..write('evaluacionId: $evaluacionId, ')
+          ..write('muestraId: $muestraId, ')
           ..write('muestraNumero: $muestraNumero, ')
           ..write('factor: $factor, ')
           ..write('bytes: $bytes, ')
@@ -1445,14 +1482,24 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, evaluacionId, muestraNumero, factor, $driftBlobEquality.hash(bytes), mime, syncState, creado);
+  int get hashCode => Object.hash(
+    id,
+    evaluacionId,
+    muestraId,
+    muestraNumero,
+    factor,
+    $driftBlobEquality.hash(bytes),
+    mime,
+    syncState,
+    creado,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is EvidenciasLocalData &&
           other.id == this.id &&
           other.evaluacionId == this.evaluacionId &&
+          other.muestraId == this.muestraId &&
           other.muestraNumero == this.muestraNumero &&
           other.factor == this.factor &&
           $driftBlobEquality.equals(other.bytes, this.bytes) &&
@@ -1464,6 +1511,7 @@ class EvidenciasLocalData extends DataClass implements Insertable<EvidenciasLoca
 class EvidenciasLocalCompanion extends UpdateCompanion<EvidenciasLocalData> {
   final Value<String> id;
   final Value<String> evaluacionId;
+  final Value<String?> muestraId;
   final Value<int?> muestraNumero;
   final Value<String?> factor;
   final Value<Uint8List> bytes;
@@ -1474,6 +1522,7 @@ class EvidenciasLocalCompanion extends UpdateCompanion<EvidenciasLocalData> {
   const EvidenciasLocalCompanion({
     this.id = const Value.absent(),
     this.evaluacionId = const Value.absent(),
+    this.muestraId = const Value.absent(),
     this.muestraNumero = const Value.absent(),
     this.factor = const Value.absent(),
     this.bytes = const Value.absent(),
@@ -1485,6 +1534,7 @@ class EvidenciasLocalCompanion extends UpdateCompanion<EvidenciasLocalData> {
   EvidenciasLocalCompanion.insert({
     required String id,
     required String evaluacionId,
+    this.muestraId = const Value.absent(),
     this.muestraNumero = const Value.absent(),
     this.factor = const Value.absent(),
     required Uint8List bytes,
@@ -1501,6 +1551,7 @@ class EvidenciasLocalCompanion extends UpdateCompanion<EvidenciasLocalData> {
   static Insertable<EvidenciasLocalData> custom({
     Expression<String>? id,
     Expression<String>? evaluacionId,
+    Expression<String>? muestraId,
     Expression<int>? muestraNumero,
     Expression<String>? factor,
     Expression<Uint8List>? bytes,
@@ -1512,6 +1563,7 @@ class EvidenciasLocalCompanion extends UpdateCompanion<EvidenciasLocalData> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (evaluacionId != null) 'evaluacion_id': evaluacionId,
+      if (muestraId != null) 'muestra_id': muestraId,
       if (muestraNumero != null) 'muestra_numero': muestraNumero,
       if (factor != null) 'factor': factor,
       if (bytes != null) 'bytes': bytes,
@@ -1525,6 +1577,7 @@ class EvidenciasLocalCompanion extends UpdateCompanion<EvidenciasLocalData> {
   EvidenciasLocalCompanion copyWith({
     Value<String>? id,
     Value<String>? evaluacionId,
+    Value<String?>? muestraId,
     Value<int?>? muestraNumero,
     Value<String?>? factor,
     Value<Uint8List>? bytes,
@@ -1536,6 +1589,7 @@ class EvidenciasLocalCompanion extends UpdateCompanion<EvidenciasLocalData> {
     return EvidenciasLocalCompanion(
       id: id ?? this.id,
       evaluacionId: evaluacionId ?? this.evaluacionId,
+      muestraId: muestraId ?? this.muestraId,
       muestraNumero: muestraNumero ?? this.muestraNumero,
       factor: factor ?? this.factor,
       bytes: bytes ?? this.bytes,
@@ -1554,6 +1608,9 @@ class EvidenciasLocalCompanion extends UpdateCompanion<EvidenciasLocalData> {
     }
     if (evaluacionId.present) {
       map['evaluacion_id'] = Variable<String>(evaluacionId.value);
+    }
+    if (muestraId.present) {
+      map['muestra_id'] = Variable<String>(muestraId.value);
     }
     if (muestraNumero.present) {
       map['muestra_numero'] = Variable<int>(muestraNumero.value);
@@ -1584,6 +1641,7 @@ class EvidenciasLocalCompanion extends UpdateCompanion<EvidenciasLocalData> {
     return (StringBuffer('EvidenciasLocalCompanion(')
           ..write('id: $id, ')
           ..write('evaluacionId: $evaluacionId, ')
+          ..write('muestraId: $muestraId, ')
           ..write('muestraNumero: $muestraNumero, ')
           ..write('factor: $factor, ')
           ..write('bytes: $bytes, ')
@@ -3459,6 +3517,7 @@ typedef $$EvidenciasLocalTableCreateCompanionBuilder =
     EvidenciasLocalCompanion Function({
       required String id,
       required String evaluacionId,
+      Value<String?> muestraId,
       Value<int?> muestraNumero,
       Value<String?> factor,
       required Uint8List bytes,
@@ -3471,6 +3530,7 @@ typedef $$EvidenciasLocalTableUpdateCompanionBuilder =
     EvidenciasLocalCompanion Function({
       Value<String> id,
       Value<String> evaluacionId,
+      Value<String?> muestraId,
       Value<int?> muestraNumero,
       Value<String?> factor,
       Value<Uint8List> bytes,
@@ -3492,6 +3552,9 @@ class $$EvidenciasLocalTableFilterComposer extends Composer<_$AppDatabase, $Evid
 
   ColumnFilters<String> get evaluacionId =>
       $composableBuilder(column: $table.evaluacionId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get muestraId =>
+      $composableBuilder(column: $table.muestraId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get muestraNumero =>
       $composableBuilder(column: $table.muestraNumero, builder: (column) => ColumnFilters(column));
@@ -3524,6 +3587,9 @@ class $$EvidenciasLocalTableOrderingComposer extends Composer<_$AppDatabase, $Ev
   ColumnOrderings<String> get evaluacionId =>
       $composableBuilder(column: $table.evaluacionId, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get muestraId =>
+      $composableBuilder(column: $table.muestraId, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get muestraNumero =>
       $composableBuilder(column: $table.muestraNumero, builder: (column) => ColumnOrderings(column));
 
@@ -3555,6 +3621,8 @@ class $$EvidenciasLocalTableAnnotationComposer extends Composer<_$AppDatabase, $
 
   GeneratedColumn<String> get evaluacionId =>
       $composableBuilder(column: $table.evaluacionId, builder: (column) => column);
+
+  GeneratedColumn<String> get muestraId => $composableBuilder(column: $table.muestraId, builder: (column) => column);
 
   GeneratedColumn<int> get muestraNumero =>
       $composableBuilder(column: $table.muestraNumero, builder: (column) => column);
@@ -3597,6 +3665,7 @@ class $$EvidenciasLocalTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> evaluacionId = const Value.absent(),
+                Value<String?> muestraId = const Value.absent(),
                 Value<int?> muestraNumero = const Value.absent(),
                 Value<String?> factor = const Value.absent(),
                 Value<Uint8List> bytes = const Value.absent(),
@@ -3607,6 +3676,7 @@ class $$EvidenciasLocalTableTableManager
               }) => EvidenciasLocalCompanion(
                 id: id,
                 evaluacionId: evaluacionId,
+                muestraId: muestraId,
                 muestraNumero: muestraNumero,
                 factor: factor,
                 bytes: bytes,
@@ -3619,6 +3689,7 @@ class $$EvidenciasLocalTableTableManager
               ({
                 required String id,
                 required String evaluacionId,
+                Value<String?> muestraId = const Value.absent(),
                 Value<int?> muestraNumero = const Value.absent(),
                 Value<String?> factor = const Value.absent(),
                 required Uint8List bytes,
@@ -3629,6 +3700,7 @@ class $$EvidenciasLocalTableTableManager
               }) => EvidenciasLocalCompanion.insert(
                 id: id,
                 evaluacionId: evaluacionId,
+                muestraId: muestraId,
                 muestraNumero: muestraNumero,
                 factor: factor,
                 bytes: bytes,

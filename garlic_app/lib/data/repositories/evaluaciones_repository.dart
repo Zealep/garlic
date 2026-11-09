@@ -192,6 +192,7 @@ class EvaluacionesRepository {
                   (f) => EvidenciaLocal(
                     id: f.id,
                     evaluacionId: f.evaluacionId,
+                    muestraId: f.muestraId,
                     muestraNumero: f.muestraNumero,
                     factor: f.factor,
                     bytes: f.bytes,
@@ -207,6 +208,7 @@ class EvaluacionesRepository {
     required String evaluacionId,
     required Uint8List bytes,
     required String mime,
+    String? muestraId,
     int? muestraNumero,
     String? factor,
   }) async {
@@ -217,6 +219,7 @@ class EvaluacionesRepository {
           EvidenciasLocalCompanion.insert(
             id: id,
             evaluacionId: evaluacionId,
+            muestraId: Value(muestraId),
             muestraNumero: Value(muestraNumero),
             factor: Value(factor),
             bytes: bytes,

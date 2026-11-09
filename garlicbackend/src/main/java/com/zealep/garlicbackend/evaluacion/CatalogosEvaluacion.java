@@ -16,7 +16,6 @@ import com.zealep.garlicbackend.catalogo.tipohumedad.TipoHumedadService;
 import com.zealep.garlicbackend.evaluacion.dto.EvaluacionRequest;
 import com.zealep.garlicbackend.evaluacion.dto.FormularioEvaluacion;
 import com.zealep.garlicbackend.shared.exception.BusinessException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -55,12 +54,14 @@ public class CatalogosEvaluacion {
                         .flatMap(m -> m.calidadOVacio().stream()).map(EvaluacionRequest.Calidad::claseCalidadId).toList()),
                 calibreService.referenciasActivas(request.muestrasOVacio().stream()
                         .flatMap(m -> m.calibresOVacio().stream()).map(EvaluacionRequest.Calibre::calibreId).toList()),
-                tipoHumedadService.referenciasActivas(request.humedadOVacio().stream()
-                        .map(EvaluacionRequest.Humedad::tipoHumedadId).toList()),
-                tipoEmpasteService.referenciasActivas(request.empastesOVacio()),
-                tipoDanoService.referenciasActivas(request.danosOVacio()),
-                enfermedadService.referenciasActivas(request.sanidadOVacio().stream()
-                        .map(EvaluacionRequest.Sanidad::enfermedadId).toList()));
+                tipoHumedadService.referenciasActivas(request.muestrasOVacio().stream()
+                        .flatMap(m -> m.humedadOVacio().stream()).map(EvaluacionRequest.Humedad::tipoHumedadId).toList()),
+                tipoEmpasteService.referenciasActivas(request.muestrasOVacio().stream()
+                        .flatMap(m -> m.empastesOVacio().stream()).toList()),
+                tipoDanoService.referenciasActivas(request.muestrasOVacio().stream()
+                        .flatMap(m -> m.danosOVacio().stream()).map(EvaluacionRequest.Dano::tipoDanoId).toList()),
+                enfermedadService.referenciasActivas(request.muestrasOVacio().stream()
+                        .flatMap(m -> m.sanidadOVacio().stream()).map(EvaluacionRequest.Sanidad::enfermedadId).toList()));
         r.todos()
                 .filter(c -> !c.getCultivoId().equals(cultivoId))
                 .findFirst()
@@ -78,10 +79,13 @@ public class CatalogosEvaluacion {
                         .map(PorcentajeCalidad::claseCalidadId).toList()),
                 calibreService.porIds(muestras.stream().flatMap(m -> m.getCalibres().stream())
                         .map(PorcentajeCalibre::calibreId).toList()),
-                tipoHumedadService.porIds(ev.getHumedad().stream().map(HumedadObservada::tipoHumedadId).toList()),
-                tipoEmpasteService.porIds(ev.getEmpastes()),
-                tipoDanoService.porIds(ev.getDanos()),
-                enfermedadService.porIds(ev.getSanidad().stream().map(SanidadObservada::enfermedadId).toList()));
+                tipoHumedadService.porIds(muestras.stream().flatMap(m -> m.getHumedad().stream())
+                        .map(HumedadObservada::tipoHumedadId).toList()),
+                tipoEmpasteService.porIds(muestras.stream().flatMap(m -> m.getEmpastes().stream()).toList()),
+                tipoDanoService.porIds(muestras.stream().flatMap(m -> m.getDanos().stream())
+                        .map(DanoObservado::tipoDanoId).toList()),
+                enfermedadService.porIds(muestras.stream().flatMap(m -> m.getSanidad().stream())
+                        .map(SanidadObservada::enfermedadId).toList()));
     }
 
     /** Enfermedades que deben responderse SI/NO en toda evaluacion del cultivo. */
@@ -98,7 +102,6 @@ public class CatalogosEvaluacion {
                 claseCalidadService.listarActivos(cultivoId),
                 calibreService.listarActivos(cultivoId),
                 tipoHumedadService.listarActivos(cultivoId),
-                Arrays.asList(NivelHumedad.values()),
                 tipoEmpasteService.listarActivos(cultivoId),
                 tipoDanoService.listarActivos(cultivoId),
                 enfermedadService.listarActivos(cultivoId).stream()

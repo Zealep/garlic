@@ -55,7 +55,7 @@ public class EvidenciaService {
      *           (reintento de sincronizacion) sin volver a guardar el archivo.
      */
     @Transactional
-    public Creacion<EvidenciaResponse> subir(UUID id, UUID evaluacionId, MultipartFile archivo, Short muestraNumero,
+    public Creacion<EvidenciaResponse> subir(UUID id, UUID evaluacionId, MultipartFile archivo, UUID muestraId, Short muestraNumero,
             FactorEvidencia factor, String descripcion, Instant fechaCaptura) {
         if (id != null) {
             var existente = repository.findByIdAndEmpresaId(id, tenantProvider.currentEmpresaId());
@@ -64,9 +64,12 @@ public class EvidenciaService {
             }
         }
         EvaluacionLote evaluacion = evaluacionEditable(evaluacionId);
-        Muestra muestra = muestraNumero == null ? null : evaluacion.muestra(muestraNumero)
-                .orElseThrow(() -> new BusinessException("La muestra " + muestraNumero
-                        + " no existe en la evaluacion; guardela primero"));
+        Muestra muestra = null;
+        if (muestraId != null || muestraNumero != null) {
+            muestra = (muestraId != null ? evaluacion.muestra(muestraId) : evaluacion.muestra(muestraNumero))
+                    .orElseThrow(() -> new BusinessException("La muestra " + (muestraNumero != null ? muestraNumero : muestraId)
+                            + " no existe en la evaluacion; guardela primero"));
+        }
         String extension = ArchivosSubidos.extensionImagen(archivo);
 
         String clave;

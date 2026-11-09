@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 /**
  * Punto 3 contra Postgres real con el ejemplo del Excel: precios 3.4 / 1.4, llenado 0.30, pactado 2.80,
- * dos camiones de 15 000 kg con 1% de destare y gastos 1800 + 30 + 900 + 70.
+ * dos camiones de 15 000 kg con 150 kg de destare cada uno y gastos 1800 + 30 + 900 + 70.
  */
 class CompraIT extends AbstractIntegrationTest {
 
@@ -122,7 +122,21 @@ class CompraIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.resumen.gastosVinculados").value(2800.0))
                 .andExpect(jsonPath("$.resumen.costoPacking").value(85960.0))
                 .andExpect(jsonPath("$.resumen.cuMp").value(2.8))
-                .andExpect(jsonPath("$.resumen.cuPacking").value(2.8943));
+                .andExpect(jsonPath("$.resumen.cuPacking").value(2.89));
+
+        // 6. Pendientes de pago (inicio): el lote con saldo
+        mvc.perform(get("/api/v1/compras/pendientes").header(TenantContext.HEADER, empresa))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].loteId").value(lote))
+                .andExpect(jsonPath("$[0].agricultor").value("Kevin"))
+                .andExpect(jsonPath("$[0].saldo").value(33160.0))
+                .andExpect(jsonPath("$[0].estadoPago").value("PARCIAL"));
+        // pagado el saldo, deja de estar pendiente
+        mvc.perform(json(put(url("/pagos/" + UUID.randomUUID())), empresa, pago("33160", agricultorPersona)))
+                .andExpect(status().isCreated());
+        mvc.perform(get("/api/v1/compras/pendientes").header(TenantContext.HEADER, empresa))
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
@@ -171,10 +185,11 @@ class CompraIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.detail").value(containsString("Describa")));
         // carga de otro lote / inexistente
         gasto(UUID.randomUUID().toString(), estiba, "70", null).andExpect(status().isUnprocessableContent());
-        // monto 0 y destare > 100 -> 400
+        // monto 0 -> 400
         mvc.perform(json(put(url("/pagos/" + UUID.randomUUID())), empresa, pago("0", null))).andExpect(status().isBadRequest());
+        // destare mayor que los kg -> 422
         mvc.perform(json(put(url("/cargas/" + UUID.randomUUID())), empresa, """
-                {"fecha":"2025-10-20","kg":100,"precioKg":2.8,"destarePct":150}""")).andExpect(status().isBadRequest());
+                {"fecha":"2025-10-20","kg":100,"precioKg":2.8,"destareKg":150}""")).andExpect(status().isUnprocessableContent());
         // otra empresa no ve el lote
         mvc.perform(get(url("/compra")).header(TenantContext.HEADER, nuevaEmpresa())).andExpect(status().isNotFound());
     }
@@ -224,7 +239,7 @@ class CompraIT extends AbstractIntegrationTest {
     private String carga(String placa) {
         return """
                 {"fecha":"2025-10-20","placa":%s,"kg":15000,"cantidadEmpaques":375,"tipoEmpaqueId":"%s",
-                 "precioKg":2.8,"destarePct":1}"""
+                 "precioKg":2.8,"destareKg":150}"""
                 .formatted(placa == null ? "null" : "\"" + placa + "\"", malla);
     }
 
@@ -258,7 +273,7 @@ class CompraIT extends AbstractIntegrationTest {
     /** Evaluacion del Excel: PRIMERA 80/85/75, ABIERTOS 20/15/25, un calibre al 100%. */
     private String crearEvaluacion(boolean cerrar) throws Exception {
         String evaluador = crearId("/api/v1/usuarios", """
-                {"nombres":"Evaluador","email":"eval-%s@demo.pe","rol":"EVALUADOR"}""".formatted(UUID.randomUUID()));
+                {"nombres":"Evaluador","dni":"%s","rol":"EVALUADOR"}""".formatted(dniAlAzar()));
         String body = """
                 {"evaluadorId":"%s","fechaEvaluacion":"2025-10-10","muestras":[%s,%s,%s]}"""
                 .formatted(evaluador, muestra(1, 80, 20), muestra(2, 85, 15), muestra(3, 75, 25));

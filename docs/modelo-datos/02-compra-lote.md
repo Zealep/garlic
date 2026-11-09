@@ -8,7 +8,7 @@ El flujo del MVP termina con la **materia prima puesta en packing**.
 
 ## Decisiones (usuario, 2026-10-03)
 - **Gasto de llenado se resta**: precio técnico = promedio de muestras − llenado (como la celda N72 del Excel).
-- **Destare = % por carga** (sugerido 1 %, editable; 0 si no aplica). Es el estimado de kg que pierde el ajo.
+- **Destare en kg por carga** (2026-11-02; antes %; 0 si no aplica, no más que los kg). Es el estimado de kg que pierde el ajo.
 - **Pagos** solo por la materia prima (al agricultor/proveedor). Los **gastos vinculados** (llevar el producto
   al packing) van aparte y no se descuentan del pago.
 - **Costos unitarios separados** y sobre **kg netos** (kg cargados − destare).
@@ -22,7 +22,7 @@ El flujo del MVP termina con la **materia prima puesta en packing**.
 | Precio promedio | promedio(precio de cada muestra) | N70 |
 | Precio técnico | precio promedio − gasto de llenado | N72 |
 | Ajuste | precio pactado − precio técnico | — |
-| Destare (kg) | kg × destare % / 100 | E83 |
+| Destare (kg) | ingresado por carga | E83 |
 | Kg netos de la carga | kg − destare | — |
 | Importe de la carga | kg × precio | H81 |
 | Descuento por destare | destare (kg) × precio | H83 |
@@ -48,9 +48,9 @@ Estado de pago: `SIN_COMPRAS` · `POR_PAGAR` · `PARCIAL` · `PAGADO` (saldo 0) 
 ### Ejemplo del Excel (usado en los tests)
 - Precios base PRIMERA 3.40 y ABIERTOS 1.40 con PRIMERA 80/85/75 % dan 3.00 / 3.10 / 2.90 por muestra y un **promedio de 3.00**.
 - Con llenado 0.30 queda un **técnico de 2.70**; se **pacta en 2.80** (ajuste +0.10).
-- 2 camiones × 15 000 kg (375 mallas) a 2.80 con 1 % de destare dan **29 700 kg netos** y **MP S/ 83 160**.
+- 2 camiones × 15 000 kg (375 mallas) a 2.80 con 150 kg de destare cada uno dan **29 700 kg netos** y **MP S/ 83 160**.
 - Gastos: estiba 1 800 + pesaje 30 + flete 900 + otros 70 = **S/ 2 800**.
-- Total puesto en packing: **S/ 85 960**. C.U. MP: **2.8000**. C.U. packing: **2.8943**.
+- Total puesto en packing: **S/ 85 960**. C.U. MP: **2.8000**. C.U. packing: **2.89** (2 decimales).
 
 ## Tablas
 
@@ -76,7 +76,7 @@ Para **pactar**, cada clase con % > 0 en alguna muestra debe tener precio base (
 
 ### `carga` (un camión)
 `lote_id`, `fecha`, `placa`, `kg > 0`, `cantidad_empaques ≥ 0`, `tipo_empaque_id`, `precio_kg > 0`
-(sugerido = pactado), `destare_pct 0–100` (default 1), `observacion`.
+(sugerido = pactado), `destare_kg` (0 ≤ destare ≤ kg, default 0), `observacion`.
 
 ### `gasto_vinculado`
 `lote_id`, `carga_id` (null = gasto general), `tipo_gasto_id`, `fecha`, `monto > 0`, `descripcion`.

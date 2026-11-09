@@ -1,6 +1,8 @@
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:garlic_app/data/repositories/sync_repository.dart';
@@ -43,7 +45,10 @@ void main() {
   late _ApiFalsa api;
   late SyncRepository sync;
 
-  setUpAll(() => registerFallbackValue(<String, Object?>{}));
+  setUpAll(() {
+    registerFallbackValue(<String, Object?>{});
+    registerFallbackValue(Uint8List(0));
+  });
 
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
@@ -115,6 +120,26 @@ void main() {
     expect(cola.single.bloqueada, isFalse);
     expect(sync.resumen.pendientes, 1);
     expect((await lote('l-2')).syncState, SyncState.pendiente.name);
+  });
+
+  test('sesión vencida (401): lo pendiente espera sin bloquearse y sale al volver a entrar', () async {
+    await insertarLotePendiente('l-4');
+    when(() => api.put(any(), body: any(named: 'body'))).thenAnswer(
+      (_) async => const Result.error(AppFailure(FailureKind.sinSesion, 'Tu sesión expiró', statusCode: 401)),
+    );
+
+    await encolarLote('l-4');
+    await sync.sincronizar();
+
+    final cola = await db.select(db.outbox).get();
+    expect(cola.single.bloqueada, isFalse);
+    expect(sync.resumen.errores, 0);
+    expect((await lote('l-4')).syncState, SyncState.pendiente.name);
+
+    // vuelve a iniciar sesión: se envía
+    when(() => api.put(any(), body: any(named: 'body'))).thenAnswer((_) async => Result.ok(_loteJson('l-4')));
+    await sync.sincronizar();
+    expect(await db.select(db.outbox).get(), isEmpty);
   });
 
   test('rechazo del servidor (409): se bloquea, el lote queda con error y se puede reintentar', () async {
@@ -216,5 +241,161 @@ void main() {
     await sync.sincronizar();
 
     expect(orden, ['/api/v1/evaluaciones/ev-9', '/api/v1/evaluaciones/ev-9/cerrar']);
+  });
+
+  test('si el borrador cambia mientras se envía, no se pierde: se reenvía antes que lo que sigue', () async {
+    final enviados = <Object?>[];
+    var primera = true;
+    when(() => api.put(any(), body: any(named: 'body'))).thenAnswer((inv) async {
+      enviados.add(inv.namedArguments[#body]);
+      if (primera) {
+        primera = false;
+        // el evaluador agrega una muestra mientras viaja el primer envío
+        await sync.encolar(
+          tipo: TipoOperacion.evaluacionUpsert,
+          entidadId: 'ev-5',
+          descripcion: 'Evaluación',
+          payload: {
+            'loteId': 'l-1',
+            'request': {'muestras': 2},
+          },
+          reemplazar: true,
+        );
+      }
+      return const Result.ok(<String, Object?>{});
+    });
+    when(() => api.post(any(), body: any(named: 'body'))).thenAnswer((inv) async {
+      enviados.add(inv.positionalArguments.first);
+      return const Result.ok(<String, Object?>{});
+    });
+
+    await sync.encolar(
+      tipo: TipoOperacion.evaluacionUpsert,
+      entidadId: 'ev-5',
+      descripcion: 'Evaluación',
+      payload: {
+        'loteId': 'l-1',
+        'request': {'muestras': 1},
+      },
+      reemplazar: true,
+    );
+    await sync.encolar(
+      tipo: TipoOperacion.evaluacionCerrar,
+      entidadId: 'ev-5',
+      descripcion: 'Cierre',
+      payload: const {},
+    );
+
+    await sync.sincronizar(); // envía la versión 1, ve que cambió y se detiene
+    expect(enviados, [
+      {'muestras': 1},
+    ]);
+    expect(await db.select(db.outbox).get(), hasLength(2));
+
+    await sync.sincronizar(); // la versión nueva sale antes que el cierre
+    expect(enviados, [
+      {'muestras': 1},
+      {'muestras': 2},
+      '/api/v1/evaluaciones/ev-5/cerrar',
+    ]);
+    expect(await db.select(db.outbox).get(), isEmpty);
+  });
+
+  group('fotos tomadas antes de que su evaluación llegue al servidor', () {
+    Future<void> foto(String id) async {
+      await db
+          .into(db.evidenciasLocal)
+          .insert(
+            EvidenciasLocalCompanion.insert(
+              id: id,
+              evaluacionId: 'ev-9',
+              bytes: Uint8List.fromList([1, 2, 3]),
+              mime: 'image/jpeg',
+              syncState: SyncState.pendiente.name,
+              creado: DateTime.now(),
+            ),
+          );
+      await sync.encolar(tipo: TipoOperacion.evidenciaSubir, entidadId: id, descripcion: 'Foto', payload: const {});
+    }
+
+    Future<void> evaluacion() => sync.encolar(
+      tipo: TipoOperacion.evaluacionUpsert,
+      entidadId: 'ev-9',
+      descripcion: 'Evaluación',
+      payload: {'loteId': 'l-1', 'request': <String, Object?>{}},
+      reemplazar: true,
+    );
+
+    void subidaOk(List<String> orden) => when(
+      () => api.subirArchivo(
+        any(),
+        bytes: any(named: 'bytes'),
+        nombreArchivo: any(named: 'nombreArchivo'),
+        mime: any(named: 'mime'),
+        campos: any(named: 'campos'),
+      ),
+    ).thenAnswer((inv) async {
+      orden.add('foto');
+      return const Result.ok(<String, Object?>{});
+    });
+
+    test('la foto encolada antes que su evaluación espera y sale después de ella (sin bloquearse)', () async {
+      final orden = <String>[];
+      when(() => api.put(any(), body: any(named: 'body'))).thenAnswer((_) async {
+        orden.add('evaluacion');
+        return const Result.ok(<String, Object?>{});
+      });
+      subidaOk(orden);
+
+      await foto('f-1'); // cámara antes del primer guardado del borrador
+      await evaluacion();
+      await sync.sincronizar();
+
+      expect(orden, ['evaluacion', 'foto']);
+      expect(await db.select(db.outbox).get(), isEmpty);
+      expect(sync.resumen.errores, 0);
+    });
+
+    test('si la evaluación tiene error, su foto espera (pendiente) en vez de fallar con "no existe"', () async {
+      when(() => api.put(any(), body: any(named: 'body'))).thenAnswer((_) async => const Result.error(_zonaRepetida));
+      subidaOk([]);
+
+      await evaluacion();
+      await foto('f-2');
+      await sync.sincronizar();
+      await sync.sincronizar();
+
+      verifyNever(
+        () => api.subirArchivo(
+          any(),
+          bytes: any(named: 'bytes'),
+          nombreArchivo: any(named: 'nombreArchivo'),
+          mime: any(named: 'mime'),
+          campos: any(named: 'campos'),
+        ),
+      );
+      expect(sync.resumen.errores, 1, reason: 'solo la evaluación');
+      expect(sync.resumen.pendientes, 1, reason: 'la foto espera');
+    });
+
+    test('una foto que quedó bloqueada por "no existe" se desbloquea y sale cuando llega su evaluación', () async {
+      final orden = <String>[];
+      await foto('f-3');
+      await (db.update(
+        db.outbox,
+      )).write(const OutboxCompanion(bloqueada: Value(true), ultimoError: Value('Evaluacion con id ev-9 no existe')));
+      when(() => api.put(any(), body: any(named: 'body'))).thenAnswer((_) async {
+        orden.add('evaluacion');
+        return const Result.ok(<String, Object?>{});
+      });
+      subidaOk(orden);
+
+      await evaluacion();
+      await sync.sincronizar();
+      await sync.sincronizar();
+
+      expect(orden, ['evaluacion', 'foto']);
+      expect(await db.select(db.outbox).get(), isEmpty);
+    });
   });
 }

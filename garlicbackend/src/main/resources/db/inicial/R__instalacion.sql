@@ -3,7 +3,8 @@
 -- Migracion repetible e idempotente (ON CONFLICT DO NOTHING): no pisa lo que el cliente
 -- ya edito desde la app. Los valores vienen de variables de entorno (placeholders de Flyway):
 --   GARLIC_EMPRESA_RUC, GARLIC_EMPRESA_RAZON_SOCIAL, GARLIC_CAMPANIA,
---   GARLIC_ADMIN_NOMBRE, GARLIC_ADMIN_EMAIL
+--   GARLIC_ADMIN_NOMBRE, GARLIC_ADMIN_DNI, GARLIC_ADMIN_EMAIL (opcional)
+-- La clave del administrador no va aqui: la asigna el backend al arrancar (GARLIC_ADMIN_CLAVE_INICIAL).
 -- =====================================================================
 
 INSERT INTO empresa (ruc, razon_social)
@@ -64,10 +65,10 @@ BEGIN
         (v_emp, v_cul, 'MANDARINA', 'MANDARINA', 4)
     ON CONFLICT DO NOTHING;
 
-    INSERT INTO tipo_dano (empresa_id, cultivo_id, codigo, nombre, es_excluyente, orden) VALUES
-        (v_emp, v_cul, 'PARALISIS_CEROSA', 'PARALISIS CEROSA (Caramelo)',     false, 1),
-        (v_emp, v_cul, 'PARALISIS_ACUOSA', 'PARALISIS ACUOSA (Dano Diente)',  false, 2),
-        (v_emp, v_cul, 'NO_CONTIENE',      'NO CONTIENE',                     true,  3)
+    INSERT INTO tipo_dano (empresa_id, cultivo_id, codigo, nombre, es_excluyente, pide_cantidades, orden) VALUES
+        (v_emp, v_cul, 'PARALISIS_CEROSA', 'PARALISIS CEROSA (Caramelo)',     false, true,  1),
+        (v_emp, v_cul, 'PARALISIS_ACUOSA', 'PARALISIS ACUOSA (Dano Diente)',  false, true,  2),
+        (v_emp, v_cul, 'NO_CONTIENE',      'NO CONTIENE',                     true,  false, 3)
     ON CONFLICT DO NOTHING;
 
     -- Punto 3: compra del lote
@@ -105,9 +106,9 @@ BEGIN
         (v_emp, v_cul, 'PENICILLIUM',       'PENICILLIUM',                     'Penicillium spp.',                   false, false, 12)
     ON CONFLICT DO NOTHING;
 
-    -- Primer usuario (evaluador / administrador); los demas se agregan despues
-    INSERT INTO usuario (empresa_id, nombres, email, rol)
-    VALUES (v_emp, '${admin_nombre}', '${admin_email}', 'ADMIN')
+    -- Primer usuario (administrador: entra con su DNI y crea a los demas desde la app)
+    INSERT INTO usuario (empresa_id, nombres, dni, email, rol)
+    VALUES (v_emp, '${admin_nombre}', '${admin_dni}', NULLIF('${admin_email}', ''), 'ADMIN')
     ON CONFLICT DO NOTHING;
 END;
 $$;

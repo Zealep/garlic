@@ -53,11 +53,12 @@ class Lote {
     required this.cultivoId,
     required this.variedad,
     required this.agricultor,
-    required this.localidad,
     required this.zona,
     required this.tipoCompra,
+    this.localidad,
     this.proveedor,
     this.titularLiquidacion,
+    this.cuentaLiquidacion,
     this.latitud,
     this.longitud,
     this.mapsUrl,
@@ -81,7 +82,8 @@ class Lote {
       agricultor: PersonaRef.fromJson(m('agricultor')!),
       proveedor: m('proveedor') == null ? null : PersonaRef.fromJson(m('proveedor')!),
       titularLiquidacion: m('titularLiquidacion') == null ? null : PersonaRef.fromJson(m('titularLiquidacion')!),
-      localidad: Ref.fromJson(m('localidad')!),
+      cuentaLiquidacion: json['cuentaLiquidacion'] as String?,
+      localidad: m('localidad') == null ? null : Ref.fromJson(m('localidad')!),
       zona: json['zona']! as String,
       latitud: (json['latitud'] as num?)?.toDouble(),
       longitud: (json['longitud'] as num?)?.toDouble(),
@@ -105,7 +107,12 @@ class Lote {
   final PersonaRef agricultor;
   final PersonaRef? proveedor;
   final PersonaRef? titularLiquidacion;
-  final Ref localidad;
+
+  /// Número de cuenta o CCI de quien cobra la liquidación.
+  final String? cuentaLiquidacion;
+
+  /// Ciudad / CCPP; puede faltar si se registró el punto GPS.
+  final Ref? localidad;
   final String zona;
   final double? latitud;
   final double? longitud;
@@ -121,6 +128,13 @@ class Lote {
   bool get activo => estado == EstadoLote.activo;
   bool get tieneUbicacion => latitud != null && longitud != null;
 
+  /// Ciudad / CCPP o, si no se indicó, las coordenadas GPS.
+  String get ubicacionTexto {
+    final ciudad = localidad?.texto ?? '';
+    if (ciudad.isNotEmpty) return ciudad;
+    return tieneUbicacion ? 'GPS ${latitud!.toStringAsFixed(4)}, ${longitud!.toStringAsFixed(4)}' : '—';
+  }
+
   Map<String, Object?> toJson() => {
     'id': id,
     'codigo': codigo,
@@ -131,7 +145,8 @@ class Lote {
     'agricultor': agricultor.toJson(),
     'proveedor': proveedor?.toJson(),
     'titularLiquidacion': titularLiquidacion?.toJson(),
-    'localidad': localidad.toJson(),
+    'cuentaLiquidacion': cuentaLiquidacion,
+    'localidad': localidad?.toJson(),
     'zona': zona,
     'latitud': latitud,
     'longitud': longitud,
@@ -166,11 +181,12 @@ class NuevoLote {
     required this.campaniaId,
     required this.variedadId,
     required this.agricultorId,
-    required this.localidadId,
     required this.zona,
     required this.tipoCompraId,
+    this.localidadId,
     this.proveedorId,
     this.titular,
+    this.cuentaLiquidacion,
     this.latitud,
     this.longitud,
     this.fechaArrancado,
@@ -184,7 +200,10 @@ class NuevoLote {
   final String agricultorId;
   final String? proveedorId;
   final TitularLiquidacion? titular;
-  final String localidadId;
+  final String? cuentaLiquidacion;
+
+  /// Opcional si se registra el punto GPS.
+  final String? localidadId;
   final String zona;
   final double? latitud;
   final double? longitud;
@@ -201,6 +220,7 @@ class NuevoLote {
     'agricultorId': agricultorId,
     'proveedorId': proveedorId,
     'titularLiquidacion': titular?.toJson(),
+    'cuentaLiquidacion': (cuentaLiquidacion?.trim().isEmpty ?? true) ? null : cuentaLiquidacion!.trim(),
     'localidadId': localidadId,
     'zona': zona,
     'latitud': latitud == null ? null : double.parse(latitud!.toStringAsFixed(6)),

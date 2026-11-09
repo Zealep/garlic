@@ -80,6 +80,7 @@ class ComparacionEvaluaciones {
 
     // la opción excluyente es "NO CONTIENE": no cuenta como daño
     final sinDano = formulario.tiposDano.where((d) => d.esExcluyente).map((d) => d.id).toSet();
+    final paralisis = formulario.tiposDano.where((d) => d.pideCantidades).map((d) => d.id).toSet();
     FilaComparacion menor(String id, String etiqueta, double Function(EvaluacionBorrador) valor, double umbral) {
       final (va, vb) = (valor(a), valor(b));
       return FilaComparacion(
@@ -97,15 +98,31 @@ class ComparacionEvaluaciones {
       valorKg: valorKg,
       fijacionA: fijA,
       fijacionB: fijB,
+      // sensoriales y sanidad son por muestra: se resumen sobre todas las muestras de cada evaluación
       sanidadYDanos: [
-        menor('enfermedades', 'Enfermedades presentes', (e) => _presentes(e).length.toDouble(), 0),
+        menor('enfermedades', 'Enfermedades presentes', (e) => _enfermedadesPresentes(e).toDouble(), 0),
         menor(
           'incidencia',
           'Incidencia máxima',
           (e) => _presentes(e).fold(0, (m, p) => p > m ? p : m),
           umbralPorcentaje,
         ),
-        menor('danos', 'Daños registrados', (e) => e.danos.where((d) => !sinDano.contains(d)).length.toDouble(), 0),
+        if (paralisis.isNotEmpty)
+          menor(
+            'paralisis',
+            '% parálisis (PROM)',
+            (e) => CalculoCompra.redondear(
+              e.promediosDanos().entries.where((x) => paralisis.contains(x.key)).fold(0, (s, x) => s + x.value),
+              2,
+            ),
+            umbralPorcentaje,
+          ),
+        menor(
+          'danos',
+          'Daños registrados',
+          (e) => {for (final m in e.muestras) ...m.danos.keys}.where((d) => !sinDano.contains(d)).length.toDouble(),
+          0,
+        ),
       ],
     );
   }
@@ -144,11 +161,20 @@ class ComparacionEvaluaciones {
     return CalculoCompra.fijacion(precios, [for (final m in muestras) m.calidad], llenado);
   }
 
-  /// % de cada enfermedad presente (sin % registrado cuenta como 0).
+  /// % de cada enfermedad presente en cada muestra (sin % registrado cuenta como 0).
   static List<double> _presentes(EvaluacionBorrador e) => [
-    for (final s in e.sanidad.values)
-      if (s.presente) s.porcentaje ?? 0,
+    for (final m in e.muestras)
+      for (final s in m.sanidad.values)
+        if (s.presente) s.porcentaje ?? 0,
   ];
+
+  /// Enfermedades distintas marcadas SÍ en alguna muestra.
+  static int _enfermedadesPresentes(EvaluacionBorrador e) =>
+      {
+        for (final m in e.muestras)
+          for (final x in m.sanidad.entries)
+            if (x.value.presente) x.key,
+      }.length;
 
   static Ganador _ganador(double a, double b, double umbral, {required bool mayorEsMejor}) {
     final d = b - a;

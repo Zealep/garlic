@@ -4,7 +4,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/theme/tema.dart';
 import '../../../../core/widgets/campos.dart';
 import '../../../../core/widgets/componentes.dart';
-import '../../../../../domain/models/evaluacion.dart';
 import '../../view_models/evaluacion_view_model.dart';
 import '../../../../core/widgets/galeria_fotos.dart';
 
@@ -27,7 +26,7 @@ class PasoGeneral extends StatelessWidget {
           child: Column(
             children: [
               DatoFila(etiqueta: 'Agricultor', valor: lote.agricultor.nombres),
-              DatoFila(etiqueta: 'Localidad', valor: '${lote.localidad.texto} · zona ${lote.zona}'),
+              DatoFila(etiqueta: 'Localidad', valor: '${lote.ubicacionTexto} · zona ${lote.zona}'),
               DatoFila(etiqueta: 'Tipo de compra', valor: lote.tipoCompra.texto),
             ],
           ),
@@ -68,9 +67,9 @@ class PasoGeneral extends StatelessWidget {
         GaleriaFotos(
           titulo: 'Evidencias generales (opcional)',
           ayuda: 'Fotos del campo, del lote o de la carga.',
-          fotos: vm.fotosDe(SeccionFoto.general),
+          fotos: vm.fotosGenerales,
           editable: vm.editable,
-          onAgregar: (bytes, mime) => vm.agregarFoto(bytes, mime, seccion: SeccionFoto.general),
+          onAgregar: (bytes, mime) => vm.agregarFoto(bytes, mime),
           onEliminar: vm.eliminarFoto,
         ),
       ],

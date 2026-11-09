@@ -6,7 +6,9 @@ import '../data/repositories/compra_repository.dart';
 import '../data/repositories/config_repository.dart';
 import '../data/repositories/evaluaciones_repository.dart';
 import '../data/repositories/lotes_repository.dart';
+import '../data/repositories/sesion_repository.dart';
 import '../data/repositories/sync_repository.dart';
+import '../data/repositories/usuarios_repository.dart';
 import '../data/services/api/api_client.dart';
 import '../data/services/conectividad_service.dart';
 import '../data/services/local/app_database.dart';
@@ -17,6 +19,8 @@ import '../data/services/local/kv_store.dart';
 class Dependencias {
   Dependencias._({
     required this.db,
+    required this.sesion,
+    required this.usuarios,
     required this.config,
     required this.catalogos,
     required this.sync,
@@ -26,6 +30,8 @@ class Dependencias {
   });
 
   final AppDatabase db;
+  final SesionRepository sesion;
+  final UsuariosRepository usuarios;
   final ConfigRepository config;
   final CatalogosRepository catalogos;
   final SyncRepository sync;
@@ -37,11 +43,14 @@ class Dependencias {
     final base = db ?? AppDatabase();
     final cliente = api ?? ApiClient();
     final kv = KvStore(base);
+    final sesion = SesionRepository(kv: kv, api: cliente);
     final config = ConfigRepository(kv: kv, api: cliente);
     final catalogos = CatalogosRepository(kv: kv, api: cliente);
     final sync = SyncRepository(db: base, api: cliente, conectividad: conectividad ?? ConectividadService(), kv: kv);
     final deps = Dependencias._(
       db: base,
+      sesion: sesion,
+      usuarios: UsuariosRepository(api: cliente),
       config: config,
       catalogos: catalogos,
       sync: sync,
@@ -49,6 +58,8 @@ class Dependencias {
       evaluaciones: EvaluacionesRepository(db: base, api: cliente, sync: sync),
       compra: CompraRepository(db: base, api: cliente, sync: sync, kv: kv),
     );
+    // la sesión primero: el sync arranca usando su token
+    await sesion.cargar();
     await config.cargar();
     await catalogos.cargar();
     await sync.iniciar();
@@ -56,6 +67,8 @@ class Dependencias {
   }
 
   List<SingleChildWidget> get providers => [
+    ChangeNotifierProvider.value(value: sesion),
+    Provider.value(value: usuarios),
     ChangeNotifierProvider.value(value: config),
     ChangeNotifierProvider.value(value: catalogos),
     ChangeNotifierProvider.value(value: sync),

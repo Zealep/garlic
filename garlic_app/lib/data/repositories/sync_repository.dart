@@ -152,23 +152,37 @@ class SyncRepository extends ChangeNotifier {
     _resumen = _resumen.copyWith(sincronizando: true);
     notifyListeners();
     AppFailure? falloRed;
+    var pendientesNuevos = false;
     try {
       final cola =
           await (_db.select(_db.outbox)
                 ..where((t) => t.bloqueada.equals(false))
                 ..orderBy([(t) => OrderingTerm.asc(t.seq)]))
               .get();
-      for (final op in cola) {
+
+      /// Envía una operación; false = detener esta vuelta.
+      Future<bool> enviar(OutboxData op) async {
         final r = await _procesar(op);
         switch (r) {
           case Ok():
-            await (_db.delete(_db.outbox)..where((t) => t.seq.equals(op.seq))).go();
+            // Si se reemplazó mientras se enviaba (p. ej. se agregó una muestra), no se borra: el contenido
+            // nuevo sale en la siguiente vuelta. Antes se perdía y su foto fallaba con "la muestra no existe".
+            final enviada =
+                await (_db.delete(_db.outbox)..where((t) => t.seq.equals(op.seq) & t.payload.equals(op.payload))).go();
+            if (enviada == 0) {
+              pendientesNuevos = true; // reenviar antes que lo que depende de ella (sus fotos)
+              return false;
+            }
             await _actualizarEstadoEntidad(TipoOperacion.parse(op.tipo), op.entidadId);
+            // lo que se bloqueó porque este registro aún no existía en el servidor ya puede salir
+            if (await _desbloquearDependientes(op.entidadId)) pendientesNuevos = true;
+            return true;
           case Error(:final failure) when failure.esReintentable:
             await (_db.update(_db.outbox)..where(
               (t) => t.seq.equals(op.seq),
             )).write(OutboxCompanion(intentos: Value(op.intentos + 1), ultimoError: Value(failure.message)));
             falloRed = failure;
+            return false; // sin servidor: no tiene sentido seguir
           case Error(:final failure):
             await (_db.update(_db.outbox)..where((t) => t.seq.equals(op.seq))).write(
               OutboxCompanion(
@@ -178,8 +192,27 @@ class SyncRepository extends ChangeNotifier {
               ),
             );
             await _marcarEntidad(TipoOperacion.parse(op.tipo), op.entidadId, SyncState.error, failure.message);
+            return true;
         }
-        if (falloRed != null) break; // sin servidor: no tiene sentido seguir
+      }
+
+      // Una foto tomada antes de guardar la evaluación queda en la cola ANTES que la evaluación: se
+      // difiere hasta que su evaluación (o lote) llegue al servidor, en vez de fallar con "no existe".
+      final diferidas = <OutboxData>[];
+      var seguir = true;
+      for (final op in cola) {
+        final padre = await _padrePendiente(op);
+        if (padre != null) {
+          if (!padre.bloqueada) diferidas.add(op); // si su padre tiene error, espera sin bloquearse
+          continue;
+        }
+        if (!(seguir = await enviar(op))) break;
+      }
+      if (seguir) {
+        for (final op in diferidas) {
+          if (await _padrePendiente(op) != null) continue; // su padre no salió en esta vuelta
+          if (!await enviar(op)) break;
+        }
       }
       if (falloRed == null) {
         _fallosSeguidos = 0;
@@ -188,7 +221,7 @@ class SyncRepository extends ChangeNotifier {
         _resumen = _resumen.copyWith(ultimaSincronizacion: ahora, limpiarError: true);
       } else {
         _fallosSeguidos++;
-        _resumen = _resumen.copyWith(ultimoError: falloRed.message);
+        _resumen = _resumen.copyWith(ultimoError: falloRed!.message);
         // backoff exponencial con tope de 5 minutos
         programar(espera: Duration(seconds: min(300, 5 * pow(2, _fallosSeguidos).toInt())));
       }
@@ -196,7 +229,57 @@ class SyncRepository extends ChangeNotifier {
       _resumen = _resumen.copyWith(sincronizando: false);
       await _recontar();
     }
-    return falloRed == null ? const Result.ok(null) : Result.error(falloRed);
+    if (pendientesNuevos && falloRed == null) programar();
+    return falloRed == null ? const Result.ok(null) : Result.error(falloRed!);
+  }
+
+  // ------------------------------------------------------------------ dependencias
+
+  /// Registro del que depende la operación (debe existir en el servidor antes): la foto de su
+  /// evaluación, el comprobante de su lote, la evaluación de su lote, el cierre de su evaluación.
+  Future<(TipoOperacion, String)?> _padre(OutboxData op) async {
+    switch (TipoOperacion.parse(op.tipo)) {
+      case TipoOperacion.evidenciaSubir:
+        final foto = await (_db.select(_db.evidenciasLocal)..where((t) => t.id.equals(op.entidadId))).getSingleOrNull();
+        return foto == null ? null : (TipoOperacion.evaluacionUpsert, foto.evaluacionId);
+      case TipoOperacion.comprobanteSubir:
+        final foto =
+            await (_db.select(_db.comprobantesLocal)..where((t) => t.id.equals(op.entidadId))).getSingleOrNull();
+        return foto == null ? null : (TipoOperacion.loteUpsert, foto.loteId);
+      case TipoOperacion.evaluacionUpsert:
+        final loteId = (jsonDecode(op.payload) as Map)['loteId'];
+        return loteId is String ? (TipoOperacion.loteUpsert, loteId) : null;
+      case TipoOperacion.evaluacionCerrar || TipoOperacion.evaluacionResultado:
+        return (TipoOperacion.evaluacionUpsert, op.entidadId);
+      default:
+        return null;
+    }
+  }
+
+  /// La operación de su padre si aún está en la cola (no llegó al servidor).
+  Future<OutboxData?> _padrePendiente(OutboxData op) async {
+    final p = await _padre(op);
+    if (p == null) return null;
+    final (tipo, id) = p;
+    return (_db.select(_db.outbox)
+          ..where((t) => t.tipo.equals(tipo.name) & t.entidadId.equals(id))
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  /// Desbloquea lo que falló porque [padreId] aún no existía en el servidor. true si hubo alguna.
+  Future<bool> _desbloquearDependientes(String padreId) async {
+    final bloqueadas = await (_db.select(_db.outbox)..where((t) => t.bloqueada.equals(true))).get();
+    var alguna = false;
+    for (final b in bloqueadas) {
+      if ((await _padre(b))?.$2 != padreId) continue;
+      await (_db.update(_db.outbox)..where(
+        (t) => t.seq.equals(b.seq),
+      )).write(const OutboxCompanion(bloqueada: Value(false), ultimoError: Value(null)));
+      await _actualizarEstadoEntidad(TipoOperacion.parse(b.tipo), b.entidadId);
+      alguna = true;
+    }
+    return alguna;
   }
 
   // ------------------------------------------------------------------ envío por tipo
@@ -257,7 +340,11 @@ class SyncRepository extends ChangeNotifier {
         bytes: foto.bytes,
         nombreArchivo: 'evidencia-$id.$extension',
         mime: foto.mime,
-        campos: {'id': id, 'muestraNumero': foto.muestraNumero, 'factor': foto.factor},
+        campos: {
+          'id': id,
+          if (foto.muestraId != null) 'muestraId': foto.muestraId else 'muestraNumero': foto.muestraNumero,
+          'factor': foto.factor,
+        },
       ),
     );
   }

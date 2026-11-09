@@ -12,7 +12,7 @@
 	<artifactId>garlicbackend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>garlicbackend</name>
-	<description>SaaS agricola - Evaluacion de lotes de ajo</description>
+	<description>Compra de ajo en campo - Guadalupe Agroexportadora</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -44,6 +44,16 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- Acceso: login propio (DNI + clave) con JWT firmado por el servidor -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
@@ -85,6 +95,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

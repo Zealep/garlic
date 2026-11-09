@@ -1,22 +1,10 @@
 import 'dart:typed_data';
 
+import 'package:uuid/uuid.dart';
+
 import '../../utils/formato.dart';
 import 'foto.dart';
 import 'sync.dart';
-
-enum NivelHumedad {
-  baja('BAJA'),
-  media('MEDIA'),
-  alta('ALTA');
-
-  const NivelHumedad(this.api);
-
-  final String api;
-
-  String get etiqueta => api[0] + api.substring(1).toLowerCase();
-
-  static NivelHumedad parse(String v) => NivelHumedad.values.firstWhere((e) => e.api == v);
-}
 
 enum EstadoEvaluacion {
   borrador('BORRADOR'),
@@ -111,16 +99,64 @@ class EvaluacionResumen {
   };
 }
 
-/// Muestra representativa: % por clase de calidad (2.1) y por calibre (2.2).
-class MuestraBorrador {
-  MuestraBorrador({required this.numero, this.observacion, Map<String, double>? calidad, Map<String, double>? calibres})
-    : calidad = calidad ?? {},
-      calibres = calibres ?? {};
+/// Daño no visible marcado en una muestra. Si el tipo pide cantidades (parálisis) se cuentan los frutos
+/// y se calcula el % de daño.
+class DanoBorrador {
+  DanoBorrador({this.total, this.afectados});
 
+  int? total;
+  int? afectados;
+
+  /// Frutos con problema / total × 100 (2 decimales); null sin cantidades.
+  double? get porcentaje =>
+      (total == null || afectados == null || total == 0)
+          ? null
+          : double.parse((afectados! * 100 / total!).toStringAsFixed(2));
+
+  DanoBorrador copia() => DanoBorrador(total: total, afectados: afectados);
+}
+
+class SanidadBorrador {
+  SanidadBorrador({required this.presente, this.porcentaje});
+
+  bool presente;
+  double? porcentaje;
+
+  SanidadBorrador copia() => SanidadBorrador(presente: presente, porcentaje: porcentaje);
+}
+
+/// Muestra representativa: % por clase de calidad (2.1) y por calibre (2.2), sensoriales (humedad SI/NO,
+/// empaste y daños) y sanidad. El [id] lo genera la app y no cambia al renumerar: identifica sus fotos.
+class MuestraBorrador {
+  MuestraBorrador({
+    String? id,
+    required this.numero,
+    this.observacion,
+    Map<String, double>? calidad,
+    Map<String, double>? calibres,
+    Map<String, bool>? humedad,
+    Set<String>? empastes,
+    Map<String, DanoBorrador>? danos,
+    Map<String, SanidadBorrador>? sanidad,
+  }) : id = id ?? const Uuid().v4(),
+       calidad = calidad ?? {},
+       calibres = calibres ?? {},
+       humedad = humedad ?? {},
+       empastes = empastes ?? {},
+       danos = danos ?? {},
+       sanidad = sanidad ?? {};
+
+  final String id;
   int numero;
   String? observacion;
   final Map<String, double> calidad;
   final Map<String, double> calibres;
+
+  /// 2.2.1 Humedad: SI (true) / NO (false) por indicador.
+  final Map<String, bool> humedad;
+  final Set<String> empastes;
+  final Map<String, DanoBorrador> danos;
+  final Map<String, SanidadBorrador> sanidad;
 
   double get totalCalidad => calidad.values.fold(0, (a, b) => a + b);
   double get totalCalibres => calibres.values.fold(0, (a, b) => a + b);
@@ -136,20 +172,104 @@ class MuestraBorrador {
     calibres[destino] = double.parse((calibres[destino]! + faltaCalibres).toStringAsFixed(2));
   }
 
-  MuestraBorrador copia() =>
-      MuestraBorrador(numero: numero, observacion: observacion, calidad: {...calidad}, calibres: {...calibres});
-}
+  /// Copia los sensoriales y la sanidad de otra muestra (suelen repetirse entre muestras del lote).
+  /// Las cantidades de frutos no se copian: se cuentan en cada muestra.
+  void copiarSensorialesYSanidad(MuestraBorrador otra) {
+    humedad
+      ..clear()
+      ..addAll(otra.humedad);
+    empastes
+      ..clear()
+      ..addAll(otra.empastes);
+    danos
+      ..clear()
+      ..addAll({for (final id in otra.danos.keys) id: DanoBorrador()});
+    sanidad
+      ..clear()
+      ..addAll({for (final e in otra.sanidad.entries) e.key: e.value.copia()});
+  }
 
-class SanidadBorrador {
-  SanidadBorrador({required this.presente, this.porcentaje});
+  bool get sinSensorialesNiSanidad => humedad.isEmpty && empastes.isEmpty && danos.isEmpty && sanidad.isEmpty;
 
-  bool presente;
-  double? porcentaje;
+  MuestraBorrador copia() => MuestraBorrador(
+    id: id,
+    numero: numero,
+    observacion: observacion,
+    calidad: {...calidad},
+    calibres: {...calibres},
+    humedad: {...humedad},
+    empastes: {...empastes},
+    danos: {for (final e in danos.entries) e.key: e.value.copia()},
+    sanidad: {for (final e in sanidad.entries) e.key: e.value.copia()},
+  );
+
+  Map<String, Object?> toRequestJson() => {
+    'id': id,
+    'numero': numero,
+    'observacion': observacion,
+    'calidad': [
+      for (final e in calidad.entries) {'claseCalidadId': e.key, 'porcentaje': _redondeo(e.value)},
+    ],
+    'calibres': [
+      for (final e in calibres.entries) {'calibreId': e.key, 'porcentaje': _redondeo(e.value)},
+    ],
+    'humedad': [
+      for (final e in humedad.entries) {'tipoHumedadId': e.key, 'presente': e.value},
+    ],
+    'empastes': empastes.toList(),
+    'danos': [
+      for (final e in danos.entries)
+        {'tipoDanoId': e.key, 'frutosTotal': e.value.total, 'frutosAfectados': e.value.afectados},
+    ],
+    'sanidad': [
+      for (final e in sanidad.entries)
+        {
+          'enfermedadId': e.key,
+          'presente': e.value.presente,
+          'porcentaje': e.value.presente ? e.value.porcentaje : null,
+        },
+    ],
+  };
+
+  /// Acepta el formato del request (guardado en el teléfono) y el de la respuesta del API
+  /// (`id` de la opción en lugar de `claseCalidadId`, `calibreId`, ...).
+  factory MuestraBorrador.fromJson(Map<String, Object?> m) {
+    List<Map<String, Object?>> lista(Object? v) => ((v as List<Object?>?) ?? const []).cast<Map<String, Object?>>();
+    String clave(Map<String, Object?> f, String campo) => (f[campo] ?? f['id'])! as String;
+    double? numero(Object? v) => (v as num?)?.toDouble();
+    return MuestraBorrador(
+      id: m['id'] as String?,
+      numero: (m['numero']! as num).toInt(),
+      observacion: m['observacion'] as String?,
+      calidad: {for (final c in lista(m['calidad'])) clave(c, 'claseCalidadId'): numero(c['porcentaje'])!},
+      calibres: {for (final c in lista(m['calibres'])) clave(c, 'calibreId'): numero(c['porcentaje'])!},
+      humedad: {for (final h in lista(m['humedad'])) clave(h, 'tipoHumedadId'): h['presente']! as bool},
+      empastes: {
+        for (final e in (m['empastes'] as List<Object?>?) ?? const []) e is Map ? e['id']! as String : e! as String,
+      },
+      danos: {
+        for (final d in lista(m['danos']))
+          clave(d, 'tipoDanoId'): DanoBorrador(
+            total: (d['frutosTotal'] as num?)?.toInt(),
+            afectados: (d['frutosAfectados'] as num?)?.toInt(),
+          ),
+      },
+      sanidad: {
+        for (final x in lista(m['sanidad']))
+          clave(x, 'enfermedadId'): SanidadBorrador(
+            presente: x['presente']! as bool,
+            porcentaje: numero(x['porcentaje']),
+          ),
+      },
+    );
+  }
+
+  static double _redondeo(double v) => double.parse(v.toStringAsFixed(2));
 }
 
 /// Evaluación en edición (punto 2 del protocolo). Es un borrador mutable que pertenece al
 /// ViewModel del wizard; se serializa en el formato del request del API para guardarse
-/// localmente y encolarse para sincronizar.
+/// localmente y encolarse para sincronizar. Todo lo observado está en sus muestras.
 class EvaluacionBorrador {
   EvaluacionBorrador({
     required this.id,
@@ -161,104 +281,41 @@ class EvaluacionBorrador {
     this.resultado,
     this.motivoResultado,
     List<MuestraBorrador>? muestras,
-    Map<String, NivelHumedad>? humedad,
-    Set<String>? empastes,
-    Set<String>? danos,
-    Map<String, SanidadBorrador>? sanidad,
-  }) : muestras = muestras ?? [],
-       humedad = humedad ?? {},
-       empastes = empastes ?? {},
-       danos = danos ?? {},
-       sanidad = sanidad ?? {};
+  }) : muestras = muestras ?? [];
 
   /// Formato del request (lo que se guarda localmente y se envía).
   factory EvaluacionBorrador.fromRequestJson(
     Map<String, Object?> json, {
     required String loteId,
     EstadoEvaluacion? estado,
-  }) {
-    List<Map<String, Object?>> lista(Object? v) => ((v as List<Object?>?) ?? const []).cast<Map<String, Object?>>();
-    return EvaluacionBorrador(
-      id: json['id']! as String,
-      loteId: loteId,
-      evaluadorId: json['evaluadorId'] as String?,
-      fecha: Formato.parseFecha(json['fechaEvaluacion']) ?? DateTime.now(),
-      observacion: json['observacion'] as String?,
-      estado: estado ?? EstadoEvaluacion.parse(json['estado'] as String?),
-      resultado: ResultadoEvaluacion.parse(json['resultado']),
-      motivoResultado: json['motivoResultado'] as String?,
-      muestras:
-          lista(json['muestras'])
-              .map(
-                (m) => MuestraBorrador(
-                  numero: (m['numero']! as num).toInt(),
-                  observacion: m['observacion'] as String?,
-                  calidad: {
-                    for (final c in lista(m['calidad']))
-                      c['claseCalidadId']! as String: (c['porcentaje']! as num).toDouble(),
-                  },
-                  calibres: {
-                    for (final c in lista(m['calibres']))
-                      c['calibreId']! as String: (c['porcentaje']! as num).toDouble(),
-                  },
-                ),
-              )
-              .toList(),
-      humedad: {
-        for (final h in lista(json['humedad']))
-          h['tipoHumedadId']! as String: NivelHumedad.parse(h['nivel']! as String),
-      },
-      empastes: {...((json['empastes'] as List<Object?>?) ?? const []).cast<String>()},
-      danos: {...((json['danos'] as List<Object?>?) ?? const []).cast<String>()},
-      sanidad: {
-        for (final s in lista(json['sanidad']))
-          s['enfermedadId']! as String: SanidadBorrador(
-            presente: s['presente']! as bool,
-            porcentaje: (s['porcentaje'] as num?)?.toDouble(),
-          ),
-      },
-    );
-  }
+  }) => EvaluacionBorrador(
+    id: json['id']! as String,
+    loteId: loteId,
+    evaluadorId: json['evaluadorId'] as String?,
+    fecha: Formato.parseFecha(json['fechaEvaluacion']) ?? DateTime.now(),
+    observacion: json['observacion'] as String?,
+    estado: estado ?? EstadoEvaluacion.parse(json['estado'] as String?),
+    resultado: ResultadoEvaluacion.parse(json['resultado']),
+    motivoResultado: json['motivoResultado'] as String?,
+    muestras: _muestras(json['muestras']),
+  );
 
   /// Formato de la respuesta de detalle del API (evaluación descargada del servidor).
-  factory EvaluacionBorrador.fromResponseJson(Map<String, Object?> json) {
-    List<Map<String, Object?>> lista(Object? v) => ((v as List<Object?>?) ?? const []).cast<Map<String, Object?>>();
-    return EvaluacionBorrador(
-      id: json['id']! as String,
-      loteId: json['loteId']! as String,
-      evaluadorId: (json['evaluador'] as Map<String, Object?>?)?['id'] as String?,
-      fecha: Formato.parseFecha(json['fechaEvaluacion']) ?? DateTime.now(),
-      observacion: json['observacion'] as String?,
-      estado: EstadoEvaluacion.parse(json['estado'] as String?),
-      resultado: ResultadoEvaluacion.parse(json['resultado']),
-      motivoResultado: json['motivoResultado'] as String?,
-      muestras:
-          lista(json['muestras'])
-              .map(
-                (m) => MuestraBorrador(
-                  numero: (m['numero']! as num).toInt(),
-                  observacion: m['observacion'] as String?,
-                  calidad: {
-                    for (final c in lista(m['calidad'])) c['id']! as String: (c['porcentaje']! as num).toDouble(),
-                  },
-                  calibres: {
-                    for (final c in lista(m['calibres'])) c['id']! as String: (c['porcentaje']! as num).toDouble(),
-                  },
-                ),
-              )
-              .toList(),
-      humedad: {for (final h in lista(json['humedad'])) h['id']! as String: NivelHumedad.parse(h['nivel']! as String)},
-      empastes: {for (final e in lista(json['empastes'])) e['id']! as String},
-      danos: {for (final d in lista(json['danos'])) d['id']! as String},
-      sanidad: {
-        for (final s in lista(json['sanidad']))
-          s['id']! as String: SanidadBorrador(
-            presente: s['presente']! as bool,
-            porcentaje: (s['porcentaje'] as num?)?.toDouble(),
-          ),
-      },
-    );
-  }
+  factory EvaluacionBorrador.fromResponseJson(Map<String, Object?> json) => EvaluacionBorrador(
+    id: json['id']! as String,
+    loteId: json['loteId']! as String,
+    evaluadorId: (json['evaluador'] as Map<String, Object?>?)?['id'] as String?,
+    fecha: Formato.parseFecha(json['fechaEvaluacion']) ?? DateTime.now(),
+    observacion: json['observacion'] as String?,
+    estado: EstadoEvaluacion.parse(json['estado'] as String?),
+    resultado: ResultadoEvaluacion.parse(json['resultado']),
+    motivoResultado: json['motivoResultado'] as String?,
+    muestras: _muestras(json['muestras']),
+  );
+
+  static List<MuestraBorrador> _muestras(Object? v) =>
+      ((v as List<Object?>?) ?? const []).cast<Map<String, Object?>>().map(MuestraBorrador.fromJson).toList()
+        ..sort((a, b) => a.numero.compareTo(b.numero));
 
   final String id;
   final String loteId;
@@ -271,10 +328,6 @@ class EvaluacionBorrador {
   ResultadoEvaluacion? resultado;
   String? motivoResultado;
   final List<MuestraBorrador> muestras;
-  final Map<String, NivelHumedad> humedad;
-  final Set<String> empastes;
-  final Set<String> danos;
-  final Map<String, SanidadBorrador> sanidad;
 
   bool get editable => estado == EstadoEvaluacion.borrador;
 
@@ -283,38 +336,36 @@ class EvaluacionBorrador {
     'evaluadorId': evaluadorId,
     'fechaEvaluacion': Formato.fechaIso(fecha),
     'observacion': (observacion?.trim().isEmpty ?? true) ? null : observacion!.trim(),
-    'muestras': [
-      for (final m in muestras)
-        {
-          'numero': m.numero,
-          'observacion': m.observacion,
-          'calidad': [
-            for (final e in m.calidad.entries) {'claseCalidadId': e.key, 'porcentaje': _redondeo(e.value)},
-          ],
-          'calibres': [
-            for (final e in m.calibres.entries) {'calibreId': e.key, 'porcentaje': _redondeo(e.value)},
-          ],
-        },
-    ],
-    'humedad': [
-      for (final e in humedad.entries) {'tipoHumedadId': e.key, 'nivel': e.value.api},
-    ],
-    'empastes': empastes.toList(),
-    'danos': danos.toList(),
-    'sanidad': [
-      for (final e in sanidad.entries)
-        {
-          'enfermedadId': e.key,
-          'presente': e.value.presente,
-          'porcentaje': e.value.presente ? e.value.porcentaje : null,
-        },
-    ],
+    'muestras': [for (final m in muestras) m.toRequestJson()],
   };
 
   /// Promedio por opción sobre las muestras que la registran (columna PROM del protocolo).
   Map<String, double> promediosCalidad() => _promedios((m) => m.calidad);
 
   Map<String, double> promediosCalibres() => _promedios((m) => m.calibres);
+
+  /// % de daño promedio por tipo (parálisis) sobre las muestras que lo cuentan.
+  Map<String, double> promediosDanos() => _promedios(
+    (m) => {
+      for (final e in m.danos.entries)
+        if (e.value.porcentaje != null) e.key: e.value.porcentaje!,
+    },
+  );
+
+  /// Incidencia promedio por enfermedad sobre las muestras que la respondieron (NO cuenta como 0%).
+  Map<String, double> promediosSanidad() =>
+      _promedios((m) => {for (final e in m.sanidad.entries) e.key: e.value.presente ? (e.value.porcentaje ?? 0) : 0});
+
+  /// Cuántas muestras marcan SI en cada indicador de humedad.
+  Map<String, int> muestrasConHumedad() {
+    final n = <String, int>{};
+    for (final m in muestras) {
+      for (final e in m.humedad.entries) {
+        n[e.key] = (n[e.key] ?? 0) + (e.value ? 1 : 0);
+      }
+    }
+    return n;
+  }
 
   Map<String, double> _promedios(Map<String, double> Function(MuestraBorrador) valores) {
     final suma = <String, double>{};
@@ -330,39 +381,29 @@ class EvaluacionBorrador {
 
   /// Nueva muestra que reutiliza los calibres elegidos en la última (con 0%, pendientes de llenar).
   MuestraBorrador nuevaMuestra() => MuestraBorrador(
-    numero: siguienteNumeroMuestra(),
+    numero: muestras.length + 1,
     calibres: muestras.isEmpty ? {} : {for (final id in muestras.last.calibres.keys) id: 0},
   );
 
-  int siguienteNumeroMuestra() =>
-      muestras.isEmpty ? 1 : muestras.map((m) => m.numero).reduce((a, b) => a > b ? a : b) + 1;
-
-  static double _redondeo(double v) => double.parse(v.toStringAsFixed(2));
+  /// Quita la muestra y renumera las demás 1..n en el orden en que se ven (de izquierda a derecha).
+  void quitarMuestra(String muestraId) {
+    muestras.removeWhere((m) => m.id == muestraId);
+    for (final (i, m) in muestras.indexed) {
+      m.numero = i + 1;
+    }
+  }
 }
 
 /// Sección del wizard a la que pertenece una foto.
 enum SeccionFoto {
-  /// Evidencia general del lote (paso Datos): sin muestra ni factor.
-  general(null),
+  /// Evidencia general del lote (paso Datos): sin muestra.
+  general,
 
-  /// Foto de una muestra: se identifica por el número de muestra.
-  muestra(null),
+  /// Foto de una muestra (calidad, calibre, sensoriales o sanidad).
+  muestra;
 
-  /// Bloque único de la sección Sensoriales.
-  sensoriales('SENSORIALES');
-
-  const SeccionFoto(this.factor);
-
-  /// Valor de `factor` que se envía al API.
-  final String? factor;
-
-  /// Clasifica una foto (incluye las tomadas antes de este cambio: las generales tenían factor nulo
-  /// y las de muestra, factor CALIDAD con número de muestra).
-  static SeccionFoto de(EvidenciaLocal foto) {
-    if (foto.muestraNumero != null) return muestra;
-    if (foto.factor == sensoriales.factor) return sensoriales;
-    return general;
-  }
+  static SeccionFoto de(EvidenciaLocal foto) =>
+      foto.muestraId != null || foto.muestraNumero != null ? muestra : general;
 }
 
 /// Foto tomada en campo, guardada en el teléfono hasta subirse.
@@ -373,6 +414,7 @@ class EvidenciaLocal implements FotoLocal {
     required this.bytes,
     required this.mime,
     required this.creado,
+    this.muestraId,
     this.muestraNumero,
     this.factor,
     this.syncState = SyncState.pendiente,
@@ -381,6 +423,9 @@ class EvidenciaLocal implements FotoLocal {
   @override
   final String id;
   final String evaluacionId;
+
+  /// Muestra a la que pertenece (no cambia al renumerar); null = evidencia general.
+  final String? muestraId;
   final int? muestraNumero;
   final String? factor;
   @override
