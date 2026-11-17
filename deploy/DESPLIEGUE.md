@@ -160,7 +160,23 @@ Monitoreo gratuito: [UptimeRobot](https://uptimerobot.com) apuntando a `https://
 - El sistema es de **una sola empresa** (`EMPRESA_RUC`): el servidor la fija en cada consulta; la app no la envía.
 - Swagger/OpenAPI está desactivado en producción. Postgres no tiene puertos públicos.
 
-## Producción Guadalupe (droplet nuevo)
+## Producción Guadalupe (desplegado 2026-11-17)
+Se usó el droplet **existente** de agroguadalupe.com (`143.198.121.232`, 1 vCPU / 2 GB + 2 GB swap), que ya tiene
+nginx en 80/443 (web de la empresa con certbot) y la app "liberty". Por eso **no se levanta Caddy**:
+- `.env` con `COMPOSE_FILE=docker-compose.yml:docker-compose.nginx.yml`: el backend escucha en `127.0.0.1:8090`
+  (máx. 900 MB de RAM) y Caddy queda apagado.
+- nginx: sitio propio `/etc/nginx/sites-available/compras.conf` (copia de `nginx-compras.conf`) que sirve
+  `/opt/garlic/deploy/web` y pasa `/api`, `/instalacion` y `/actuator/health` al backend. HTTPS con
+  `certbot --nginx -d compras.agroguadalupe.com` (se renueva solo, igual que la web).
+- El droplet **no tiene acceso a GitHub**: el código se copia desde la PC (backend + deploy, sin `.env`):
+  ```bash
+  { git ls-files; git ls-files --others --exclude-standard; } | grep -E "^(deploy|garlicbackend)/" \
+    | grep -v "^deploy/\.env" | tar -czf - -T - | ssh root@143.198.121.232 "tar -xzf - -C /opt/garlic"
+  ssh root@143.198.121.232 "cd /opt/garlic/deploy && docker compose up -d --build backend"
+  ```
+  y la app web con `.\deploy\publicar-web.ps1 -Servidor root@143.198.121.232` (no reinicia nada más).
+
+## Producción Guadalupe (droplet nuevo, alternativa)
 Base **limpia**: solo la empresa, sus catálogos base, la campaña y el administrador (sin lotes ni compras de prueba).
 1. **Droplet**: como en los pasos 0–2, nombre `guadalupe-produccion`. Para el uso real conviene **4 GB RAM / 2 vCPU**
    con backups activados.
@@ -174,7 +190,19 @@ Base **limpia**: solo la empresa, sus catálogos base, la campaña y el administ
    y revisar `DOMINIO` si eligen otro subdominio.
 4. Publicar la app con `publicar-web.ps1 -Servidor root@IP_NUEVA`.
 5. Primer ingreso del administrador, alta de evaluadores (paso 7) y configurar respaldos (paso 10).
-6. En los celulares: instalar la PWA desde el dominio nuevo (la de pruebas queda aparte, con sus datos).
+6. En los celulares: instalar la PWA desde el dominio nuevo (la de pruebas queda aparte, con sus datos),
+   o la APK (abajo).
+
+### APK Android (producción)
+- Paquete `com.agroguadalupe.compras`, firmada con la llave de Guadalupe: `garlic_app/android/key.properties` +
+  `garlic_app/android/app/guadalupe-release.jks` (no se suben al repo). **Respaldarlas** fuera de la PC (USB/nube
+  privada): sin esa llave Android no acepta actualizaciones de la APK instalada y habría que desinstalar.
+- Compilar (el servidor queda fijo en la APK):
+  `flutter build apk --release --dart-define=API_URL=https://compras.agroguadalupe.com`
+  y copiar `build/app/outputs/flutter-apk/app-release.apk` a `entregables/Guadalupe-X.Y.Z.apk`.
+- Cada versión nueva sube `version:` en `pubspec.yaml` (ej. `1.0.1+2`; el `+N` debe crecer) para que se instale
+  encima sin perder datos.
+- Instalar: enviar el archivo al celular (WhatsApp/Drive/cable), abrirlo y permitir "instalar apps desconocidas".
 
 ## Servidor de pruebas: pasar al login
 El servidor actual conserva sus datos. Al actualizarlo (paso 9):

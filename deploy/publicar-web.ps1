@@ -10,5 +10,5 @@ try {
 } finally { Pop-Location }
 ssh $Servidor "rm -rf /opt/garlic/deploy/web.nueva && mkdir -p /opt/garlic/deploy/web.nueva"
 scp -r garlic_app/build/web/* "${Servidor}:/opt/garlic/deploy/web.nueva/"
-ssh $Servidor "cd /opt/garlic/deploy && rm -rf web.anterior && (mv web web.anterior 2>/dev/null || true) && mv web.nueva web && docker compose restart caddy"
+ssh $Servidor "cd /opt/garlic/deploy && rm -rf web.anterior && (mv web web.anterior 2>/dev/null || true) && mv web.nueva web && (docker compose ps --services --status running | grep -qx caddy && docker compose restart caddy || true)"
 Write-Host 'App web publicada.'

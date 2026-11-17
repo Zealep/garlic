@@ -1,0 +1,10 @@
+# Variante para un servidor que YA tiene nginx en 80/443 (droplet de agroguadalupe.com).
+# Caddy no se levanta: nginx sirve la app web y pasa el API al backend (ver nginx-compras.conf).
+# Se activa con COMPOSE_FILE=docker-compose.yml:docker-compose.nginx.yml en el .env del servidor.
+services:
+  backend:
+    ports:
+      - "127.0.0.1:8090:8080"   # solo nginx del propio servidor lo ve
+    mem_limit: 900m             # comparte el droplet con otras apps; heap = 60 % de esto
+  caddy:
+    profiles: ["caddy"]         # apagado en esta variante

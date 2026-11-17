@@ -95,7 +95,7 @@ HTTPS). La app se instala como PWA en el celular.
 - [ ] Verificar la app en emulador Android (en Windows requiere Modo desarrollador para compilar con plugins).
 - [ ] Roles de negocio: quién registra / quién aprueba (el cliente no lo definió; el login ya existe).
 - [ ] Datos de Guadalupe para producción: RUC 20614219824, AGROEXPORTADORA GUADALUPE S.A.C. y administrador (DNI 72790829) ya están en `deploy/.env.produccion` (local, no se sube). Faltan: confirmar subdominio y logo en alta resolución.
-- [ ] APK release: `applicationId` propio y firma de release en `garlic_app/android/app/build.gradle.kts`.
+- [x] APK release: `com.agroguadalupe.compras`, firmada (llave local, ver DESPLIEGUE.md "APK Android").
 
 Las reglas de negocio implementadas se dan por **definidas** (2026-10-30). No hay preguntas abiertas con el cliente:
 si pide cambios, el usuario los informará.
